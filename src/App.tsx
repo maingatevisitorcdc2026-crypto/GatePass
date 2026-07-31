@@ -6678,7 +6678,7 @@ export default function App() {
                                       });
                                       
                                       const pathLine = points.length > 0 
-                                        ? `M ${points[0].x} ${points[0].y} ` + points.slice.map(p => `L ${p.x} ${p.y}`).join(' ') 
+                                        ? `M ${points[0].x} ${points[0].y} ` + points.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ') 
                                         : '';
                                       
                                       const pathArea = points.length > 0 
@@ -6731,7 +6731,7 @@ export default function App() {
                                                 )}
                                                 <div className="flex flex-col">
                                                   <span className="text-sm font-black tracking-tight uppercase">
-                                                    {config?.organizationName || config?.title || 'Security Guard System'}
+                                                    {config?.organizationName || (config as any)?.title || 'Security Guard System'}
                                                   </span>
                                                   <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
                                                     Official Guard Operation Center
@@ -6925,7 +6925,7 @@ export default function App() {
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-800/30">
                                                   {statsToUse.recentLogs && statsToUse.recentLogs.length > 0 ? (
-                                                    statsToUse.recentLogs.slice(0, 4).map((log, index) => (
+                                                    (statsToUse.recentLogs as any[]).slice(0, 4).map((log: any, index: number) => (
                                                       <tr key={index} className={pdfReportTheme === 'light' ? 'hover:bg-slate-50 text-slate-800' : 'hover:bg-slate-900/30 text-slate-300'}>
                                                         <td className="py-2 px-3 font-bold truncate max-w-[120px]">{log.name}</td>
                                                         <td className="py-2 px-3 font-medium text-slate-400">{log.visitorType}</td>

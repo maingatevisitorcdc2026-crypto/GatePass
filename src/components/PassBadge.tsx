@@ -7,6 +7,7 @@ import { useState, useRef, useEffect, RefObject, ReactNode, MouseEvent } from 'r
 import { Visitor, BrandingConfig, ElementPosition } from '../types';
 import { ShieldCheck, Calendar, MapPin, Briefcase, Printer, QrCode, Phone, CheckCircle, Ban } from 'lucide-react';
 import html2canvas from 'html2canvas';
+import QRCode from 'qrcode';
 
 const getDisplayPhotoUrl = (url: string | null | undefined): string => {
   if (!url) return 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150';
@@ -98,7 +99,7 @@ export function DraggableElement({
   useEffect(() => {
     if (!isDragging && !isResizing) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (e: any) => {
       if (!cardRef.current) return;
       const rect = cardRef.current.getBoundingClientRect();
       const deltaX = ((e.clientX - startPosRef.current.x) / rect.width) * 100;
@@ -436,8 +437,39 @@ export default function PassBadge({ visitor, config, isDesigner, onUpdateTemplat
     }
   };
 
-  // Construct URL for the dynamic QR code generation
-  const qrCodeUrl = `/api/qrcode?text=${encodeURIComponent(visitor.id || '')}`;
+  // Generate QR code client-side as base64 Data URL for instant loading and offline/GitHub Pages support
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+
+  useEffect(() => {
+    let isMounted = true;
+    const textToEncode = visitor.id || 'PASS';
+
+    QRCode.toDataURL(textToEncode, {
+      margin: 1,
+      width: 256,
+      color: {
+        dark: '#000000',
+        light: '#ffffff',
+      },
+    })
+      .then((dataUrl) => {
+        if (isMounted) setQrCodeDataUrl(dataUrl);
+      })
+      .catch((err) => {
+        console.error('Client QRCode generation error:', err);
+        if (isMounted) {
+          setQrCodeDataUrl(`https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(textToEncode)}`);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [visitor.id]);
+
+  const qrCodeUrl =
+    qrCodeDataUrl ||
+    `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(visitor.id || '')}`;
 
   const isReceipt = template.layout === 'receipt';
   // Force clean, all-white card background and black text
