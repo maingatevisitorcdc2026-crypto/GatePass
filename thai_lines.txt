@@ -1,0 +1,592 @@
+72: name: "สมชาย รักดี (ผู้ติดต่อตัวอย่าง)",
+75: vehiclePlate: "กข 1234 กรุงเทพฯ",
+76: address: "99/1 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ",
+77: company: "บริษัท สิริ เทคโนโลยี จำกัด (มหาชน)",
+78: visitorType: "ผู้รับเหมา (Contractor)",
+79: contactArea: "อาคาร A ชั้น 15 (ฝ่ายบุคคล)",
+87: const s = status || 'ยังไม่ถูกเช็คอิน';
+88: if (s.startsWith('เช็คอินโดย')) {
+94: if (s.startsWith('เช็คเอาท์โดย')) {
+102: text: 'ถูกระงับสิทธิ์ (Banned)',
+107: text: s === 'pending' ? 'ยังไม่ถูกเช็คอิน' : s,
+113: 'โหลดเดอร์',
+114: 'ส่งสินค้าภายในคลัง',
+115: 'ส่งสินค้าร้านจำหน่ายอาหาร',
+116: 'รับสินค้า',
+117: 'รับภาชนะ',
+118: 'พนักงานโรงอาหาร',
+119: 'ส่งเอกสาร',
+120: 'รับซื้อขยะ',
+121: 'เจ้าหน้าที่อบรม',
+122: 'ผู้จัดกิจกรรม',
+123: 'ผู้รับเหมา',
+124: 'ประกัน',
+125: 'ออดิท',
+126: 'ส่งพัสดุ',
+127: 'อื่นๆ'
+131: 'เจ้าหน้าที่ความปลอดภัย (Staff)': [
+132: { desc: 'สแกนใบหน้าและบันทึกประวัติ ณ จุดตรวจเข้า-ออก', allowed: true },
+133: { desc: 'เพิ่มใบผ่านผู้ติดต่อและบันทึกประวัติรูปหน้าใหม่', allowed: true },
+134: { desc: 'จัดการสถานะผู้ติดต่อและแบนบุคคลต้องห้าม (Ban/Unban)', allowed: false },
+135: { desc: 'เข้าถึงสถิติแดชบอร์ดภาพรวมและรายงานส่งออก', allowed: false },
+136: { desc: 'แก้ไขค่าปรับแต่งตราสัญลักษณ์ & การเชื่อมต่อระบบคลาวด์', allowed: false }
+138: 'เจ้าหน้าที่รักษาความปลอดภัย (Guard)': [
+139: { desc: 'สแกนใบหน้าและบันทึกประวัติ ณ จุดตรวจเข้า-ออก', allowed: true },
+140: { desc: 'เพิ่มใบผ่านผู้ติดต่อและบันทึกประวัติรูปหน้าใหม่', allowed: true },
+141: { desc: 'จัดการสถานะผู้ติดต่อและแบนบุคคลต้องห้าม (Ban/Unban)', allowed: false },
+142: { desc: 'เข้าถึงสถิติแดชบอร์ดภาพรวมและรายงานส่งออก', allowed: false },
+143: { desc: 'แก้ไขค่าปรับแต่งตราสัญลักษณ์ & การเชื่อมต่อระบบคลาวด์', allowed: false }
+145: 'หัวหน้าฝ่ายความปลอดภัย (Supervisor)': [
+146: { desc: 'สแกนใบหน้าและบันทึกประวัติ ณ จุดตรวจเข้า-ออก', allowed: true },
+147: { desc: 'เพิ่มใบผ่านผู้ติดต่อและบันทึกประวัติรูปหน้าใหม่', allowed: true },
+148: { desc: 'จัดการสถานะผู้ติดต่อและแบนบุคคลต้องห้าม (Ban/Unban)', allowed: true },
+149: { desc: 'เข้าถึงสถิติแดชบอร์ดภาพรวมและรายงานส่งออก', allowed: true },
+150: { desc: 'แก้ไขค่าปรับแต่งตราสัญลักษณ์ & การเชื่อมต่อระบบคลาวด์', allowed: false }
+152: 'ผู้จัดการ (Manager)': [
+153: { desc: 'สแกนใบหน้าและบันทึกประวัติ ณ จุดตรวจเข้า-ออก', allowed: true },
+154: { desc: 'เพิ่มใบผ่านผู้ติดต่อและบันทึกประวัติรูปหน้าใหม่', allowed: true },
+155: { desc: 'จัดการสถานะผู้ติดต่อและแบนบุคคลต้องห้าม (Ban/Unban)', allowed: true },
+156: { desc: 'เข้าถึงสถิติแดชบอร์ดภาพรวมและรายงานส่งออก', allowed: true },
+157: { desc: 'แก้ไขค่าปรับแต่งตราสัญลักษณ์ & การเชื่อมต่อระบบคลาวด์', allowed: true }
+159: 'ผู้ดูแลระบบระดับสูง (Administrator)': [
+160: { desc: 'สแกนใบหน้าและบันทึกประวัติ ณ จุดตรวจเข้า-ออก', allowed: true },
+161: { desc: 'เพิ่มใบผ่านผู้ติดต่อและบันทึกประวัติรูปหน้าใหม่', allowed: true },
+162: { desc: 'จัดการสถานะผู้ติดต่อและแบนบุคคลต้องห้าม (Ban/Unban)', allowed: true },
+163: { desc: 'เข้าถึงสถิติแดชบอร์ดภาพรวมและรายงานส่งออก', allowed: true },
+164: { desc: 'แก้ไขค่าปรับแต่งตราสัญลักษณ์ & การเชื่อมต่อระบบคลาวด์', allowed: true }
+169: 'ผู้ดูแลระบบระดับสูง (Administrator)',
+170: 'ผู้จัดการ (Manager)',
+171: 'หัวหน้าฝ่ายความปลอดภัย (Supervisor)',
+172: 'เจ้าหน้าที่ความปลอดภัย (Staff)',
+173: 'เจ้าหน้าที่รักษาความปลอดภัย (Guard)'
+178: 'ลานจอดผู้รับเหมา',
+190: 'โรงอาหารด้านหลัง',
+598: headerText: 'บัตรผ่านเข้า-ออก (Visitor Pass)',
+599: footerText: 'กรุณาแสดงใบผ่านต่อเจ้าหน้าที่รักษาความปลอดภัย',
+608: securityNotice: 'บัตรนี้เป็นทรัพย์สินของบริษัทฯ กรุณาพกติดตัวขณะเข้าพื้นที่',
+694: visitorType: 'โหลดเดอร์',
+742: role: 'ผู้ดูแลระบบระดับสูง (Administrator)',
+795: role: 'เจ้าหน้าที่รักษาความปลอดภัย (Guard)',
+810: 'ผู้ดูแลระบบระดับสูง (Administrator)': {
+814: 'ผู้จัดการ (Manager)': {
+818: 'หัวหน้าฝ่ายความปลอดภัย (Supervisor)': {
+822: 'เจ้าหน้าที่ความปลอดภัย (Staff)': {
+826: 'เจ้าหน้าที่รักษาความปลอดภัย (Guard)': {
+879: const [selectedRoleToConfig, setSelectedRoleToConfig] = useState<string>('ผู้ดูแลระบบระดับสูง (Administrator)');
+1099: assignedBy: 'ระบบตั้งต้น',
+1464: setAdminError('ขออภัย ระบบอนุญาตเฉพาะบัญชี kittisak.s99631@gmail.com เท่านั้น');
+1524: role: 'เจ้าหน้าที่รักษาความปลอดภัย (Guard)',
+1558: setAdminError(`ลงชื่อเข้าใช้ด้วย Google ล้มเหลว: ${err?.message || err}`);
+1584: setAdminError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง หรือยังไม่ได้สมัครใช้บริการ');
+1596: setSignUpError('กรุณากรอกชื่อ-นามสกุลจริง');
+1600: setSignUpError('กรุณากรอกชื่อผู้ใช้งาน (Username)');
+1604: setSignUpError('ชื่อผู้ใช้งานต้องมีความยาวอย่างน้อย 4 ตัวอักษร');
+1608: setSignUpError('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
+1612: setSignUpError('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน');
+1621: setSignUpError('ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว กรุณาใช้ชื่ออื่น');
+1652: throw new Error(errorData.error || 'สมัครสิทธิ์ผู้ใช้งานระบบไม่สำเร็จ');
+1656: setSignUpSuccess('สมัครสิทธิ์ผู้ใช้งานระบบสำเร็จแล้ว! ระบบกำลังนำท่านกลับสู่หน้าเข้าสู่ระบบ...');
+1665: role: 'เจ้าหน้าที่รักษาความปลอดภัย (Guard)',
+1674: setSignUpError(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูลระบบ');
+1698: setProfileError('กรุณากรอกชื่อ-นามสกุลจริง');
+1704: setProfileError('รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร');
+1708: setProfileError('การยืนยันรหัสผ่านใหม่ไม่ตรงกัน');
+1716: setProfileError('ไม่พบข้อมูลโปรไฟล์ของท่าน');
+1756: throw new Error(errorData.error || 'อัปเดตข้อมูลโปรไฟล์ไม่สำเร็จ');
+1772: setProfileSuccess('อัปเดตข้อมูลโปรไฟล์และรหัสผ่านเรียบร้อยแล้ว!');
+1777: setProfileError(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูลระบบ');
+1788: role: user.role || 'เจ้าหน้าที่รักษาความปลอดภัย (Guard)',
+1804: role: 'เจ้าหน้าที่รักษาความปลอดภัย (Guard)',
+1813: role: 'เจ้าหน้าที่รักษาความปลอดภัย (Guard)',
+1832: setStaffError('กรุณากรอกชื่อผู้ใช้งาน (Username)');
+1836: setStaffError('ชื่อผู้ใช้งานต้องมีความยาวอย่างน้อย 4 ตัวอักษร');
+1841: setStaffError('ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว');
+1845: setStaffError('กรุณากรอกรหัสผ่านเริ่มต้น');
+1849: setStaffError('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+1853: setStaffError('การยืนยันรหัสผ่านไม่ตรงกัน');
+1859: setStaffError('รหัสผ่านใหม่ต้องมีอย่างน้อย 6 ตัวอักษร');
+1863: setStaffError('การยืนยันรหัสผ่านใหม่ไม่ตรงกัน');
+1870: setStaffError('กรุณากรอกชื่อ-นามสกุลจริง');
+1881: role: staffForm.role || 'เจ้าหน้าที่รักษาความปลอดภัย (Guard)',
+1889: setStaffError('ไม่พบข้อมูลเจ้าหน้าที่คนนี้');
+1931: throw new Error(errorData.error || (isCreate ? 'สร้างบัญชีผู้ใช้งานระบบไม่สำเร็จ' : 'อัปเดตข้อมูลสิทธิ์เจ้าหน้าที่ไม่สำเร็จ'));
+1957: setStaffSuccess(isCreate ? 'สร้างบัญชีผู้ใช้งานระบบและสิทธิ์เรียบร้อยแล้ว!' : 'อัปเดตข้อมูลเจ้าหน้าที่และสิทธิ์เรียบร้อยแล้ว!');
+1964: setStaffError(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูลระบบ');
+2002: registeredBy: loggedInSystemUser?.name || 'ไม่ได้ระบุ',
+2019: visitorType: 'โหลดเดอร์',
+2040: setRetrievalStatus('กำลังค้นหาข้อมูลประวัติเก่าจากระบบ...');
+2066: visitorType: vis.visitorType || 'โหลดเดอร์',
+2072: setRetrievalStatus(`ดึงข้อมูลเก่าสำเร็จ: พบข้อมูลของคุณ ${vis.name}`);
+2074: setRetrievalStatus(data.error || 'ไม่พบประวัติผู้ติดต่อด้วยเลขบัตรประชาชนนี้');
+2078: setRetrievalStatus('เกิดข้อผิดพลาดในการดึงข้อมูล');
+2090: setRetrievalStatus('กำลังวิเคราะห์ใบหน้าและเปรียบเทียบในคลังข้อมูลอัจฉริยะ (Gemini)...');
+2110: setRetrievalStatus(`ระบบพบประวัติเก่าของคุณ ${vis.name} ในคลังข้อมูล!`);
+2114: setRetrievalStatus('ไม่พบประวัติใบหน้าของคุณในฐานข้อมูล กรุณากรอกแบบฟอร์มเพื่อลงทะเบียนใหม่');
+2118: setRetrievalStatus(data.error || 'สแกนใบหน้าขัดข้อง');
+2122: setRetrievalStatus('เกิดข้อผิดพลาดในการประมวลผลใบหน้า');
+2130: setGateStatusMsg({ type: 'error', text: 'กรุณากรอกรหัสใบผ่าน, ชื่อ-นามสกุล, เลขบัตรประชาชน หรือเลขทะเบียนรถเพื่อค้นหา' });
+2151: if (visitor.status && (visitor.status.startsWith('เช็คอิน') || visitor.status === 'checked-in')) {
+2160: setGateStatusMsg({ type: 'success', text: `พบผู้เข้าติดต่อที่ตรงกับเงื่อนไข ${matches.length} รายการ กรุณาเลือกบุคคลที่ต้องการ` });
+2164: setGateStatusMsg({ type: 'error', text: `ไม่พบข้อมูลผู้ผ่านทางที่ตรงกับ "${query}" ในระบบ` });
+2174: setGateStatusMsg({ type: 'error', text: 'กรุณาระบุรหัสใบผ่านเข้าออก (Pass ID)' });
+2206: text: `ทำรายการ ${gateLogAction === 'check-in' ? 'เช็คอิน (เข้าพื้นที่)' : 'เช็คเอาท์ (ออกพื้นที่)'} สำเร็จ! คุณ ${data.visitorName} (${data.id})`
+2223: setGateStatusMsg({ type: 'error', text: data.error || 'ทำรายการล้มเหลว' });
+2227: setGateStatusMsg({ type: 'error', text: 'เกิดข้อผิดพลาด: ' + err.message });
+2264: text: `ทำรายการ ${action === 'check-in' ? 'เช็คอิน (เข้าพื้นที่)' : 'เช็คเอาท์ (ออกพื้นที่)'} สำเร็จ! ยินดีต้อนรับคุณ ${data.visitorName} (${data.id})`
+2273: setGateStatusMsg({ type: 'error', text: data.error || 'ทำรายการล้มเหลว' });
+2277: setGateStatusMsg({ type: 'error', text: 'เกิดข้อผิดพลาด: ' + err.message });
+2330: const errMsg = data.error || 'ไม่สามารถตรวจพบรหัส QR Code จากในรูปภาพได้ กรุณาจัดตำแหน่งคิวอาร์โค้ดให้อยู่กลางหน้ากล้องและถือค้างไว้ให้นิ่ง';
+2335: setQrScanError('เกิดข้อผิดพลาดในการประมวลผลกล้อง QR: ' + err.message);
+2347: setGateStatusMsg({ type: 'success', text: 'กำลังตรวจวิเคราะห์ใบหน้าในฐานข้อมูลรักษาความปลอดภัย...' });
+2372: text: `ตรวจสอบใบหน้าผ่านร้อยละ 100! พบประวัติของคุณ ${vis.name} (${vis.id}) สิทธิ์การใช้งาน: ${vis.status === 'banned' ? 'ระงับการเข้า' : 'ปกติ'}`
+2376: setGateStatusMsg({ type: 'error', text: 'สแกนล้มเหลว: ใบหน้าไม่ตรงกับประวัติผู้มีใบผ่านในฐานข้อมูล หรือข้อมูลเลขบัตรไม่ถูกต้อง' });
+2380: setGateStatusMsg({ type: 'error', text: 'เกิดความผิดพลาดในการประมวลผลระบบสแกนใบหน้า' });
+2421: <span className="hidden sm:inline">{lang === 'TH' ? 'ติดตั้ง' : 'Install'}</span>
+2433: title={lang === 'TH' ? 'Switch to English' : 'เปลี่ยนเป็นภาษาไทย'}
+2475: <div className="flex items-center gap-1" title={lang === 'TH' ? 'ฐานข้อมูลหลักออนไลน์' : 'Main Database Online'}>
+2492: {lang === 'TH' ? 'ผูก' : 'Link'}
+2499: {lang === 'TH' ? 'ต่อ' : 'Renew'}
+2625: if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการปลดระงับการเข้าพื้นที่ (ปลดแบน) ผู้ใช้นี้?')) return;
+2688: if (!window.confirm('คุณต้องการรัน "วิธีที่ 2: ดำเนินการย้ายประวัติเก่าทั้งหมดเข้าฐานข้อมูลเซิร์ฟเวอร์ และล้างข้อมูลบน Google Sheets เพื่อเพิ่มพื้นที่การทำงาน" ใช่หรือไม่? (ประวัติทั้งหมดจะปลอดภัยในเซิร์ฟเวอร์ และดาวน์โหลดเป็นไฟล์เก็บไว้ได้ตลอดเวลา)')) {
+2770: const confirmSeed = window.confirm('คุณต้องการจำลองข้อมูลลงทะเบียนและประวัติเข้าออก 1,000 รายการจริงหรือไม่?\n(ระบบจะใช้เวลาประมาณ 2-5 วินาทีในการจัดเตรียมข้อมูลทั้งหมด)');
+2815: setReportStatus('กำลังจัดทำสรุปสถิติผู้เข้าติดต่อและส่งผ่านระบบเมลของบริษัท...');
+2830: setReportStatus(`ส่งอีเมลรายงานเข้า-ออกพื้นที่สรุปเสร็จสมบูรณ์ ไปยัง ${recipientEmail} เรียบร้อยแล้ว!`);
+2832: setReportStatus('การส่งล้มเหลว: ' + (data.error || 'ไม่สามารถติดต่อเซิร์ฟเวอร์เมลได้'));
+2836: setReportStatus('เกิดข้อผิดพลาดในการส่งรายงาน: ' + err.message);
+2929: address: 'ที่อยู่ตามระบบ',
+3056: {lang === 'TH' ? 'กำลังเชื่อมต่อฐานข้อมูลระบบนิรภัย...' : 'SYNCHRONIZING SECURITY ASSETS...'}
+3105: <span className="hidden xs:inline">{lang === 'TH' ? 'ติดตั้ง' : 'Install'}</span>
+3174: <div className="flex items-center gap-1" title={lang === 'TH' ? 'ฐานข้อมูลหลักออนไลน์' : 'Main Database Online'}>
+3191: {lang === 'TH' ? 'ผูก' : 'Link'}
+3198: {lang === 'TH' ? 'ต่อ' : 'Renew'}
+3253: <h2 className="text-base font-extrabold text-slate-100">เข้าสู่ระบบรักษาความปลอดภัย (Security Login)</h2>
+3254: <p className="text-xs text-slate-400">กรุณาเข้าสู่ระบบด้วยบัญชีระบบเพื่อเริ่มใช้งาน</p>
+3266: placeholder="ป้อนชื่อผู้ใช้งาน (เช่น Adminmaingate)"
+3278: placeholder="ป้อนรหัสผ่าน"
+3293: <Shield className="w-4 h-4" /> ลงชื่อเข้าใช้งานบัญชีระบบ
+3451: <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wide">เชื่อมต่อคลาวด์แล้ว</span>
+3464: <span>ระยะเวลาสิทธิ์เชื่อมต่อ (Google Token)</span>
+3482: * มาตรฐาน Google กำหนดอายุเซสชัน 1 ชม. เพื่อความปลอดภัย
+3487: <span className="text-[9px] font-medium text-slate-400 truncate block mt-0.5">เมลแอดมิน: {googleUser?.email || 'เชื่อมต่อสำเร็จ'}</span>
+3492: title="ต่ออายุสิทธิ์ใหม่ (รีเฟรช 1 ชม.)"
+3495: ⚡ ต่ออายุสิทธิ์
+3501: ยกเลิกผูกสิทธิ์
+3511: เชื่อมต่อ Google Sheet & Drive
+3560: ระบบทำงานในโหมด "ฐานข้อมูลความเร็วสูง" (Local Server Active)
+3562: <p className="text-[11px] text-slate-400 mt-1">ท่านสามารถลงทะเบียน พิมพ์ใบผ่าน และบันทึกเวลา เข้า-ออก ประมวลผลบนเซิร์ฟเวอร์หลักได้อย่างสมบูรณ์ โดยไม่จำเป็นต้องเชื่อมต่อ Google Sheets ตลอดเวลา</p>
+3587: {lang === 'TH' ? 'ข้อมูลบัตรผ่านทาง' : 'Pass Identity'}
+3616: {scannedOrSearchedVisitor.visitorType || 'ผู้ผ่านทาง'}
+3628: <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">สังกัด / บริษัท</span>
+3632: <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">ทะเบียนรถ</span>
+3636: <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">พื้นที่เข้าติดต่อ</span>
+3640: <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">เบอร์โทรศัพท์</span>
+3644: <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">ออกใบผ่านโดย</span>
+3645: <span className="text-xs text-amber-400 font-black truncate block" title={scannedOrSearchedVisitor.registeredBy}>{scannedOrSearchedVisitor.registeredBy || 'ระบบอัตโนมัติ'}</span>
+3657: <h4 className="font-extrabold text-sm uppercase">พบบุคคลบัญชีดำ (BLACKLISTED)</h4>
+3659: บุคคลนี้ถูกระงับสิทธิ์การเข้าพื้นที่เด็ดขาด! เหตุผล: {scannedOrSearchedVisitor.banReason || 'ผิดกฎระเบียบความปลอดภัย'}
+3663: ) : scannedOrSearchedVisitor.status && (scannedOrSearchedVisitor.status.startsWith('เช็คอิน') || scannedOrSearchedVisitor.status === 'checked-in') ? (
+3667: <h4 className="font-extrabold text-sm uppercase">อยู่ภายในพื้นที่ (INSIDE)</h4>
+3677: <h4 className="font-extrabold text-sm uppercase">อยู่ภายนอกพื้นที่ (OUTSIDE)</h4>
+3679: {scannedOrSearchedVisitor.status || 'ยังไม่ถูกเช็คอิน (พร้อมลงทะเบียนเช็คอินเข้าพื้นที่)'}
+3688: scannedOrSearchedVisitor.status && (scannedOrSearchedVisitor.status === 'checked-out' || scannedOrSearchedVisitor.status.startsWith('เช็คเอาท์')) ? (
+3693: <h4 className="font-extrabold text-sm uppercase">ใบผ่านนี้สิ้นสุดอายุการใช้งาน (PASS EXPIRED)</h4>
+3696: ? 'ใบผ่านนี้ถูกเช็คเอาท์ออกพื้นที่เรียบร้อยแล้ว ไม่สามารถเช็คอินซ้ำได้อีกตามระบบรักษาความปลอดภัยแบบ 1 ใบผ่านต่อ 1 ครั้ง กรุณาออกใบผ่านใหม่'
+3711: {lang === 'TH' ? '➕ ไปลงทะเบียนทำใบผ่านใหม่' : '➕ Register New Pass'}
+3717: <span className="text-[10px] text-slate-400 uppercase tracking-wider font-extrabold">การดำเนินการตามสิทธิ์ (Gate Action)</span>
+3730: เข้า (In)
+3741: ออก (Out)
+3759: {lang === 'TH' ? 'กำลังส่งข้อมูลบันทึกเวลา...' : 'Sending transaction...'}
+3764: ? (lang === 'TH' ? '🟢 บันทึกเวลาเข้าพื้นที่ (CHECK-IN)' : 'Confirm Check-In')
+3765: : (lang === 'TH' ? '🔴 บันทึกเวลาออกพื้นที่ (CHECK-OUT)' : 'Confirm Check-Out')
+3784: {lang === 'TH' ? '← กลับหน้าค้นหา / สแกนคิวอาร์ใหม่' : '← Back to Search / Scan New'}
+3819: ? 'ค้นหาจากระบบ คีย์รหัส หรือสแกนคิวอาร์โค้ดใบผ่าน เพื่อเช็คอิน-เช็คเอาท์เข้าออกพื้นที่อย่างปลอดภัย'
+3831: กล้องสแกน QR Code (AI-Powered)
+3834: ชูใบผ่านที่มี QR Code หน้ากล้องเพื่ออ่านรหัสและเรียกข้อมูลอัตโนมัติ
+3840: buttonText="สแกนใบผ่านด้วยภาพถ่าย (QR Reader)"
+3862: กลับไปหน้าค้นหา
+3876: {lang === 'TH' ? 'ค้นหาหรือป้อนรหัสใบผ่านเข้าออก (Pass ID / ชื่อ / ทะเบียนรถ / เบอร์โทร)' : 'Search or Enter Pass details'}
+3883: placeholder="พิมพ์รหัสใบผ่าน เช่น P123456, ชื่อ, หรือทะเบียนรถ..."
+3890: title="สแกนด้วยกล้อง AI"
+3902: {lang === 'TH' ? '🔍 ตรวจสอบและค้นหาข้อมูล' : '🔍 Search & Verify'}
+3909: title="เปิดกล้องสแกน QR Code"
+3920: 👥 ผลการค้นหาที่ตรวจพบ ({multipleSearchResults.length} รายการ)
+3931: if (v.status && (v.status.startsWith('เช็คอิน') || v.status === 'checked-in')) {
+3946: <div className="text-[10px] text-slate-500 font-mono truncate max-w-[180px]">{v.id} • {v.company || 'ไม่ระบุสังกัด'}</div>
+3950: v.status && v.status.startsWith('เช็คอิน')
+3954: {v.status && v.status.startsWith('เช็คอิน') ? 'อยู่ในพื้นที่' : 'อยู่ภายนอก'}
+4042: กรอกข้อมูลผู้ติดต่อ
+4082: {isRetrievingByPassport ? 'กำลังดึง...' : 'ดึงข้อมูลเก่า'}
+4213: ระบบสืบค้นและจัดพิมพ์ใบผ่าน (Visitor Pass Directory)
+4216: ค้นหา ตรวจสอบข้อมูล และจัดพิมพ์ใบผ่านทางสำหรับบุคคลภายนอกและรถบรรทุกเข้าออกทั้งหมด
+4234: placeholder="พิมพ์ชื่อผู้ติดต่อ, รหัสใบผ่าน, บริษัท, เลขที่บัตร, ทะเบียนรถ เพื่อค้นหา..."
+4251: พบทั้งหมด {
+4263: } รายการ
+4291: ไม่พบข้อมูลใบผ่านประวัติการติดต่อในระบบที่ตรงกับคำค้นหา
+4303: <th className="py-3.5 px-4 font-extrabold">รหัสใบผ่าน (Pass ID)</th>
+4304: <th className="py-3.5 px-4 font-extrabold">รูปถ่าย</th>
+4305: <th className="py-3.5 px-4 font-extrabold">ชื่อผู้เข้าติดต่อ</th>
+4306: <th className="py-3.5 px-4 font-extrabold">บริษัท / สังกัด</th>
+4307: <th className="py-3.5 px-4 font-extrabold">ทะเบียนรถ</th>
+4308: <th className="py-3.5 px-4 font-extrabold">พื้นที่เข้าติดต่อ</th>
+4309: <th className="py-3.5 px-4 font-extrabold">สถานะ</th>
+4310: <th className="py-3.5 px-4 text-right font-extrabold">การจัดการ</th>
+4334: เลขบัตร: {visitor.passportId || 'ไม่ได้ระบุ'}
+4337: ออกใบผ่านโดย: {visitor.registeredBy || 'ระบบอัตโนมัติ'}
+4344: {visitor.vehiclePlate || <span className="text-slate-600 font-normal">เดินเท้า</span>}
+4348: {visitor.contactArea || 'ไม่ได้ระบุ'}
+4354: ภายในพื้นที่
+4358: แบน/ห้ามเข้า
+4362: ออกไปแล้ว
+4372: <Search className="w-3.5 h-3.5" /> ตรวจสอบและพิมพ์
+4400: <p className="text-[9px] text-amber-400/90 font-mono">ออกโดย: {visitor.registeredBy || 'ระบบอัตโนมัติ'}</p>
+4409: <span className="text-slate-500 block text-[8px] uppercase font-bold">ทะเบียนรถ</span>
+4410: <span className="text-slate-300 font-extrabold">{visitor.vehiclePlate || 'เดินเท้า'}</span>
+4413: <span className="text-slate-500 block text-[8px] uppercase font-bold">พื้นที่ติดต่อ</span>
+4414: <span className="text-blue-400 font-extrabold">{visitor.contactArea || 'ไม่ได้ระบุ'}</span>
+4418: <span className="text-[9px] text-slate-500">สังกัด: {visitor.company || '-'}</span>
+4424: <Search className="w-3.5 h-3.5" /> ตรวจสอบ
+4439: ก่อนหน้า (Prev)
+4442: หน้า {currentPassPage} / {totalPassPages}
+4449: ถัดไป (Next)
+4479: จำกัดสิทธิ์การเข้าถึงข้อมูลระบบ
+4482: บทบาทปัจจุบัน: {loggedInSystemUser.role}
+4485: บัญชีของท่านได้รับการจำกัดสิทธิ์การเข้าใช้เมนูผู้ดูแลระบบ ตามที่กำหนดไว้โดยแอดมินสูงสุดในหน้าระบบควบคุมสิทธิ์ตามบทบาท (Role Permissions Customization)
+4488: หากต้องการเข้าดูหรือใช้เครื่องมือต่างๆ ในส่วนสำหรับ ADMIN นี้ กรุณาติดต่อผู้ดูแลระบบเพื่อเปิดใช้สิทธิ์ หรือสลับเข้าใช้ด้วยบัญชีที่มีสิทธิ์ระดับสูงกว่า
+4499: <div className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider">บัญชีรักษาความปลอดภัย:</div>
+4500: <div className="text-xs font-bold text-slate-300">ชื่อ: {loggedInSystemUser.name}</div>
+4506: <Settings className="w-3.5 h-3.5" /> แก้ไขโปรไฟล์ & อัปโหลดรูปภาพ
+4517: ลงชื่อออกเพื่อสลับบัญชี (Switch Account)
+4537: ตัวกรองสถิติและประวัติการเข้าออกแบบละเอียด (Dashboard Filters)
+4540: ค้นหาผู้เข้าติดต่อ กำหนดช่วงเวลากรองข้อมูล ย้อนหลัง หรือกรองตามจุดตรวจและประเภทบุคคลเพื่อวิเคราะห์ความปลอดภัย
+4557: {preset === 'today' ? 'วันนี้' :
+4558: preset === 'yesterday' ? 'เมื่อวาน' :
+4559: preset === '7days' ? '7 วันที่ผ่านมา' :
+4560: preset === '30days' ? '30 วันที่ผ่านมา' :
+4561: preset === 'all' ? 'ประวัติทั้งหมด' : 'เลือกวันเอง (Custom)'}
+4571: <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">วันเริ่มต้น (Start Date)</label>
+4585: <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">วันสิ้นสุด (End Date)</label>
+4600: <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ประเภทผู้ติดต่อ (Visitor Type)</label>
+4606: <option value="">ทั้งหมด (All Types)</option>
+4615: <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">พื้นที่/หน่วยงานปลายทาง (Area)</label>
+4621: <option value="">ทั้งหมด (All Areas)</option>
+4632: <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">การดำเนินการ (Action)</label>
+4638: <option value="">ทั้งหมด (In & Out)</option>
+4639: <option value="check-in">เช็คอิน (เข้าพื้นที่ เท่านั้น)</option>
+4640: <option value="check-out">เช็คเอาท์ (ออกพื้นที่ เท่านั้น)</option>
+4646: <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">คำค้นหาพิเศษ (Search Keyword)</label>
+4651: placeholder="พิมพ์ชื่อ, รหัส, บริษัท, ทะเบียนรถ..."
+4664: อัปเดตการกรองข้อมูล
+4687: title="ล้างค่าตัวกรองทั้งหมดเป็นค่าเริ่มต้น"
+4689: ล้างค่ากรอง
+4701: {filterPreset === 'today' ? 'สถิติเข้าพื้นที่วันนี้' :
+4702: filterPreset === 'yesterday' ? 'สถิติเข้าพื้นที่เมื่อวาน' :
+4703: filterPreset === 'all' ? 'สถิติเข้าพื้นที่ทั้งหมด' :
+4704: `สถิติเข้าพื้นที่ย้อนหลัง`}
+4707: {loadingDashboard ? '...' : dashboardStats.totalVisitsToday} ครั้ง
+4717: <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">ผู้อยู่ในพื้นที่ขณะนี้</span>
+4719: {loadingDashboard ? '...' : dashboardStats.currentlyInside} คน
+4729: <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">ผู้ลงทะเบียน ยังไม่เช็คอิน</span>
+4731: {loadingDashboard ? '...' : (dashboardStats.registeredNotCheckedIn ?? 0)} คน
+4741: <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">ผู้ใช้ที่โดนระงับ (Banned)</span>
+4743: {loadingDashboard ? '...' : dashboardStats.totalBanned} คน
+4756: กำลังโหลดชาร์ตวิเคราะห์สถิติเรียลไทม์...
+4764: <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">บันทึกกิจกรรมล่าสุด (Activity Logs)</h3>
+4771: <th className="pb-3 pr-3">เวลาบันทึก</th>
+4772: <th className="pb-3 px-3">ผู้ติดต่อ (รหัส)</th>
+4773: <th className="pb-3 px-3">ประเภท</th>
+4774: <th className="pb-3 px-3">พื้นที่ติดต่อ</th>
+4775: <th className="pb-3 px-3">การดำเนินการ</th>
+4781: <td colSpan={5} className="py-4 text-center text-slate-500">ไม่มีกิจกรรมการเข้าออกที่ถูกบันทึกในวันนี้</td>
+4787: {new Date(log.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} น.
+4796: {log.action === 'check-in' ? 'เข้า (CHECK-IN)' : 'ออก (CHECK-OUT)'}
+4809: <div className="py-8 text-center text-slate-500 text-xs">ไม่มีกิจกรรมการเข้าออกที่ถูกบันทึกในวันนี้</div>
+4815: {new Date(log.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
+4820: {log.action === 'check-in' ? 'เข้า (IN)' : 'ออก (OUT)'}
+4825: <p className="font-mono text-[9px] text-slate-500 mt-0.5">รหัสผู้ติดต่อ: {log.visitorId}</p>
+4829: <span className="block text-[8px] uppercase font-bold text-slate-600">ประเภท</span>
+4833: <span className="block text-[8px] uppercase font-bold text-slate-600">พื้นที่ติดต่อ</span>
+4846: แสดง <span className="text-slate-200 font-bold">{dashboardStats.recentLogs.length > 0 ? (logsCurrentPage - 1) * logsPageSize + 1 : 0}</span> ถึง{" "}
+4847: <span className="text-slate-200 font-bold">{Math.min(((logsCurrentPage - 1) * logsPageSize) + logsPageSize, dashboardStats.recentLogs.length)}</span> จาก{" "}
+4848: <span className="text-slate-200 font-bold">{dashboardStats.recentLogs.length}</span> รายการ
+4860: หน้า {logsCurrentPage} / {Math.ceil(dashboardStats.recentLogs.length / logsPageSize)}
+4882: <h3 className="text-base font-extrabold text-slate-100">รายชื่อผู้ถือใบผ่านเข้าพื้นที่ล่าสุด</h3>
+4883: <p className="text-xs text-slate-400">ระงับสิทธิ์ (แบน) หรืออนุมัติการตรวจสอบประวัติของบุคคลภายนอก</p>
+4890: placeholder="ค้นหาชื่อ, รหัส, บริษัท..."
+4899: <Ban className="w-4 h-4" /> ระบบบันทึกพฤติกรรมความเสี่ยง (แบนผู้ใช้)
+4907: placeholder="ระบุสาเหตุการแบน เช่น ขับรถเร็วเกินกำหนด, ไม่สวมหมวกนิรภัย"
+4915: ยืนยันแบน
+4922: ยกเลิก
+4933: <th className="pb-3 pr-3">รูปภาพ</th>
+4934: <th className="pb-3 px-3">ผู้ถือใบผ่าน (รหัส)</th>
+4935: <th className="pb-3 px-3">บริษัท / ประเภท</th>
+4936: <th className="pb-3 px-3">สถานะพื้นที่</th>
+4937: <th className="pb-3 pl-3 text-right">สิทธิ์ / การดำเนินการ</th>
+4943: <td colSpan={5} className="py-8 text-center text-slate-500 font-mono">ไม่มีข้อมูลผู้ใช้สอดคล้องตามเกณฑ์ค้นหา</td>
+4984: title="ดูใบผ่านและพิมพ์ใบผ่าน"
+4986: <Printer className="w-3.5 h-3.5" /> พิมพ์ใบผ่าน
+4998: {visitor.status && visitor.status.startsWith('เช็คเอาท์โดย') ? (
+5000: 🔒 เช็คเอาท์แล้ว (ต้องลงทะเบียนใหม่)
+5002: ) : visitor.status && visitor.status.startsWith('เช็คอินโดย') ? (
+5038: <div className="py-8 text-center text-slate-500 text-xs font-mono">ไม่มีข้อมูลผู้ใช้สอดคล้องตามเกณฑ์ค้นหา</div>
+5061: <span className="text-[8px] uppercase tracking-wider text-slate-500 font-bold">พื้นที่ติดต่อ</span>
+5062: <span className="font-medium text-slate-300 font-mono text-[10px]">{visitor.contactArea || 'ยังไม่กำหนด'}</span>
+5086: {visitor.status && visitor.status.startsWith('เช็คเอาท์โดย') ? (
+5088: 🔒 เช็คเอาท์แล้ว (ต้องลงทะเบียนใหม่)
+5092: {visitor.status && visitor.status.startsWith('เช็คอินโดย') ? (
+5126: <Printer className="w-3.5 h-3.5" /> ดูและพิมพ์ใบผ่านเก่า
+5137: แสดง <span className="text-slate-200 font-bold">{filteredVisitors.length > 0 ? (visitorsCurrentPage - 1) * visitorsPageSize + 1 : 0}</span> ถึง{" "}
+5138: <span className="text-slate-200 font-bold">{Math.min(((visitorsCurrentPage - 1) * visitorsPageSize) + visitorsPageSize, filteredVisitors.length)}</span> จาก{" "}
+5139: <span className="text-slate-200 font-bold">{filteredVisitors.length}</span> รายการ
+5151: หน้า {visitorsCurrentPage} / {Math.ceil(filteredVisitors.length / visitorsPageSize)}
+5171: <h4 className="text-sm font-extrabold text-slate-100">บัญชีเจ้าหน้าที่ผู้ใช้งานระบบ ({filteredStaff.length})</h4>
+5172: <p className="text-[11px] text-slate-400">รายชื่อเจ้าหน้าที่รักษาความปลอดภัยและแอดมินที่มีสิทธิเข้าใช้งานแผงควบคุม</p>
+5184: <UserPlus className="w-3.5 h-3.5" /> เพิ่มบัญชีผู้ใช้งานใหม่
+5196: placeholder="ค้นหาชื่อเจ้าหน้าที่..."
+5208: <th className="pb-2 pr-3">ชื่อ-นามสกุล</th>
+5210: <th className="pb-2 px-3">บทบาท / ตำแหน่ง</th>
+5212: <th className="pb-2 px-3 text-center">การจัดการ</th>
+5214: <th className="pb-2 pl-3 text-right">วันที่ลงทะเบียน</th>
+5220: <td colSpan={5} className="py-6 text-center text-slate-500 font-mono text-xs">ไม่พบรายชื่อเจ้าหน้าที่ที่ตรงกับเงื่อนไขค้นหา</td>
+5257: <Edit3 className="w-3 h-3" /> แก้ไขข้อมูล
+5262: {user.createdAt ? new Date(user.createdAt).toLocaleDateString('th-TH', { dateStyle: 'short' }) : 'ระบบตั้งต้น'}
+5274: <div className="py-6 text-center text-slate-500 font-mono text-xs">ไม่พบรายชื่อเจ้าหน้าที่ที่ตรงกับเงื่อนไขค้นหา</div>
+5307: <span className="text-slate-500 block text-[8px] uppercase font-bold">วันที่ลงทะเบียน</span>
+5309: {user.createdAt ? new Date(user.createdAt).toLocaleDateString('th-TH', { dateStyle: 'short' }) : 'ระบบตั้งต้น'}
+5319: <Edit3 className="w-3 h-3" /> แก้ไขข้อมูล & สิทธิ์
+5332: แสดง <span className="text-slate-200 font-bold">{filteredStaff.length > 0 ? (staffCurrentPage - 1) * staffPageSize + 1 : 0}</span> ถึง{" "}
+5333: <span className="text-slate-200 font-bold">{Math.min(((staffCurrentPage - 1) * staffPageSize) + staffPageSize, filteredStaff.length)}</span> จาก{" "}
+5334: <span className="text-slate-200 font-bold">{filteredStaff.length}</span> คน
+5346: หน้า {staffCurrentPage} / {Math.ceil(filteredStaff.length / staffPageSize)}
+5370: <FileText className="w-5 h-5 text-blue-500" /> ระบบจัดทำและส่งออกรายงานประวัติ PDF
+5373: เลือกกรองช่วงเวลา ออกแบบดีไซน์เทมเพลต และสั่งส่งออกรายงานเอกสารความปลอดภัยเป็นไฟล์ PDF คุณภาพสูง พร้อมกราฟสรุปสถิติที่สวยงาม
+5387: <Sliders className="w-4 h-4 text-blue-400" /> ตั้งค่าโครงสร้างรายงาน
+5393: <Calendar className="w-3.5 h-3.5 text-slate-500" /> เลือกช่วงเวลาของรายงาน
+5405: <option value="today">ประวัติการเข้าออกพื้นที่ วันนี้</option>
+5406: <option value="yesterday">ประวัติการเข้าออกพื้นที่ เมื่อวานนี้</option>
+5407: <option value="7days">ประวัติความปลอดภัยย้อนหลัง 7 วันล่าสุด</option>
+5408: <option value="30days">รายงานความเสี่ยงรายเดือน 30 วันล่าสุด</option>
+5409: <option value="all">ข้อมูลประวัติความปลอดภัยทั้งหมดในระบบ</option>
+5416: <Users className="w-3.5 h-3.5 text-slate-500" /> กรองเฉพาะประเภทผู้เข้าติดต่อ
+5428: <option value="all">แสดงผู้เข้าติดต่อทุกประเภท (All Visitors)</option>
+5429: <option value="ผู้ติดต่อทั่วไป">ผู้ติดต่อทั่วไป (General)</option>
+5430: <option value="ผู้รับเหมา (Contractor)">ผู้รับเหมา (Contractor)</option>
+5431: <option value="VIP / บุคคลสำคัญ">VIP / บุคคลสำคัญ (VIP)</option>
+5432: <option value="พนักงานส่งของ (Delivery)">พนักงานส่งของ / พัสดุ (Delivery)</option>
+5450: กำลังแปลงพิกเซลเป็น PDF...
+5455: สร้างและบันทึกไฟล์ PDF ทันที
+5464: <Shield className="w-3.5 h-3.5" /> คำแนะนำความเที่ยงตรงการรายงาน
+5466: <p>รายงาน PDF นี้รองรับระบบ Multi-Page Rendering อัตโนมัติ โดยระบบจัดรูปแบบ CSS Page-breaks และแผนภูมิกราฟิกแบบเวกเตอร์ คมชัด 100% เหมาะสำหรับนำเสนอในการประชุมผู้บริหาร ฝ่ายบริหารความเสี่ยง หรือยื่นตรวจสอบประวัติความปลอดภัย</p>
+5473: <Eye className="w-4 h-4 text-slate-500" /> ตัวอย่างหน้าเอกสารจริงที่ระบบจะสร้างออก (A4 Ratio Live Preview)
+5492: <span className="text-xs font-bold text-slate-400 font-mono">กำลังประมวลผลข้อมูลกราฟและสถิติย้อนหลัง...</span>
+5529: { name: 'ผู้รับเหมา (Contractor)', value: 45 },
+5530: { name: 'ผู้ติดต่อทั่วไป', value: 25 },
+5531: { name: 'VIP / บุคคลสำคัญ', value: 15 },
+5532: { name: 'พนักงานส่งของ', value: 15 }
+5582: <span>วันที่ออกเอกสาร: {new Date().toLocaleDateString('th-TH')} {new Date().toLocaleTimeString('th-TH')}</span>
+5592: ช่วงเวลา: <strong className={pdfReportTheme === 'light' ? 'text-blue-600' : 'text-blue-400'}>
+5593: {pdfReportPreset === 'today' ? 'วันนี้' :
+5594: pdfReportPreset === 'yesterday' ? 'เมื่อวานนี้' :
+5595: pdfReportPreset === '7days' ? 'ย้อนหลัง 7 วัน' :
+5596: pdfReportPreset === '30days' ? 'ย้อนหลัง 30 วัน' : 'ประวัติทั้งหมด'}
+5601: การกรอง: <strong className={pdfReportTheme === 'light' ? 'text-emerald-600' : 'text-emerald-400'}>
+5602: {pdfVisitorType === 'all' ? 'แสดงผู้ติดต่อทุกประเภท' : pdfVisitorType}
+5614: <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">ผู้ติดต่อเข้าพื้นที่สะสม</span>
+5616: <span className="text-[8px] text-slate-500 font-medium">รายการเข้าพื้นที่</span>
+5622: <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">กำลังอยู่ในพื้นที่ (Inside)</span>
+5624: <span className="text-[8px] text-slate-500 font-medium">บุคคลยังไม่สแกนออก</span>
+5630: <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">การบล็อกความเสี่ยง (Blocked)</span>
+5632: <span className="text-[8px] text-slate-500 font-medium">บุคคลติด Blacklist/ระงับ</span>
+5638: <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">ด่านตรวจที่ใช้งาน (Duty)</span>
+5640: <span className="text-[8px] text-slate-500 font-medium">จุดตรวจคัดกรองหลัก</span>
+5647: <Activity className="w-3.5 h-3.5 text-blue-500" /> แผนภูมิแสดงช่วงเวลาความหนาแน่นของผู้เข้าติดต่อสะสม (Hourly Volume Distribution)
+5710: <Users className="w-3.5 h-3.5 text-emerald-500" /> แผนภูมิสัดส่วนจัดประเภทผู้เข้าติดต่อสูงสุด (Visitor Intent Proportion)
+5740: {entry.value} ครั้ง ({pct}%)
+5752: <FileSpreadsheet className="w-3.5 h-3.5 text-blue-500" /> ตารางแสดงประวัติผู้เข้าพื้นที่ล่าสุดตามผลการกรอง
+5758: <th className="py-2 px-3 font-bold">ชื่อ-นามสกุล</th>
+5759: <th className="py-2 px-3 font-bold">ประเภท</th>
+5760: <th className="py-2 px-3 font-bold">จุดเข้าติดต่อ</th>
+5761: <th className="py-2 px-3 font-bold">เวลาสแกนเข้า</th>
+5762: <th className="py-2 px-3 font-bold text-center">สถานะ</th>
+5771: <td className="py-2 px-3 text-slate-500 font-medium">{log.entryArea || 'ฝ่ายผลิต'}</td>
+5773: {log.timestamp ? new Date(log.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '14:28'} น.
+5777: log.status === 'inside' || log.status === 'เช็คอินแล้ว'
+5781: {log.status === 'inside' || log.status === 'เช็คอินแล้ว' ? 'Inside' : 'Out'}
+5789: ไม่มีประวัติข้อมูลการสแกนในกลุ่มผู้ติดต่อนี้
+5806: <span>ระบบรายงานความปลอดภัยและข้อมูลดิจิทัลอัตโนมัติ</span>
+5835: <MapPin className="w-5 h-5 text-blue-500 animate-bounce" /> มอบหมายจุดปฏิบัติงานเจ้าหน้าที่ รปภ. ประจำวัน
+5838: เนื่องจาก รปภ. มีการหมุนเวียนสลับเปลี่ยนจุดปฏิบัติงานทุกวัน ท่านสามารถระบุจุดประจำตรวจ และพื้นที่ติดต่อที่อนุญาตให้สแกนเข้าออกได้ที่นี่
+5846: <Shield className="w-4 h-4" /> กฎการควบคุมสิทธิ์ตามจุดตรวจประจำวัน
+5849: <li>เมื่อ รปภ. ประจำจุดใดๆ สแกนเช็คอิน/เช็คเอาท์ หรือออกใบผ่านใหม่ ระบบจะตรวจสอบว่าพื้นที่เข้าติดต่อของแขกตรงกับขอบเขตที่ รปภ. ได้รับสิทธิ์ดูแลในวันนั้นหรือไม่</li>
+5850: <li>หากไม่ตรง ระบบความปลอดภัยจะจำกัดสิทธิ์ (Block) และแสดงคำเตือน เพื่อป้องกันการเช็คอินข้ามจุดตรวจที่ไม่มีหน้าที่รับผิดชอบ</li>
+5851: <li>บัญชีระดับ <strong className="text-slate-100">Supervisor</strong> และ <strong className="text-slate-100">Administrator</strong> ได้รับสิทธิ์เข้าถึงแดชบอร์ดสรุปและระบบรายงานทั้งหมด</li>
+5866: placeholder="ค้นหาชื่อเจ้าหน้าที่ / รหัสผู้ใช้ / บทบาท..."
+5872: พบ {filteredGuards.length} รายการ
+5881: <span className="font-bold">ไม่พบบัญชีเจ้าหน้าที่รักษาความปลอดภัย</span>
+5882: <span className="text-slate-500 text-[10px]">กรุณาลองป้อนชื่อตัวสะกด หรือคำค้นหาอื่น</span>
+5888: <th className="py-4 px-5 font-black text-slate-400">เจ้าหน้าที่ (Guard)</th>
+5889: <th className="py-4 px-4 font-black text-slate-400">บทบาท (Role)</th>
+5890: <th className="py-4 px-4 font-black text-slate-400">จุดปฏิบัติงานประจำวัน (Duty Checkpoint)</th>
+5891: <th className="py-4 px-4 font-black text-slate-400">ขอบเขตพื้นที่อนุญาตสแกน (Allowed Areas)</th>
+5892: <th className="py-4 px-4 font-black text-slate-400">ผู้มอบหมาย / เวลาล่าสุด (Assigned By)</th>
+5893: <th className="py-4 px-5 text-right font-black text-slate-400">การจัดการ (Action)</th>
+5932: <Check className="w-3 h-3 text-emerald-600" /> ทุกพื้นที่ (Full Access)
+5936: <Lock className="w-3 h-3 text-amber-500" /> เฉพาะจุดตรวจนี้ (Strict)
+5941: {assignment.allowedAreas.length} พื้นที่ (Custom)
+5951: โดย: <span className="text-slate-300 font-bold">{assignment.assignedBy}</span>
+5955: {new Date(assignment.updatedAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.
+5964: <Sliders className="w-3.5 h-3.5" /> มอบหมายสิทธิ์
+5979: แสดง <span className="text-slate-200 font-bold">{filteredGuards.length > 0 ? (checkpointsCurrentPage - 1) * checkpointsPageSize + 1 : 0}</span> ถึง{" "}
+5980: <span className="text-slate-200 font-bold">{Math.min(((checkpointsCurrentPage - 1) * checkpointsPageSize) + checkpointsPageSize, filteredGuards.length)}</span> จาก{" "}
+5981: <span className="text-slate-200 font-bold">{filteredGuards.length}</span> คน
+5993: หน้า {checkpointsCurrentPage} / {Math.ceil(filteredGuards.length / checkpointsPageSize)}
+6014: <h3 className="text-base font-extrabold text-slate-100">ปรับแต่งใบผ่านและตั้งค่าระบบ (Branding & System Configuration)</h3>
+6015: <p className="text-xs text-slate-400 mt-1">สลับเมนูย่อยเพื่อปรับเปลี่ยนอัตลักษณ์องค์กร ฟิลด์ข้อมูลดีไซน์บัตร และเชื่อมโยง Google Sheets & อีเมล</p>
+6030: <span>🎨 อัตลักษณ์ & โลโก้</span>
+6041: <span>📋 ฟิลด์แบบฟอร์ม</span>
+6052: <span>🎫 ดีไซน์บัตรผ่าน</span>
+6063: <span>🌐 Google Sheets & อีเมล</span>
+6074: <span>💾 ความจุ & ข้อมูลทดสอบ</span>
+6081: {configSubTab === 'branding' && '🎨 ตั้งค่ารูปแบบแบรนด์ขององค์กร'}
+6082: {configSubTab === 'fields' && '📋 ตั้งค่าฟิลด์ความต้องการในแบบฟอร์มลงทะเบียน'}
+6083: {configSubTab === 'designer' && '🎫 ดีไซน์บัตรผ่านประตูและสลิปความปลอดภัย'}
+6084: {configSubTab === 'integration' && '🌐 ตั้งค่าระบบเชื่อมต่อ Google Sheets & ส่งอีเมล'}
+6085: {configSubTab === 'storage' && '💾 การจัดการข้อมูลทดสอบ & พื้นที่จัดเก็บประวัติ'}
+6088: {configSubTab === 'branding' && 'ปรับแต่งชื่อองค์กรหลัก, กำหนดสีธีมระบบ (สีประจำองค์กร/สีไฮไลท์), และอัปโหลดไฟล์ภาพโลโก้แบรนด์ของคุณ'}
+6089: {configSubTab === 'fields' && 'กำหนดว่าในการลงทะเบียนเข้าติดต่อ จะต้องบังคับกรอกข้อมูลใดบ้าง เช่น ชื่อ-นามสกุล, ทะเบียนรถ, ชื่อบริษัท หรือประเภทผู้ติดต่อ'}
+6090: {configSubTab === 'designer' && 'ตกแต่งบัตรผ่านความปลอดภัย แบบ Real-time เช่น รูปแบบโครงสร้างสลิม ความกว้าง ชุดฟอนต์ ขนาดอักษร ความโค้งมน สี และเลือกเปิด/ปิดการแสดงคิวอาร์โค้ด'}
+6091: {configSubTab === 'integration' && 'เลือกระหว่างเชื่อมต่อผ่าน Google Web App หรือ Service Account และกำหนดค่า SMTP/Gmail สำหรับส่งอีเมลรายงานเข้าออก'}
+6092: {configSubTab === 'storage' && 'จำลองข้อมูลทดสอบ 1,000 รายการสำหรับสถิติแดชบอร์ด ตรวจสอบความจุแถวบนแผ่นงานชีต และจัดเก็บประวัติสำรองเพื่อความรวดเร็ว'}
+6154: ระบบกำหนดสิทธิ์การใช้งานตามบทบาท (Role Permission Customization)
+6157: ปรับแต่งและล็อกหน้าต่างการใช้งาน เมนู และข้อมูลรายงานต่างๆ ของแต่ละตำแหน่งได้แบบเรียลไทม์
+6161: <Check className="w-4 h-4 stroke-[3]" /> ระบบบันทึกอัตโนมัติเรียลไทม์ (Auto-Saved)
+6170: <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-500 px-1 mb-1">เลือกตำแหน่ง / บทบาท</span>
+6202: <span className="text-[10px] uppercase font-bold text-slate-500 block">การตั้งค่าสิทธิ์เข้าถึงของตำแหน่ง</span>
+6212: 'ผู้ดูแลระบบระดับสูง (Administrator)': {
+6216: 'ผู้จัดการ (Manager)': {
+6220: 'หัวหน้าฝ่ายความปลอดภัย (Supervisor)': {
+6224: 'เจ้าหน้าที่ความปลอดภัย (Staff)': {
+6228: 'เจ้าหน้าที่รักษาความปลอดภัย (Guard)': {
+6240: รีเซ็ตค่าเริ่มต้นสิทธิ์ของตำแหน่งนี้
+6247: <QrCode className="w-3.5 h-3.5" /> 1. สิทธิ์การเข้าถึงเมนูหลัก (Main Tabs Access)
+6252: { key: 'gate', label: 'เช็คอิน เข้า-ออก (Gate)', icon: QrCode },
+6253: { key: 'register', label: 'ลงทะเบียนใบผ่าน (Register)', icon: UserPlus },
+6254: { key: 'pass', label: 'พิมพ์ใบผ่าน (Pass)', icon: FileText },
+6255: { key: 'admin', label: 'ระบบจัดการหลังบ้าน (Admin)', icon: Shield, warning: selectedRoleToConfig.includes('Guard') || selectedRoleToConfig.includes('Staff') },
+6297: * แนะนำให้ปิดส่วน Admin สำหรับตำแหน่งพนักงานปฏิบัติการจริง
+6310: <Sliders className="w-3.5 h-3.5" /> 2. สิทธิ์ฟังก์ชันแผงควบคุมแอดมิน (Admin Subtab Controls)
+6315: { key: 'admin_dashboard', label: 'แดชบอร์ดสรุปสถิติ (Dashboard)', icon: Activity },
+6316: { key: 'admin_visitors', label: 'จัดการผู้ใช้/พนักงาน & แบน (Users & Ban)', icon: Users },
+6317: { key: 'admin_checkpoints', label: 'จัดการด่านจุดตรวจ รปภ. (Duty Station)', icon: MapPin },
+6318: { key: 'admin_reports', label: 'ส่งออกเมลรายงาน (Email Reports)', icon: Mail },
+6319: { key: 'admin_config', label: 'ตั้งค่าองค์กรและโลโก้ (Branding Config)', icon: Sliders },
+6320: { key: 'admin_permissions', label: 'จัดการและแก้ไขสิทธิ์ใช้งาน (Role Permissions)', icon: Key, danger: true },
+6363: (ต้องเปิดใช้ระบบจัดการหลังบ้านก่อน)
+6368: ⚠️ มีสิทธิ์แก้ไขความปลอดภัยระบบหลัก
+6382: ? 'ได้รับอนุญาตให้เป็นผู้บริหารระบบความปลอดภัยระดับสูงและมีสิทธิ์เข้าถึงรายงานและฟังก์ชันของเจ้าหน้าที่ส่วนหน้าได้ทั้งหมด'
+6383: : 'ได้รับอนุญาตให้ดำเนินงานเฉพาะหน้าด่านเข้า-ออกและจัดทำทะเบียนใหม่เท่านั้น ป้องกันปัญหาข้อมูลรั่วไหลสู่บุคคลภายนอก'
+6422: <h3 className="text-xl font-black text-slate-100">ลงทะเบียนสำเร็จ!</h3>
+6423: <p className="text-xs text-slate-400">ระบบคลาวด์ได้ออกใบผ่านเข้า-ออกพื้นที่อิเล็กทรอนิกส์เรียบร้อยแล้ว</p>
+6443: <span className="text-slate-500 font-bold">ชื่อผู้ติดต่อ:</span>
+6447: <span className="text-slate-500 font-bold">บริษัท:</span>
+6448: <span className="text-slate-200 font-bold">{newPass.company || 'ไม่ระบุ'}</span>
+6451: <span className="text-slate-500 font-bold">ประเภท:</span>
+6455: <span className="text-slate-500 font-bold">พื้นที่ติดต่อ:</span>
+6459: <span className="text-slate-500 font-bold">ออกใบผ่านโดย:</span>
+6460: <span className="text-amber-400 font-extrabold">{newPass.registeredBy || 'ระบบอัตโนมัติ'}</span>
+6478: <Check className="w-4 h-4" /> ตกลง / ลงทะเบียนคนต่อไป (OK & Register Next)
+6487: <Printer className="w-4 h-4" /> ดูและพิมพ์ใบผ่านทางนี้ (View & Print)
+6495: ปิดหน้าต่างนี้ (Close)
+6520: ข้อจำกัดของระบบบราวเซอร์ (Iframe Sandbox)
+6523: เนื่องจากระบบความปลอดภัยของเว็บบราวเซอร์ บล็อกการทำรายการล็อกอินด้วย Google Account (Sign-In Popup) เมื่อเปิดแอปพลิเคชันอยู่ภายในกรอบจำลองพรีวิว (iframe) ของ AI Studio
+6528: <h4 className="text-xs font-bold text-slate-300">💡 วิธีแก้ไขปัญหาอย่างง่าย:</h4>
+6530: <li>คลิกที่ปุ่ม <strong className="text-blue-400">"เปิดแอปในแท็บใหม่"</strong> ด้านล่าง</li>
+6531: <li>บราวเซอร์จะเปิดตัวระบบของจริงขึ้นมาแยกอีกหน้าต่าง</li>
+6532: <li>จากนั้นคลิก <strong className="text-blue-400">"เชื่อมต่อคลาวด์"</strong> ในแท็บใหม่ จะสามารถเข้าสู่ระบบและเชื่อมโยง Google Sheets & Drive ได้ทันที!</li>
+6544: เปิดแอปพลิเคชันในแท็บใหม่
+6574: พยายามเชื่อมต่อต่อในหน้านี้ (Try anyway)
+6603: แก้ไขข้อมูลโปรไฟล์เจ้าหน้าที่ & ตรวจสอบสิทธิ์การใช้งาน
+6605: <p className="text-xs text-slate-400">อัปเดตชื่อ อีเมล รูปถ่ายประจำตัว และเปลี่ยนรหัสผ่านเพื่อความปลอดภัย</p>
+6627: <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-3">รูปถ่ายประจำตัวผู้ใช้งาน (Profile Photo)</label>
+6641: buttonText="ถ่ายภาพใบหน้า"
+6650: ยกเลิกกล้องถ่ายรูป
+6667: ลบรูปถ่าย
+6675: <Upload className="w-3.5 h-3.5" /> อัปโหลดรูปภาพ
+6703: <Camera className="w-3.5 h-3.5" /> ถ่ายภาพด้วยกล้องเว็บแคม
+6706: <p className="text-[10px] text-slate-500">รองรับไฟล์รูปภาพ JPG, PNG (สัดส่วนภาพแบบจัตุรัสจะแสดงผลดีที่สุด)</p>
+6715: <span className="text-[10px] uppercase font-extrabold text-slate-400 tracking-wider">ตรวจสอบสิทธิ์การใช้งานของกลุ่ม</span>
+6725: { desc: 'สแกนเช็คอิน เข้า-ออก (Gate)', allowed: !!perms.gate },
+6726: { desc: 'ลงทะเบียนใบผ่านใหม่ (Register)', allowed: !!perms.register },
+6727: { desc: 'ดูและพิมพ์บัตรผ่านทาง (Pass)', allowed: !!perms.pass },
+6728: { desc: 'สิทธิ์ระบบจัดการหลังบ้าน (Admin)', allowed: !!perms.admin },
+6729: { desc: 'สิทธิ์เข้าถึงรายงานสถิติวิเคราะห์', allowed: !!perms.admin_dashboard },
+6730: { desc: 'สิทธิ์จัดการบัญชีแบน / ข้อมูลพนักงาน', allowed: !!perms.admin_visitors },
+6731: { desc: 'สิทธิ์กำหนดจุดตั้งสถานีตรวจของ รปภ.', allowed: !!perms.admin_checkpoints },
+6732: { desc: 'สิทธิ์ส่งเมลไฟล์รายงานอัตโนมัติ', allowed: !!perms.admin_reports },
+6733: { desc: 'สิทธิ์เข้าถึงหน้าต่างตั้งค่าแบรนด์องค์กร', allowed: !!perms.admin_config },
+6734: { desc: 'สิทธิ์ปรับแต่งสิทธิ์ใช้งานตามตำแหน่ง', allowed: !!perms.admin_permissions }
+6756: บทบาทปัจจุบันของคุณคือ <strong className="text-blue-400 font-black">{loggedInSystemUser.role}</strong> ซึ่งได้รับการตั้งค่าและอนุญาตสิทธิ์ตามกลุ่มนโยบายความมั่นคงปลอดภัย
+6767: <span className="text-[9px] uppercase font-bold text-slate-500 block">ชื่อผู้ใช้งาน (Username)</span>
+6773: <span className="text-[9px] uppercase font-bold text-slate-500 block">ตำแหน่งระบบ (System Role)</span>
+6782: <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">ชื่อ-นามสกุลเจ้าหน้าที่ <span className="text-rose-500">*</span></label>
+6788: placeholder="กรอกชื่อและนามสกุลจริง"
+6795: <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">ที่อยู่อีเมลติดต่อ (Email)</label>
+6809: <span className="text-[10px] uppercase font-extrabold text-slate-400 tracking-wider">เปลี่ยนรหัสผ่านส่วนตัว (เว้นว่างไว้เพื่อรักษารหัสผ่านเดิม)</span>
+6815: <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">รหัสผ่านใหม่ (อย่างน้อย 6 ตัว)</label>
+6820: placeholder="กรอกรหัสผ่านใหม่"
+6827: <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">ยืนยันรหัสผ่านใหม่อีกครั้ง</label>
+6832: placeholder="กรอกเพื่อยืนยัน"
+6846: บันทึกการเปลี่ยนแปลง (Save Profile)
+6856: ยกเลิก (Cancel)
+6887: {isStaffCreateMode ? 'สร้างบัญชีผู้ใช้งานระบบและกำหนดสิทธิ์' : 'แก้ไขข้อมูลบัญชีและสิทธิ์ใช้งาน'}
+6892: ? 'สร้างบัญชีใหม่เพื่อเข้าใช้งานระบบและควบคุมสิทธิ์ใช้งานตามตำแหน่งหน้าที่'
+6893: : 'ผู้ดูแลระบบและผู้จัดการสามารถปรับปรุงชื่อ อีเมล สิทธิ์การเข้าถึง และรีเซ็ตรหัสผ่านให้กับผู้ใช้ระบบ'}
+6900: <span className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold">รูปถ่ายประจำตัว (Profile Photo)</span>
+6913: buttonText="ถ่ายภาพใบหน้า"
+6922: ยกเลิกกล้องถ่ายรูป
+6939: ลบรูปถ่าย
+6946: <Upload className="w-3.5 h-3.5" /> อัปโหลดรูปภาพ
+6974: <Camera className="w-3.5 h-3.5" /> ถ่ายภาพด้วยกล้องเว็บแคม
+6977: <p className="text-[10px] text-slate-500">สัดส่วนภาพแบบจัตุรัสจะแสดงผลดีที่สุด</p>
+7000: {isStaffCreateMode ? 'ชื่อผู้ใช้งาน (Username) *' : 'ชื่อผู้ใช้งาน (Username) - เปลี่ยนไม่ได้'}
+7007: placeholder={isStaffCreateMode ? "เช่น apichart_s" : "ชื่อผู้ใช้งาน"}
+7017: <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">บทบาทสิทธิ์ใช้งานระบบ <span className="text-rose-500">*</span></label>
+7023: <option value="เจ้าหน้าที่ความปลอดภัย (Staff)">เจ้าหน้าที่ความปลอดภัย (Staff)</option>
+7024: <option value="เจ้าหน้าที่รักษาความปลอดภัย (Guard)">เจ้าหน้าที่รักษาความปลอดภัย (Guard)</option>
+7025: <option value="หัวหน้าฝ่ายความปลอดภัย (Supervisor)">หัวหน้าฝ่ายความปลอดภัย (Supervisor)</option>
+7026: <option value="ผู้จัดการ (Manager)">ผู้จัดการ (Manager)</option>
+7027: <option value="ผู้ดูแลระบบระดับสูง (Administrator)">ผู้ดูแลระบบระดับสูง (Administrator)</option>
+7034: <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">ชื่อ-นามสกุลจริง <span className="text-rose-500">*</span></label>
+7040: placeholder="เช่น นายอภิชาติ แสนดี"
+7046: <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">อีเมลติดต่อ</label>
+7059: <Lock className="w-3.5 h-3.5" /> {isStaffCreateMode ? 'รหัสผ่านเริ่มต้นสำหรับเข้าใช้งาน *' : 'เปลี่ยนรหัสผ่านใหม่ (Password Reset)'}
+7063: ? 'กำหนดรหัสผ่านเริ่มต้นสำหรับบัญชีนี้ รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร'
+7064: : 'กรอกข้อมูลเฉพาะกรณีที่ต้องการรีเซ็ตตั้งรหัสผ่านใหม่ให้กับผู้ใช้นี้ หากเว้นว่างไว้จะเป็นการใช้รหัสผ่านเดิม'}
+7069: {isStaffCreateMode ? 'รหัสผ่านเริ่มต้น *' : 'รหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)'}
+7075: placeholder={isStaffCreateMode ? "กำหนดรหัสผ่านตั้งต้น" : "กรอกเพื่อตั้งใหม่"}
+7082: {isStaffCreateMode ? 'ยืนยันรหัสผ่าน *' : 'ยืนยันรหัสผ่านใหม่'}
+7088: placeholder={isStaffCreateMode ? "ยืนยันรหัสผ่าน" : "ยืนยันเพื่อความถูกต้อง"}
+7102: {isStaffCreateMode ? 'สร้างบัญชีผู้ใช้งานระบบ (Create System User)' : 'บันทึกข้อมูลเจ้าหน้าที่ (Save Staff Info)'}
+7113: ยกเลิก (Cancel)
+7141: <h3 className="text-base font-extrabold text-slate-100">มอบหมายจุดและพื้นที่สแกน (Duty Station Settings)</h3>
+7143: <p className="text-xs text-slate-400 mt-1">ตั้งค่าจุดปฏิบัติงานประจำวันและขอบเขตพื้นที่ที่ได้รับอนุญาตให้เจ้าหน้าที่สแกน</p>
+7163: <label className="text-[11px] uppercase font-bold text-slate-400">จุดตรวจปฏิบัติงานวันนี้ (Duty Checkpoint)</label>
+7179: <label className="text-[11px] uppercase font-bold text-slate-400">ขอบเขตพื้นที่ที่สแกนเช็คอินได้ (Allowed Areas)</label>
+7216: อนุมัติครบทุกพื้นที่ (Full Access)
+7225: เฉพาะจุดตรวจเดียว (Strict Single Area)
+7254: บันทึกการมอบหมาย (Save Assignment)
+7263: ยกเลิก (Cancel)
+7289: <h3 className="text-base font-extrabold text-slate-100">ตรวจสอบและสั่งพิมพ์ใบผ่าน (Verify & Print)</h3>
+7291: <p className="text-xs text-slate-400 mt-1">ตรวจสอบความถูกต้องของข้อมูลผู้เข้าติดต่อก่อนจัดทำใบผ่านทางเข้าพื้นที่</p>
+7308: ปิดหน้าต่าง (Close)
+7333: {lang === 'TH' ? 'วิธีติดตั้งแอปบนหน้าจอโฮม' : 'How to Install to Home Screen'}
+7337: ? 'ติดตั้งแอปเพื่อใช้งานบนมือถือแบบแอปจริง รวดเร็ว ไม่ต้องเปิดหน้าเว็บซ้ำ'
+7350: 📱 สำหรับ iPhone / iPad (Safari)
+7353: <li>เปิดหน้านี้ด้วยเบราว์เซอร์ <span className="text-blue-400 font-extrabold">Safari</span> เท่านั้น</li>
+7354: <li>กดปุ่ม <span className="text-blue-400 font-extrabold">"แชร์" (Share)</span> ที่แถบเมนูด้านล่าง (ไอคอนรูปสี่เหลี่ยมลูกศรชี้ขึ้น)</li>
+7355: <li>เลื่อนลงแล้วกดเลือก <span className="text-blue-400 font-extrabold">"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)</span></li>
+7356: <li>กดปุ่ม <span className="text-blue-400 font-extrabold">"เพิ่ม" (Add)</span> ที่มุมขวาบนของจอ เพื่อเริ่มใช้งานทันที!</li>
+7363: 🤖 สำหรับ Android (Chrome)
+7366: <li>กดปุ่ม <span className="text-emerald-400 font-extrabold">จุดสามจุด (three dots)</span> ที่มุมขวาบน</li>
+7367: <li>กดเลือกเมนู <span className="text-emerald-400 font-extrabold">"ติดตั้งแอป" (Install App)</span> หรือ <span className="text-emerald-400 font-extrabold">"เพิ่มลงในหน้าจอหลัก"</span></li>
+7368: <li>กดยืนยันเพื่อทำการสร้างทางลัดบนเครื่องคุณเป็นที่เรียบร้อย!</li>
+7377: {lang === 'TH' ? 'รับทราบและทำตามขั้นตอน' : 'I Understand'}

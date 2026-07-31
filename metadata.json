@@ -1,0 +1,6 @@
+{
+  "name": "MainGate Visitor Pass & Face Scanner",
+  "description": "A high-security Visitor Pass Issuing & Tracking System with facial recognition verification, QR Code check-in, real-time Recharts dashboard, Google Sheets & Drive database integration, and automated security reports.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,334 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Sarabun:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&family=Chonburi&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "IBM Plex Sans Thai", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Overriding Slate series for dynamic Blue-White Light Theme */
+  --color-slate-950: #f3f7fa; /* Beautiful soft blue-tinted white background */
+  --color-slate-900: #ffffff; /* Pure white for primary cards and blocks */
+  --color-slate-850: #f8fafc; /* Extra light slate */
+  --color-slate-800: #e2e8f0; /* Soft borders and dividers */
+  --color-slate-750: #cbd5e1;
+  --color-slate-700: #cbd5e1; /* Regular borders */
+  --color-slate-600: #94a3b8; /* Cool gray details */
+  --color-slate-500: #64748b; /* Muted subtext */
+  --color-slate-400: #475569; /* Balanced secondary text */
+  --color-slate-300: #334155; /* Secondary text */
+  --color-slate-200: #1e293b; /* Primary sub-headings */
+  --color-slate-100: #0f172a; /* Main high-contrast text */
+  
+  /* Overriding Blue/Indigo accents for light-mode readability with brand color #7f98f7 */
+  --color-blue-400: #7f98f7;  /* Accent blue tint */
+  --color-blue-500: #7f98f7;  /* Standard primary blue */
+  --color-blue-600: #7f98f7;  /* Brand blue */
+  --color-blue-700: #5c7df5;  /* Deep blue for hover states */
+  --color-blue-950: #f4f6fe;  /* Softest blue tint */
+  --color-blue-900: #e5e9ff;  /* Soft blue background */
+}
+
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Custom CSS helper for printing the badge */
+@media print {
+  @page {
+    margin: 0 !important;
+    size: auto;
+  }
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  /* Hide all non-printed elements completely to prevent extra blank pages */
+  #root > div > :not(#pass-print-modal) {
+    display: none !important;
+  }
+  
+  /* Hide close button, header and footer actions inside pass-print-modal */
+  #pass-print-modal > div > button,
+  #pass-print-modal > div > div:first-of-type,
+  #pass-print-modal > div > div:last-of-type {
+    display: none !important;
+  }
+
+  /* Reset all ancestor containers of the print-area so they don't apply margins, paddings, shadows or centering */
+  #root,
+  #root div:has(.print-area) {
+    display: block !important;
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    max-height: none !important;
+    max-width: none !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+    backdrop-filter: none !important;
+    visibility: visible !important;
+  }
+
+  /* Ensure the active print badge and all its children are fully visible */
+  .print-area,
+  .print-area * {
+    visibility: visible !important;
+  }
+
+  /* Reset the print-area element itself to position exactly at top: 0 of the printed sheet */
+  .print-area {
+    position: absolute !important;
+    top: 0 !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: 1.5px dashed #000000 !important; /* เส้นประแนวตัดบัตร (Cutting Guide Line) */
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+}
+
+/* 🔵 --- BLUE & WHITE PREMIUM LIGHT THEME FOCUS MODE & OVERRIDES --- 🔵 */
+
+/* Soft pulse animation for notifications and highlights */
+@keyframes soft-pulse-blue {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(127, 152, 247, 0.4);
+  }
+  50% {
+    opacity: 0.85;
+    box-shadow: 0 0 12px 4px rgba(127, 152, 247, 0.2);
+  }
+}
+
+.animate-soft-pulse-blue {
+  animation: soft-pulse-blue 2s infinite ease-in-out;
+}
+
+/* Globally override the default harsh pulse to be elegant and soft */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+
+/* User's exact CSS selector requirements for Focus Mode */
+div#root:nth-of-type(1) > div:nth-of-type(1) > header:nth-of-type(1) {
+  background-color: #7f98f7 !important;
+  border-bottom: 2px solid #2563eb !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > header:nth-of-type(1) h1 {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > header:nth-of-type(1) p {
+  color: #eff6ff !important;
+  font-weight: 700;
+}
+
+/* Soft white/blue navigation bar */
+div#root:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* Navigation buttons (Targeting tab 1, 3, 4 with #7f98f7 theme) */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(1) {
+  background-color: #7f98f7 !important;
+  color: #ffffff !important;
+  border: 1px solid #5c7df5 !important;
+  transition: all 0.2s ease-in-out;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(1):hover {
+  background-color: #5c7df5 !important;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) {
+  background-color: #7f98f7 !important;
+  color: #ffffff !important;
+  border: 1px solid #5c7df5 !important;
+  transition: all 0.2s ease-in-out;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2):hover {
+  background-color: #5c7df5 !important;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(3) {
+  background-color: #7f98f7 !important;
+  color: #ffffff !important;
+  border: 1px solid #5c7df5 !important;
+  transition: all 0.2s ease-in-out;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(3):hover {
+  background-color: #5c7df5 !important;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4) {
+  background-color: #7f98f7 !important;
+  color: #ffffff !important;
+  border: 1px solid #5c7df5 !important;
+  transition: all 0.2s ease-in-out;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4):hover {
+  background-color: #5c7df5 !important;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4) > svg:nth-of-type(1) > path:nth-of-type(1) {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Shield SVG in Admin button custom styling */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4) > svg:nth-of-type(1) {
+  background-color: #7f98f7 !important;
+  color: #0e00ff !important;
+  padding: 1px;
+  border-radius: 4px;
+}
+
+/* Selector 2: Main primary actions */
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(1) {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Selector 3: Inner header content container */
+div#root:nth-of-type(1) > div:nth-of-type(1) > header:nth-of-type(1) > div:nth-of-type(1) {
+  background-color: #7f98f7 !important;
+  border-radius: 16px;
+  padding: 8px 12px !important;
+  color: #ffffff !important;
+  transition: all 0.2s ease-in-out;
+}
+@media (min-width: 640px) {
+  div#root:nth-of-type(1) > div:nth-of-type(1) > header:nth-of-type(1) > div:nth-of-type(1) {
+    padding: 12px 24px !important;
+  }
+}
+
+/* Selector 6: Main container */
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Selector 7: Check-in/Check-out buttons and register submit buttons */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1) {
+  background-color: #7f98f7 !important;
+  color: #ffffff !important;
+  border: 1px solid #5c7df5 !important;
+  font-weight: bold;
+}
+
+/* Selector 8: Guard checkpoint action buttons */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1) {
+  background-color: #7f98f7 !important;
+  color: #ffffff !important;
+  border: 1px solid #5c7df5 !important;
+  font-weight: bold;
+}
+
+/* Selector 9: Secondary guard checkpoint buttons */
+div#root:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(2) {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Selector 10: Registration form submit/action button */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1) {
+  background-color: #7f98f7 !important;
+  color: #ffffff !important;
+  border: 1px solid #5c7df5 !important;
+  font-weight: bold;
+}
+
+/* Custom highlighted menu item text color */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > nav:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) > span:nth-of-type(1) {
+  color: #ff0000 !important;
+}
+
+/* Selector Admin Tab 1 Button */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(1) {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Selector Admin Tab 2 Button */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Selector Admin Tab 3 Button */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(3) {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Selector Admin Tab 4 Button */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4) {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Selector Admin Tab 5 Button */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(5) {
+  transition: all 0.2s ease-in-out;
+}
+
+/* User focused styled elements */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(1) {
+  background-color: #7f98f7 !important;
+  color: #ffffff !important;
+  border: 1px solid #5c7df5 !important;
+  transition: all 0.2s ease-in-out;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(1):hover {
+  background-color: #5c7df5 !important;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > form:nth-of-type(1) > div:nth-of-type(1) > div#camera-capture-container:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(2) > span:nth-of-type(1) {
+  transition: all 0.2s ease-in-out;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > form:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1) {
+  background-color: #7f98f7 !important;
+  color: #ffffff !important;
+  border: 1px solid #5c7df5 !important;
+  transition: all 0.2s ease-in-out;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > form:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1):hover {
+  background-color: #5c7df5 !important;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > form:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(1) {
+  background-color: #7f98f7 !important;
+  color: #ffffff !important;
+  border: 1px solid #5c7df5 !important;
+  transition: all 0.2s ease-in-out;
+}
+
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > form:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(1):hover {
+  background-color: #5c7df5 !important;
+}
+
+
+
