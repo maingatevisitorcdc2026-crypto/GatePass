@@ -1892,7 +1892,7 @@ app.post('/api/system-users', async (req, res) => {
     if (!fallback.systemUsers) {
       fallback.systemUsers = [...DEFAULT_FALLBACK_DB.systemUsers!];
     }
-    const existingIdx = fallback.systemUsers.findIndex(u => u.username.toLowerCase() === newUser.username.toLowerCase());
+    const existingIdx = fallback.systemUsers.findIndex(u => u && u.username && String(u.username).toLowerCase() === String(newUser.username || '').toLowerCase());
     if (existingIdx !== -1) {
       fallback.systemUsers[existingIdx] = newUser;
     } else {
@@ -1917,7 +1917,7 @@ app.post('/api/system-users', async (req, res) => {
       let existingRowIdx = -1;
       if (usersRes.data.values) {
         existingRowIdx = usersRes.data.values.findIndex(
-          row => row[0] && row[0].toLowerCase() === newUser.username.toLowerCase()
+          row => row && row[0] && String(row[0]).toLowerCase() === String(newUser.username || '').toLowerCase()
         );
       }
 
@@ -3317,9 +3317,9 @@ app.post('/api/verify-gate-face', async (req, res) => {
       if (passportHint && passportHint.trim() !== '') {
         const query = passportHint.trim();
         candidates = candidates.filter(c => 
-          c.passportId.includes(query) || 
-          c.phone.includes(query) || 
-          c.id.toLowerCase() === query.toLowerCase()
+          String(c.passportId || '').includes(query) || 
+          String(c.phone || '').includes(query) || 
+          String(c.id || '').toLowerCase() === query.toLowerCase()
         );
       }
 
@@ -3416,9 +3416,9 @@ app.post('/api/verify-gate-face', async (req, res) => {
     if (passportHint && passportHint.trim() !== '') {
       const query = passportHint.trim();
       candidates = candidates.filter(c => 
-        c.passportId.includes(query) || 
-        c.phone.includes(query) || 
-        c.id.toLowerCase() === query.toLowerCase()
+        String(c.passportId || '').includes(query) || 
+        String(c.phone || '').includes(query) || 
+        String(c.id || '').toLowerCase() === query.toLowerCase()
       );
     }
 

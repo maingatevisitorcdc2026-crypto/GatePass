@@ -6,15 +6,13 @@
     <meta name="theme-color" content="#0f172a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="icon" type="image/png" href="./icon-192.png" />
-    <link rel="shortcut icon" href="./icon-192.png" />
-    <link rel="manifest" href="./manifest.json" />
-    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="https://lh3.googleusercontent.com/d/179vF02W0h7sP5eWfpD6fQZ4539VNYcr4" />
     <title>GatePass System CDC</title>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
+          navigator.serviceWorker.register('/sw.js')
             .then(reg => console.log('Service Worker registered successfully:', reg.scope))
             .catch(err => console.error('Service Worker registration failed:', err));
         });

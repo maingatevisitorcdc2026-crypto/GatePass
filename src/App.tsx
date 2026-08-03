@@ -2119,8 +2119,8 @@ export default function App() {
 
         // Try to match existing user by email or username part
         const foundUser = currentUsers.find(
-          u => (u.email && u.email.toLowerCase() === email.toLowerCase()) || 
-               (u.username && u.username.toLowerCase() === email.split('@')[0].toLowerCase())
+          u => u && ((u.email && String(u.email).toLowerCase() === email.toLowerCase()) || 
+               (u.username && String(u.username).toLowerCase() === email.split('@')[0].toLowerCase()))
         );
 
         if (foundUser) {
@@ -2135,7 +2135,7 @@ export default function App() {
           const usernamePart = email ? email.split('@')[0] : 'google_' + result.user.uid.substring(0, 5);
           let finalUsername = usernamePart;
           let suffix = 1;
-          while (currentUsers.some(u => u.username.toLowerCase() === finalUsername.toLowerCase())) {
+          while (currentUsers.some(u => u && u.username && String(u.username).toLowerCase() === finalUsername.toLowerCase())) {
             finalUsername = usernamePart + suffix;
             suffix++;
           }
@@ -2190,7 +2190,7 @@ export default function App() {
     
     // Find matching user in systemUsers list
     const foundUser = systemUsers.find(
-      u => u.username.toLowerCase() === adminUsername.trim().toLowerCase() && u.password === adminPassword
+      u => u && u.username && String(u.username).toLowerCase() === adminUsername.trim().toLowerCase() && u.password === adminPassword
     );
 
     if (foundUser) {
@@ -2239,7 +2239,7 @@ export default function App() {
 
     // Check if username already exists
     const usernameExists = systemUsers.some(
-      u => u.username.toLowerCase() === signUpForm.username.trim().toLowerCase()
+      u => u && u.username && String(u.username).toLowerCase() === signUpForm.username.trim().toLowerCase()
     );
     if (usernameExists) {
       setSignUpError('ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว กรุณาใช้ชื่ออื่น');
@@ -2335,7 +2335,7 @@ export default function App() {
     }
 
     // Prepare updated user object
-    const targetUser = systemUsers.find(u => u.username.toLowerCase() === loggedInSystemUser.username.toLowerCase());
+    const targetUser = systemUsers.find(u => u && u.username && String(u.username).toLowerCase() === String(loggedInSystemUser?.username || '').toLowerCase());
     if (!targetUser) {
       setProfileError('ไม่พบข้อมูลโปรไฟล์ของท่าน');
       return;
@@ -2382,7 +2382,7 @@ export default function App() {
 
       // Update system users list and active session
       const updatedUsers = systemUsers.map(u => {
-        if (u.username.toLowerCase() === loggedInSystemUser.username.toLowerCase()) {
+        if (u && u.username && String(u.username).toLowerCase() === String(loggedInSystemUser?.username || '').toLowerCase()) {
           return updatedUser;
         }
         return u;
@@ -2460,7 +2460,7 @@ export default function App() {
         setStaffError('ชื่อผู้ใช้งานต้องมีความยาวอย่างน้อย 4 ตัวอักษร');
         return;
       }
-      const usernameExists = systemUsers.some(u => u.username.toLowerCase() === staffForm.username.trim().toLowerCase());
+      const usernameExists = systemUsers.some(u => u && u.username && String(u.username).toLowerCase() === staffForm.username.trim().toLowerCase());
       if (usernameExists) {
         setStaffError('ชื่อผู้ใช้งานนี้มีอยู่ในระบบแล้ว');
         return;
@@ -2508,7 +2508,7 @@ export default function App() {
       };
     } else {
       // Find the target user being edited
-      const targetUser = systemUsers.find(u => u.username.toLowerCase() === editingStaff.username.toLowerCase());
+      const targetUser = systemUsers.find(u => u && u.username && String(u.username).toLowerCase() === String(editingStaff?.username || '').toLowerCase());
       if (!targetUser) {
         setStaffError('ไม่พบข้อมูลเจ้าหน้าที่คนนี้');
         return;
@@ -2561,7 +2561,7 @@ export default function App() {
         updatedUsers = [...systemUsers, targetUserToSave];
       } else {
         updatedUsers = systemUsers.map(u => {
-          if (u.username.toLowerCase() === editingStaff.username.toLowerCase()) {
+          if (u && u.username && String(u.username).toLowerCase() === String(editingStaff?.username || '').toLowerCase()) {
             return targetUserToSave;
           }
           return u;
@@ -2571,8 +2571,8 @@ export default function App() {
       setSystemUsers(updatedUsers);
 
       // If the admin edited their own account, update loggedInSystemUser too!
-      if (!isCreate && loggedInSystemUser && loggedInSystemUser.username.toLowerCase() === editingStaff.username.toLowerCase()) {
-        const updatedSelf = updatedUsers.find(u => u.username.toLowerCase() === loggedInSystemUser.username.toLowerCase());
+      if (!isCreate && loggedInSystemUser && String(loggedInSystemUser.username || '').toLowerCase() === String(editingStaff?.username || '').toLowerCase()) {
+        const updatedSelf = updatedUsers.find(u => u && u.username && String(u.username).toLowerCase() === String(loggedInSystemUser.username || '').toLowerCase());
         if (updatedSelf) {
           setLoggedInSystemUser(updatedSelf);
         }
@@ -3292,13 +3292,15 @@ export default function App() {
 
   // Paginated/Filtered Guards (Checkpoint Tab)
   const filteredGuards = systemUsers.filter(u => {
-    const isGuardRole = u.role.includes('Guard') || u.role.includes('Staff') || u.role.includes('Supervisor') || u.role.includes('Manager');
+    if (!u) return false;
+    const roleStr = String(u.role || '');
+    const isGuardRole = roleStr.includes('Guard') || roleStr.includes('Staff') || roleStr.includes('Supervisor') || roleStr.includes('Manager');
     if (!isGuardRole) return false;
     const searchLower = guardSearch.toLowerCase();
     return (
-      (u.name || '').toLowerCase().includes(searchLower) ||
-      (u.username || '').toLowerCase().includes(searchLower) ||
-      (u.role || '').toLowerCase().includes(searchLower)
+      String(u.name || '').toLowerCase().includes(searchLower) ||
+      String(u.username || '').toLowerCase().includes(searchLower) ||
+      String(u.role || '').toLowerCase().includes(searchLower)
     );
   });
 
@@ -3307,11 +3309,12 @@ export default function App() {
 
   // Paginated/Filtered Staff (Visitors Tab secondary section)
   const filteredStaff = systemUsers.filter(u => {
+    if (!u) return false;
     const searchLower = staffSearch.toLowerCase();
     return (
-      (u.name || '').toLowerCase().includes(searchLower) ||
-      (u.username || '').toLowerCase().includes(searchLower) ||
-      (u.role || '').toLowerCase().includes(searchLower)
+      String(u.name || '').toLowerCase().includes(searchLower) ||
+      String(u.username || '').toLowerCase().includes(searchLower) ||
+      String(u.role || '').toLowerCase().includes(searchLower)
     );
   });
 
@@ -3545,7 +3548,7 @@ export default function App() {
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <Radio className="w-4 h-4 shrink-0 text-emerald-400 animate-pulse" />
+                            <Wifi className="w-4 h-4 shrink-0 text-emerald-400 animate-pulse" />
                             <span className="truncate">{tText("สถานะผู้ใช้งานออนไลน์", "Online Users")}</span>
                           </div>
                           <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
@@ -3988,7 +3991,7 @@ export default function App() {
                           }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
-                            <Radio className="w-4 h-4 shrink-0 text-emerald-400 animate-pulse" />
+                            <Wifi className="w-4 h-4 shrink-0 text-emerald-400 animate-pulse" />
                             <span className="truncate">{tText("สถานะผู้ใช้งานออนไลน์", "Online Users")}</span>
                           </div>
                           <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 flex items-center gap-1">
@@ -6226,7 +6229,7 @@ export default function App() {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
                           <div>
                             <h3 className="text-base font-extrabold text-slate-100 flex items-center gap-2">
-                              <Radio className="w-5 h-5 text-emerald-400 animate-pulse" /> 
+                              <Wifi className="w-5 h-5 text-emerald-400 animate-pulse" /> 
                               {tText("สถานะผู้ใช้งานออนไลน์แบบ Real-time", "Real-time Online Users Status")}
                               <span className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[11px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 ml-1">
                                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
@@ -6264,7 +6267,7 @@ export default function App() {
                             <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-[10px] uppercase font-black text-emerald-400 tracking-wider">{tText("ออนไลน์ขณะนี้", "Currently Online")}</span>
-                              <Radio className="w-4 h-4 text-emerald-400 animate-pulse" />
+                              <Wifi className="w-4 h-4 text-emerald-400 animate-pulse" />
                             </div>
                             <div className="flex items-baseline gap-2">
                               <span className="text-2xl font-black font-mono text-emerald-300">{onlineUsersList.length}</span>
@@ -6376,7 +6379,7 @@ export default function App() {
                           if (filtered.length === 0) {
                             return (
                               <div className="bg-slate-950/50 border border-dashed border-slate-800 rounded-2xl p-10 text-center flex flex-col items-center justify-center gap-3">
-                                <Radio className="w-10 h-10 text-slate-700" />
+                                <Wifi className="w-10 h-10 text-slate-700" />
                                 <h4 className="text-sm font-bold text-slate-400">
                                   {tText("ไม่พบผู้ใช้งานออนไลน์ตรงตามเงื่อนไข", "No online users match your filters")}
                                 </h4>
@@ -6395,7 +6398,7 @@ export default function App() {
                                 const isIdle = inactiveSec > 30;
                                 const loginMinAgo = Math.floor((now - (user.loginTime || user.lastActiveAt || now)) / 60000);
 
-                                const isCurrentUser = loggedInSystemUser?.username?.toLowerCase() === user.username?.toLowerCase();
+                                const isCurrentUser = Boolean(loggedInSystemUser?.username) && String(loggedInSystemUser?.username || '').toLowerCase() === String(user?.username || '').toLowerCase();
                                 const isUserAdmin = String(user.role || '').toLowerCase().includes('admin') || String(user.role || '').toLowerCase().includes('ผู้ดูแล');
 
                                 return (
@@ -6678,7 +6681,7 @@ export default function App() {
                                       });
                                       
                                       const pathLine = points.length > 0 
-                                        ? `M ${points[0].x} ${points[0].y} ` + points.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ') 
+                                        ? `M ${points[0].x} ${points[0].y} ` + points.slice.map(p => `L ${p.x} ${p.y}`).join(' ') 
                                         : '';
                                       
                                       const pathArea = points.length > 0 
@@ -6731,7 +6734,7 @@ export default function App() {
                                                 )}
                                                 <div className="flex flex-col">
                                                   <span className="text-sm font-black tracking-tight uppercase">
-                                                    {config?.organizationName || (config as any)?.title || 'Security Guard System'}
+                                                    {config?.organizationName || config?.title || 'Security Guard System'}
                                                   </span>
                                                   <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
                                                     Official Guard Operation Center
@@ -6925,7 +6928,7 @@ export default function App() {
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-800/30">
                                                   {statsToUse.recentLogs && statsToUse.recentLogs.length > 0 ? (
-                                                    (statsToUse.recentLogs as any[]).slice(0, 4).map((log: any, index: number) => (
+                                                    statsToUse.recentLogs.slice(0, 4).map((log, index) => (
                                                       <tr key={index} className={pdfReportTheme === 'light' ? 'hover:bg-slate-50 text-slate-800' : 'hover:bg-slate-900/30 text-slate-300'}>
                                                         <td className="py-2 px-3 font-bold truncate max-w-[120px]">{log.name}</td>
                                                         <td className="py-2 px-3 font-medium text-slate-400">{log.visitorType}</td>
@@ -7465,7 +7468,7 @@ export default function App() {
                                   { key: 'admin_dashboard', label: tText(tText("แดชบอร์ดสรุปสถิติ", "Summary Analytics Dashboard"), "Summary Analytics Dashboard"), icon: Activity },
                                   { key: 'admin_visitors', label: tText("จัดการผู้ถือใบผ่าน & แบน", "Visitor Logs & Blacklist"), icon: Users },
                                   { key: 'admin_staff', label: tText("จัดการบัญชีเจ้าหน้าที่ระบบ", "Staff Accounts & Management"), icon: User },
-                                  { key: 'admin_online', label: tText("สถานะผู้ใช้งานออนไลน์", "Online Users Status"), icon: Radio },
+                                  { key: 'admin_online', label: tText("สถานะผู้ใช้งานออนไลน์", "Online Users Status"), icon: Wifi },
                                   { key: 'admin_checkpoints', label: tText(tText("จัดการด่านจุดตรวจ รปภ.", "Guard Duty Stations"), "Guard Duty Stations"), icon: MapPin },
                                   { key: 'admin_reports', label: tText(tText("ส่งออกเมลรายงาน", "Export Email Reports"), "Export Email Reports"), icon: Mail },
                                   { key: 'admin_config', label: tText(tText("ตั้งค่าองค์กรและโลโก้", "Branding Config"), "Branding Config"), icon: Sliders },
@@ -8617,11 +8620,11 @@ export default function App() {
                     if (!activeVisitorSearch.trim()) return true;
                     const q = activeVisitorSearch.toLowerCase();
                     return (
-                      v.name.toLowerCase().includes(q) ||
-                      v.id.toLowerCase().includes(q) ||
-                      (v.company && v.company.toLowerCase().includes(q)) ||
-                      (v.vehiclePlate && v.vehiclePlate.toLowerCase().includes(q)) ||
-                      (v.contactArea && v.contactArea.toLowerCase().includes(q))
+                      String(v.name || '').toLowerCase().includes(q) ||
+                      String(v.id || '').toLowerCase().includes(q) ||
+                      (v.company && String(v.company).toLowerCase().includes(q)) ||
+                      (v.vehiclePlate && String(v.vehiclePlate).toLowerCase().includes(q)) ||
+                      (v.contactArea && String(v.contactArea).toLowerCase().includes(q))
                     );
                   });
 
