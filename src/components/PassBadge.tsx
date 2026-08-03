@@ -7,6 +7,7 @@ import { useState, useRef, useEffect, RefObject, ReactNode, MouseEvent } from 'r
 import { Visitor, BrandingConfig, ElementPosition } from '../types';
 import { ShieldCheck, Calendar, MapPin, Briefcase, Printer, QrCode, Phone, CheckCircle, Ban } from 'lucide-react';
 import html2canvas from 'html2canvas';
+import QRCode from 'qrcode';
 
 const getDisplayPhotoUrl = (url: string | null | undefined): string => {
   if (!url) return 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150';
@@ -436,8 +437,25 @@ export default function PassBadge({ visitor, config, isDesigner, onUpdateTemplat
     }
   };
 
-  // Construct URL for the dynamic QR code generation
-  const qrCodeUrl = `/api/qrcode?text=${encodeURIComponent(visitor.id || '')}`;
+  // Construct URL for the dynamic QR code generation with client-side & static host fallbacks
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>(() => {
+    const text = visitor.id || '';
+    return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(text)}`;
+  });
+
+  useEffect(() => {
+    const text = visitor.id || '';
+    if (!text) return;
+
+    // Generate local QR code base64 Data URL directly in browser
+    QRCode.toDataURL(text, { margin: 1, width: 300, errorCorrectionLevel: 'M' })
+      .then((dataUrl) => {
+        setQrCodeUrl(dataUrl);
+      })
+      .catch(() => {
+        setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(text)}`);
+      });
+  }, [visitor.id]);
 
   const isReceipt = template.layout === 'receipt';
   // Force clean, all-white card background and black text
@@ -567,6 +585,9 @@ export default function PassBadge({ visitor, config, isDesigner, onUpdateTemplat
                       src={qrCodeUrl} 
                       alt="QR Code Pass ID" 
                       className="w-full h-full object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(visitor.id || '')}`;
+                      }}
                     />
                   </div>
                   <p className="text-[8px] font-mono font-black tracking-wider text-center mt-0.5" style={{ color: renderAccentColor }}>{visitor.id}</p>
@@ -702,6 +723,9 @@ export default function PassBadge({ visitor, config, isDesigner, onUpdateTemplat
                     src={qrCodeUrl} 
                     alt="QR Code Pass ID" 
                     className="w-24 h-24 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(visitor.id || '')}`;
+                    }}
                   />
                 </div>
               )}
@@ -858,6 +882,9 @@ export default function PassBadge({ visitor, config, isDesigner, onUpdateTemplat
                     src={qrCodeUrl} 
                     alt="QR Code" 
                     className="w-11 h-11 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(visitor.id || '')}`;
+                    }}
                   />
                 </div>
                 <div className="flex-1 flex flex-col items-end justify-center min-w-0">
@@ -969,6 +996,9 @@ export default function PassBadge({ visitor, config, isDesigner, onUpdateTemplat
                     src={qrCodeUrl} 
                     alt="QR Code Pass ID" 
                     className="w-32 h-32 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(visitor.id || '')}`;
+                    }}
                   />
                 </div>
                 <div className="text-center">
