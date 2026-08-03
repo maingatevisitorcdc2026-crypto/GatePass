@@ -560,15 +560,19 @@ const fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Resp
   const res = await window.fetch(url, init);
   
   // Safely guard res.json() to prevent "Unexpected token '<'" exceptions if backend returns HTML fallback
-  const originalJson = res.json.bind(res);
   res.json = async () => {
-    const contentType = res.headers.get('content-type') || '';
-    if (contentType.includes('text/html')) {
-      const text = await res.text();
-      console.warn(`[API returned HTML instead of JSON for ${url}]`, text.substring(0, 100));
-      return { error: 'Invalid API response format', message: 'Server returned HTML instead of JSON' };
+    try {
+      const text = await res.clone().text();
+      const trimmed = text.trim();
+      if (trimmed.startsWith('<') || trimmed.startsWith('<!DOCTYPE')) {
+        console.warn(`[API returned HTML instead of JSON for ${url}]`, trimmed.substring(0, 100));
+        return { error: 'Invalid API response format', message: 'Server returned HTML instead of JSON' };
+      }
+      return JSON.parse(text);
+    } catch (e) {
+      console.warn(`[API returned invalid JSON for ${url}]`);
+      return { error: 'Invalid API response format', message: 'Failed to parse JSON response' };
     }
-    return originalJson();
   };
   
   return res;

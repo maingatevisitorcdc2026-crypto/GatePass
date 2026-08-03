@@ -10,6 +10,25 @@ import { createServer as createViteServer } from 'vite';
 import { google as googleapis } from 'googleapis';
 
 // Google Apps Script Proxy helpers
+async function safeFetchAppsScriptJson(appsScriptUrl: string, payload: any): Promise<any> {
+  const response = await fetch(appsScriptUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const text = await response.text();
+  let json: any;
+  try {
+    json = JSON.parse(text);
+  } catch (err) {
+    throw new Error(`AppsScript endpoint returned HTML/non-JSON response (status ${response.status}). Ensure the web app is published with 'Anyone' access.`);
+  }
+  if (json && json.error) {
+    throw new Error(json.error);
+  }
+  return json;
+}
+
 function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
   return {
     spreadsheets: {
@@ -18,22 +37,14 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
       },
       get: async (params: any) => {
         try {
-          const response = await fetch(appsScriptUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'sheets.metadata.get' })
-          });
-          const json: any = await response.json();
-          if (json && !json.error && Array.isArray(json.sheetNames)) {
+          const json = await safeFetchAppsScriptJson(appsScriptUrl, { action: 'sheets.metadata.get' });
+          if (json && Array.isArray(json.sheetNames)) {
             return {
               data: {
                 spreadsheetId: json.spreadsheetId || 'appsscript-active-sheet',
                 sheets: json.sheetNames.map((name: string) => ({ properties: { title: name } }))
               }
             };
-          }
-          if (json && json.error) {
-            console.warn('[AppsScript API spreadsheets.get warning]:', json.error);
           }
         } catch (err: any) {
           console.warn('[AppsScript API spreadsheets.get warning]:', err.message);
@@ -56,13 +67,7 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
           const requests = params.requestBody?.requests || [];
           for (const req of requests) {
             if (req.addSheet) {
-              const response = await fetch(appsScriptUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'sheets.sheets.create', title: req.addSheet.properties.title })
-              });
-              const json: any = await response.json();
-              if (json.error) throw new Error(json.error);
+              await safeFetchAppsScriptJson(appsScriptUrl, { action: 'sheets.sheets.create', title: req.addSheet.properties.title });
             }
           }
           return { data: { success: true } };
@@ -74,13 +79,7 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
       values: {
         get: async (params: any) => {
           try {
-            const response = await fetch(appsScriptUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ action: 'sheets.values.get', range: params.range })
-            });
-            const json: any = await response.json();
-            if (json.error) throw new Error(json.error);
+            const json = await safeFetchAppsScriptJson(appsScriptUrl, { action: 'sheets.values.get', range: params.range });
             return { data: { values: json.values || [] } };
           } catch (err: any) {
             console.error('[AppsScript API values.get error]:', err.message);
@@ -89,17 +88,11 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
         },
         update: async (params: any) => {
           try {
-            const response = await fetch(appsScriptUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                action: 'sheets.values.update',
-                range: params.range,
-                values: params.requestBody?.values || []
-              })
+            await safeFetchAppsScriptJson(appsScriptUrl, {
+              action: 'sheets.values.update',
+              range: params.range,
+              values: params.requestBody?.values || []
             });
-            const json: any = await response.json();
-            if (json.error) throw new Error(json.error);
             return { data: { success: true } };
           } catch (err: any) {
             console.error('[AppsScript API values.update error]:', err.message);
@@ -108,17 +101,11 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
         },
         append: async (params: any) => {
           try {
-            const response = await fetch(appsScriptUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                action: 'sheets.values.append',
-                range: params.range,
-                values: params.requestBody?.values || []
-              })
+            await safeFetchAppsScriptJson(appsScriptUrl, {
+              action: 'sheets.values.append',
+              range: params.range,
+              values: params.requestBody?.values || []
             });
-            const json: any = await response.json();
-            if (json.error) throw new Error(json.error);
             return { data: { success: true } };
           } catch (err: any) {
             console.error('[AppsScript API values.append error]:', err.message);
@@ -127,16 +114,10 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
         },
         clear: async (params: any) => {
           try {
-            const response = await fetch(appsScriptUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                action: 'sheets.values.clear',
-                range: params.range
-              })
+            await safeFetchAppsScriptJson(appsScriptUrl, {
+              action: 'sheets.values.clear',
+              range: params.range
             });
-            const json: any = await response.json();
-            if (json.error) throw new Error(json.error);
             return { data: { success: true } };
           } catch (err: any) {
             console.error('[AppsScript API values.clear error]:', err.message);
@@ -161,13 +142,7 @@ function createAppsScriptDriveProxy(appsScriptUrl: string): any {
               name = 'MainGate_Pass_Photos';
             }
           }
-          const response = await fetch(appsScriptUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'drive.files.list', name })
-          });
-          const json: any = await response.json();
-          if (json.error) throw new Error(json.error);
+          const json = await safeFetchAppsScriptJson(appsScriptUrl, { action: 'drive.files.list', name });
           return { data: { files: json.files || [] } };
         } catch (err: any) {
           console.error('[AppsScript API drive.files.list error]:', err.message);
@@ -195,19 +170,13 @@ function createAppsScriptDriveProxy(appsScriptUrl: string): any {
             }
           }
           
-          const response = await fetch(appsScriptUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'drive.files.create',
-              name,
-              parentId,
-              mimeType,
-              base64Body
-            })
+          const json = await safeFetchAppsScriptJson(appsScriptUrl, {
+            action: 'drive.files.create',
+            name,
+            parentId,
+            mimeType,
+            base64Body
           });
-          const json: any = await response.json();
-          if (json.error) throw new Error(json.error);
           return { data: { id: json.id, name: json.name } };
         } catch (err: any) {
           console.error('[AppsScript API drive.files.create error]:', err.message);
@@ -217,14 +186,8 @@ function createAppsScriptDriveProxy(appsScriptUrl: string): any {
       get: async (params: any) => {
         try {
           const fileId = params.fileId;
-          const response = await fetch(appsScriptUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'drive.files.get', fileId })
-          });
-          const json: any = await response.json();
-          if (json.error) throw new Error(json.error);
-          const buffer = Buffer.from(json.base64, 'base64');
+          const json = await safeFetchAppsScriptJson(appsScriptUrl, { action: 'drive.files.get', fileId });
+          const buffer = Buffer.from(json.base64 || '', 'base64');
           return {
             data: Readable.from(buffer),
             headers: { 'content-type': json.mimeType || 'image/jpeg' }
@@ -783,13 +746,16 @@ function handleGoogleError(err: any, context?: any): boolean {
     const errMsg = String(err?.message || err || '');
     const status = err?.status || err?.code || (err?.response && err?.response?.status);
     
+    const isTokenError = (errMsg.includes('token') && !errMsg.includes('Unexpected token') && !errMsg.includes('JSON')) ||
+      errMsg.includes('invalid_token') ||
+      errMsg.includes('access_token');
+    
     if (
       status === 401 || 
       status === 403 || 
       errMsg.includes('Invalid Credentials') || 
       errMsg.includes('invalid_grant') || 
-      errMsg.includes('auth') || 
-      errMsg.includes('token') || 
+      isTokenError || 
       errMsg.includes('credential') ||
       errMsg.includes('unauthorized') ||
       errMsg.includes('Unauthorized')
