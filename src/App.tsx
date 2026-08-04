@@ -4885,6 +4885,8 @@ export default function App() {
                           onCapture={(base64) => setRegPhoto(base64)} 
                           buttonText={t('captureRegFaceBtn')} 
                           autoCapture={false}
+                          showLightingControls={true}
+                          showCameraSwitch={true}
                         />
                       </div>
                       {!regPhoto ? (

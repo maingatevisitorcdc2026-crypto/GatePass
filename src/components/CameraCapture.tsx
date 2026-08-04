@@ -15,6 +15,8 @@ interface CameraCaptureProps {
   isProcessing?: boolean;   // if parent is busy processing the scan results
   scanType?: 'qr' | 'face' | 'general';
   lang?: 'TH' | 'EN';
+  showLightingControls?: boolean; // toggle lighting / backlight adjustment toolbar
+  showCameraSwitch?: boolean;     // toggle camera switch button
 }
 
 // Helper to binarize image for accurate black & white QR code scanning
@@ -48,6 +50,28 @@ function enhanceContrast(imageData: ImageData, factor: number): ImageData {
   return imageData;
 }
 
+// Advanced backlight compensation / shadow recovery algorithm for dark subjects with bright backgrounds
+function applyBacklightCorrection(imageData: ImageData, shadowBoost = 1.8, gamma = 0.68): ImageData {
+  const data = imageData.data;
+  const len = data.length;
+  const lut = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) {
+    let norm = i / 255;
+    norm = Math.pow(norm, gamma);
+    if (i < 170) {
+      const factor = 1 + (shadowBoost - 1) * Math.cos((i / 170) * (Math.PI / 2));
+      norm = Math.min(1, norm * factor);
+    }
+    lut[i] = Math.min(255, Math.max(0, Math.round(norm * 255)));
+  }
+  for (let i = 0; i < len; i += 4) {
+    data[i] = lut[data[i]];
+    data[i + 1] = lut[data[i + 1]];
+    data[i + 2] = lut[data[i + 2]];
+  }
+  return imageData;
+}
+
 export default function CameraCapture({ 
   onCapture, 
   buttonText = "ถ่ายภาพใบหน้า", 
@@ -55,7 +79,9 @@ export default function CameraCapture({
   autoCapture = true,
   isProcessing = false,
   scanType = 'general',
-  lang = 'TH'
+  lang = 'TH',
+  showLightingControls = false,
+  showCameraSwitch = true
 }: CameraCaptureProps) {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +108,7 @@ export default function CameraCapture({
   const [saturation, setSaturation] = useState(100);
   const [showSliders, setShowSliders] = useState(false);
   const [currentPreset, setCurrentPreset] = useState<'normal' | 'lowlight' | 'backlit'>('normal');
+  const [screenFlash, setScreenFlash] = useState(false);
 
   // Auto capture states
   const [autoCaptureEnabled, setAutoCaptureEnabled] = useState(false);
@@ -139,13 +166,13 @@ export default function CameraCapture({
       setContrast(100);
       setSaturation(100);
     } else if (preset === 'lowlight') {
-      setBrightness(135);
+      setBrightness(140);
       setContrast(115);
       setSaturation(105);
     } else if (preset === 'backlit') {
-      setBrightness(120);
-      setContrast(125);
-      setSaturation(100);
+      setBrightness(165);
+      setContrast(120);
+      setSaturation(105);
     }
   };
 
@@ -185,14 +212,21 @@ export default function CameraCapture({
         let mediaStream: MediaStream;
         try {
           mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-        } catch (firstErr) {
+        } catch (firstErr: any) {
+          // If permission is denied or device not found, don't keep throwing repeated getUserMedia calls
+          if (firstErr?.name === 'NotAllowedError' || firstErr?.name === 'PermissionDeniedError' || firstErr?.name === 'NotFoundError') {
+            throw firstErr;
+          }
           console.warn("First camera constraint failed, retrying with fallback...", firstErr);
           try {
             mediaStream = await navigator.mediaDevices.getUserMedia({
               video: { facingMode: facingMode },
               audio: false
             });
-          } catch (secondErr) {
+          } catch (secondErr: any) {
+            if (secondErr?.name === 'NotAllowedError' || secondErr?.name === 'PermissionDeniedError' || secondErr?.name === 'NotFoundError') {
+              throw secondErr;
+            }
             console.warn("Second camera constraint failed, retrying with generic video...", secondErr);
             mediaStream = await navigator.mediaDevices.getUserMedia({
               video: true,
@@ -214,9 +248,9 @@ export default function CameraCapture({
           videoRef.current.play().catch(e => console.log("Video play interrupted or rejected:", e));
         }
       } catch (err: any) {
-        console.error("Camera access error:", err);
+        console.warn("Camera access notice:", err?.message || err);
         if (active) {
-          setError("ไม่สามารถเข้าถึงกล้องได้ หรือสิทธิ์ใช้งานกล้องถูกปฏิเสธ");
+          setError("ไม่สามารถเข้าถึงกล้องได้ หรือสิทธิ์ใช้งานกล้องถูกปฏิเสธ (เปลี่ยนเป็นโหมดอัปโหลดรูปภาพทดแทน)");
           setMode('upload');
         }
       } finally {
@@ -525,6 +559,17 @@ export default function CameraCapture({
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     }
 
+    // Apply pixel-level shadow recovery algorithm for backlit scenes or HDR mode
+    if (currentPreset === 'backlit' || brightness > 140) {
+      try {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const corrected = applyBacklightCorrection(imgData, 1.8, 0.68);
+        ctx.putImageData(corrected, 0, 0);
+      } catch (e) {
+        console.warn("Backlight pixel processing notice:", e);
+      }
+    }
+
     // Capture as JPEG Base64
     const base64 = canvas.toDataURL('image/jpeg', 0.9);
     setCapturedImage(base64);
@@ -708,6 +753,11 @@ export default function CameraCapture({
               className={`w-full h-full object-cover ${capturedImage ? 'hidden' : ''}`}
             />
 
+            {/* Screen Flash Ring / Soft Fill Light Overlay */}
+            {screenFlash && !capturedImage && (
+              <div className="absolute inset-0 border-[10px] sm:border-[14px] border-white/95 shadow-[inset_0_0_40px_20px_rgba(255,255,255,0.95)] pointer-events-none z-20 rounded-xl transition-all" />
+            )}
+
             {/* Live Overlay Canvas */}
             {!capturedImage && stream && autoLandmarks && (
               <canvas
@@ -758,6 +808,154 @@ export default function CameraCapture({
         )}
       </div>
 
+      {/* Lighting & Backlight Correction Toolbar */}
+      {showLightingControls && mode === 'camera' && !capturedImage && stream && (
+        <div className="w-full mt-2.5 bg-slate-950/90 border border-slate-800 rounded-xl p-2 flex flex-col gap-2">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-400">
+              <Sun className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span>{lang === 'TH' ? 'ปรับโหมดแสง / แก้รูปย้อนแสง' : 'Lighting / Anti-Backlight'}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowSliders(!showSliders)}
+              className="text-[10px] text-slate-400 hover:text-slate-200 flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-md transition"
+            >
+              <Sliders className="w-3 h-3 text-[#7f98f7]" />
+              <span>{showSliders ? (lang === 'TH' ? 'ซ่อน' : 'Hide') : (lang === 'TH' ? 'ปรับละเอียด' : 'Sliders')}</span>
+            </button>
+          </div>
+
+          {/* Preset Buttons */}
+          <div className="grid grid-cols-4 gap-1 text-[10px] font-bold">
+            <button
+              type="button"
+              onClick={() => applyPreset('normal')}
+              className={`py-1.5 px-1 rounded-lg border transition text-center flex flex-col items-center gap-0.5 ${
+                currentPreset === 'normal'
+                  ? 'bg-[#7f98f7]/20 border-[#7f98f7] text-[#7f98f7]'
+                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <span>☀️</span>
+              <span className="truncate">{lang === 'TH' ? 'ปกติ' : 'Normal'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => applyPreset('backlit')}
+              className={`py-1.5 px-1 rounded-lg border transition text-center flex flex-col items-center gap-0.5 ${
+                currentPreset === 'backlit'
+                  ? 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.3)]'
+                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+              title="โหมดชดเชยแสงย้อนแดด ดึงหน้าให้สว่างใสคมชัด"
+            >
+              <span>🌤️</span>
+              <span className="truncate">{lang === 'TH' ? 'ย้อนแสง' : 'Backlit'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => applyPreset('lowlight')}
+              className={`py-1.5 px-1 rounded-lg border transition text-center flex flex-col items-center gap-0.5 ${
+                currentPreset === 'lowlight'
+                  ? 'bg-indigo-500/25 border-indigo-400 text-indigo-300'
+                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <span>🌙</span>
+              <span className="truncate">{lang === 'TH' ? 'ที่มืด' : 'Low Light'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setScreenFlash(!screenFlash)}
+              className={`py-1.5 px-1 rounded-lg border transition text-center flex flex-col items-center gap-0.5 ${
+                screenFlash
+                  ? 'bg-amber-300 border-amber-300 text-slate-950 font-extrabold shadow-[0_0_12px_rgba(252,211,77,0.5)]'
+                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+              title="เปิดแฟลชวงแหวนแสงสีขาวรอบกล้องเติมแสงเข้าใบหน้า"
+            >
+              <span>💡</span>
+              <span className="truncate">{lang === 'TH' ? 'แฟลชจอ' : 'Flash'}</span>
+            </button>
+          </div>
+
+          {/* Custom Sliders Panel */}
+          {showSliders && (
+            <div className="pt-2 border-t border-slate-800/80 flex flex-col gap-2 text-[10px]">
+              <div className="flex items-center justify-between text-slate-300">
+                <span>{lang === 'TH' ? 'ความสว่าง (Brightness)' : 'Brightness'}: {brightness}%</span>
+                <button
+                  type="button"
+                  onClick={() => setBrightness(100)}
+                  className="text-slate-500 hover:text-slate-300 underline"
+                >
+                  {lang === 'TH' ? 'รีเซ็ต' : 'Reset'}
+                </button>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="250"
+                value={brightness}
+                onChange={(e) => {
+                  setBrightness(Number(e.target.value));
+                  setCurrentPreset('normal');
+                }}
+                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#7f98f7]"
+              />
+
+              <div className="flex items-center justify-between text-slate-300">
+                <span>{lang === 'TH' ? 'ความคมชัด (Contrast)' : 'Contrast'}: {contrast}%</span>
+                <button
+                  type="button"
+                  onClick={() => setContrast(100)}
+                  className="text-slate-500 hover:text-slate-300 underline"
+                >
+                  {lang === 'TH' ? 'รีเซ็ต' : 'Reset'}
+                </button>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="200"
+                value={contrast}
+                onChange={(e) => {
+                  setContrast(Number(e.target.value));
+                  setCurrentPreset('normal');
+                }}
+                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#7f98f7]"
+              />
+
+              <div className="flex items-center justify-between text-slate-300">
+                <span>{lang === 'TH' ? 'ความอิ่มสี (Saturation)' : 'Saturation'}: {saturation}%</span>
+                <button
+                  type="button"
+                  onClick={() => setSaturation(100)}
+                  className="text-slate-500 hover:text-slate-300 underline"
+                >
+                  {lang === 'TH' ? 'รีเซ็ต' : 'Reset'}
+                </button>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="200"
+                value={saturation}
+                onChange={(e) => {
+                  setSaturation(Number(e.target.value));
+                  setCurrentPreset('normal');
+                }}
+                className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-[#7f98f7]"
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Control Buttons */}
       <div className="mt-4 flex gap-2 w-full justify-center">
         {mode === 'upload' ? (
@@ -791,15 +989,17 @@ export default function CameraCapture({
                 {buttonText}
               </button>
 
-              <button
-                onClick={handleSwitchCamera}
-                disabled={loading || !!error || isProcessing}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2.5 rounded-xl border border-slate-700 cursor-pointer flex items-center justify-center gap-1.5 transition duration-150 text-xs"
-                title="สลับกล้องหน้าหลัง"
-              >
-                <RefreshCw className="w-4 h-4" />
-                <span className="text-xs font-semibold pr-1 hidden sm:inline">สลับกล้อง</span>
-              </button>
+              {showCameraSwitch && devices.length > 1 && (
+                <button
+                  onClick={handleSwitchCamera}
+                  disabled={loading || !!error || isProcessing}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2.5 rounded-xl border border-slate-700 cursor-pointer flex items-center justify-center gap-1.5 transition duration-150 text-xs"
+                  title="สลับกล้องหน้าหลัง"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  <span className="text-xs font-semibold pr-1 hidden sm:inline">สลับกล้อง</span>
+                </button>
+              )}
             </>
           ) : (
             <button

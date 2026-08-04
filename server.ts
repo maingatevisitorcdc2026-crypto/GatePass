@@ -72,7 +72,7 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
           }
           return { data: { success: true } };
         } catch (err: any) {
-          console.error('[AppsScript API batchUpdate error]:', err.message);
+          console.warn('[AppsScript API batchUpdate notice]:', err.message);
           throw err;
         }
       },
@@ -82,7 +82,7 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
             const json = await safeFetchAppsScriptJson(appsScriptUrl, { action: 'sheets.values.get', range: params.range });
             return { data: { values: json.values || [] } };
           } catch (err: any) {
-            console.error('[AppsScript API values.get error]:', err.message);
+            console.warn('[AppsScript API values.get notice]:', err.message);
             throw err;
           }
         },
@@ -95,7 +95,7 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
             });
             return { data: { success: true } };
           } catch (err: any) {
-            console.error('[AppsScript API values.update error]:', err.message);
+            console.warn('[AppsScript API values.update notice]:', err.message);
             throw err;
           }
         },
@@ -108,7 +108,7 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
             });
             return { data: { success: true } };
           } catch (err: any) {
-            console.error('[AppsScript API values.append error]:', err.message);
+            console.warn('[AppsScript API values.append notice]:', err.message);
             throw err;
           }
         },
@@ -120,7 +120,7 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
             });
             return { data: { success: true } };
           } catch (err: any) {
-            console.error('[AppsScript API values.clear error]:', err.message);
+            console.warn('[AppsScript API values.clear notice]:', err.message);
             throw err;
           }
         }
