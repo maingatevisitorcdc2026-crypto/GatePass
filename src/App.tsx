@@ -27,9 +27,12 @@ import {
   Fingerprint, 
   Ban, 
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
   ArrowLeft,
   ChevronRight, 
   LogOut,
+  LogIn,
   Sliders,
   HelpCircle,
   FileText,
@@ -125,6 +128,7 @@ const VISITOR_TYPES = [
   'ส่งสินค้าร้านจำหน่ายอาหาร',
   'รับสินค้า',
   'รับภาชนะ',
+  'ส่งภาชนะ',
   'พนักงานโรงอาหาร',
   'ส่งเอกสาร',
   'รับซื้อขยะ',
@@ -184,6 +188,24 @@ const ROLES_LIST = [
 ];
 
 const CONTACT_AREAS = [
+  'Fulfilment Inbound',
+  'Fulfilment Dishpatch',
+  'Dry Inbound',
+  'Dry Dishpatch',
+  'Fresh Dishpatch',
+  'Dry Transport',
+  'Fresh Transport',
+  'A-Zone',
+  'B-Zone',
+  'C-Zone',
+  'M-Zone',
+  'R-Zone',
+  'Maintenance',
+  'Good Return',
+  'Facility',
+  'จุดทิ้งขยะ Fresh',
+  'จุดทิ้งขยะ Dry',
+  'จุดทิ้งขยะ Canteen',
   'MainGate',
   'ลานจอดผู้รับเหมา',
   'Main Office',
@@ -192,10 +214,6 @@ const CONTACT_AREAS = [
   'Frozen',
   'Asset Control',
   'Seafood',
-  'M-Zone',
-  'A-Zone',
-  'B-Zone',
-  'C-Zone',
   'Gatekeeper',
   'โรงอาหารด้านหลัง',
   'Canteen',
@@ -864,6 +882,18 @@ export default function App() {
   const [passportHint, setPassportHint] = useState('');
   const [gateFaceVerificationResult, setGateFaceVerificationResult] = useState<any>(null);
   const [gateSubTab, setGateSubTab] = useState<'scan' | 'lost'>('scan');
+  const [hideVisitorDetails, setHideVisitorDetails] = useState(false);
+  const [expandedImage, setExpandedImage] = useState<{ url: string; title?: string } | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setExpandedImage(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // QR Code Scanner States
   const [showGateQRScanner, setShowGateQRScanner] = useState(false);
@@ -4229,113 +4259,284 @@ export default function App() {
                         </span>
                       </div>
 
-                      {/* Visitor Core Profile (Photo & Identity) */}
-                      <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start bg-slate-950/40 p-5 rounded-2xl border border-slate-800/80 mb-5">
-                        {/* Photo Section */}
-                        <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0">
-                          {scannedOrSearchedVisitor.photoUrl ? (
-                            <img
-                              src={getDisplayPhotoUrl(scannedOrSearchedVisitor.photoUrl)}
-                              alt="Visitor"
-                              className="w-full h-full object-cover"
-                              referrerPolicy="no-referrer"
-                              onError={(e) => {
-                                e.currentTarget.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150';
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-slate-950 flex items-center justify-center text-slate-600">
-                              <User className="w-10 h-10" />
+                      {/* Visitor Core Profile (Photo & Complete Identity Details) */}
+                      <div className="bg-slate-950/60 p-5 rounded-2xl border border-slate-800/80 mb-5 flex flex-col gap-5">
+                        <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start">
+                          {/* Photo Section */}
+                          <div 
+                            onClick={() => {
+                              const displayUrl = getDisplayPhotoUrl(scannedOrSearchedVisitor.photoUrl);
+                              if (displayUrl) {
+                                setExpandedImage({
+                                  url: displayUrl,
+                                  title: `รูปถ่ายผู้ผ่านทาง: ${scannedOrSearchedVisitor.name || scannedOrSearchedVisitor.id}`
+                                });
+                              }
+                            }}
+                            className={`relative w-28 h-28 rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 shadow-lg ${
+                              scannedOrSearchedVisitor.photoUrl ? 'cursor-pointer hover:border-blue-400/80 group transition-all' : ''
+                            }`}
+                            title={scannedOrSearchedVisitor.photoUrl ? "คลิกเพื่อขยายรูปถ่าย" : undefined}
+                          >
+                            {scannedOrSearchedVisitor.photoUrl ? (
+                              <>
+                                <img
+                                  src={getDisplayPhotoUrl(scannedOrSearchedVisitor.photoUrl)}
+                                  alt="Visitor"
+                                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    e.currentTarget.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150';
+                                  }}
+                                />
+                                <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 text-white font-extrabold text-[10px]">
+                                  <Maximize2 className="w-5 h-5 text-white drop-shadow" />
+                                </div>
+                              </>
+                            ) : (
+                              <div className="w-full h-full bg-slate-950 flex items-center justify-center text-slate-600">
+                                <User className="w-12 h-12" />
+                              </div>
+                            )}
+                            {/* Visitor Type mini badge */}
+                            <span className="absolute bottom-1 left-1 right-1 text-center bg-slate-900/95 border border-slate-800 text-[9px] font-black text-[#7f98f7] rounded py-0.5 uppercase tracking-wide truncate">
+                              {scannedOrSearchedVisitor.visitorType || tText(tText("ผู้ผ่านทาง", "Visitor"), "Visitor")}
+                            </span>
+                          </div>
+
+                          {/* Info Header */}
+                          <div className="flex-1 text-center sm:text-left">
+                            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
+                              <span className="text-[10px] font-black text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20 font-mono">
+                                PASS: {scannedOrSearchedVisitor.id}
+                              </span>
+                              <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                                {scannedOrSearchedVisitor.visitorType || 'ผู้ผ่านทาง'}
+                              </span>
                             </div>
-                          )}
-                          {/* Visitor Type mini badge */}
-                          <span className="absolute bottom-1 left-1 right-1 text-center bg-slate-900/95 border border-slate-800 text-[9px] font-black text-[#7f98f7] rounded py-0.5 uppercase tracking-wide truncate">
-                            {scannedOrSearchedVisitor.visitorType || tText(tText("ผู้ผ่านทาง", "Visitor"), "Visitor")}
-                          </span>
+                            <h3 className="text-xl font-black text-slate-100 mb-1">
+                              {scannedOrSearchedVisitor.name}
+                            </h3>
+                            <p className="text-xs text-slate-400">
+                              {scannedOrSearchedVisitor.company ? `สังกัด/บริษัท: ${scannedOrSearchedVisitor.company}` : 'ไม่ระบุสังกัดบริษัท'}
+                            </p>
+                          </div>
                         </div>
 
-                        {/* Info lines */}
-                        <div className="flex-1 text-center sm:text-left">
-                          <h3 className="text-lg font-black text-slate-100 mb-2">
-                            {scannedOrSearchedVisitor.name}
-                          </h3>
-
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-left mt-3">
-                            <div>
-                              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">สังกัด / บริษัท</span>
-                              <span className="text-xs text-slate-300 font-extrabold truncate block max-w-[150px]" title={scannedOrSearchedVisitor.company}>{scannedOrSearchedVisitor.company || '-'}</span>
-                            </div>
-                            <div>
-                              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">{tText(tText("ทะเบียนรถ", "Vehicle Plate"), "Vehicle Plate")}</span>
-                              <span className="text-xs text-slate-300 font-extrabold truncate block max-w-[150px]" title={scannedOrSearchedVisitor.vehiclePlate}>{scannedOrSearchedVisitor.vehiclePlate || '-'}</span>
-                            </div>
-                            <div>
-                              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">{tText(tText("พื้นที่เข้าติดต่อ", "Contact Area"), "Contact Area")}</span>
-                              <span className="text-xs text-[#7f98f7] font-black truncate block max-w-[150px]" title={scannedOrSearchedVisitor.contactArea}>{scannedOrSearchedVisitor.contactArea || '-'}</span>
-                            </div>
-                            <div>
-                              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">{tText(tText("เบอร์โทรศัพท์", "Phone Number"), "Phone Number")}</span>
-                              <span className="text-xs text-slate-300 font-extrabold truncate block max-w-[150px]" title={scannedOrSearchedVisitor.phone}>{scannedOrSearchedVisitor.phone || '-'}</span>
-                            </div>
-                            <div className="col-span-2 border-t border-slate-800/60 pt-2 mt-1">
-                              <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">{tText(tText("ออกใบผ่านโดย", "Issued By"), "Issued By")}</span>
-                              <span className="text-xs text-amber-400 font-black truncate block" title={scannedOrSearchedVisitor.registeredBy}>{scannedOrSearchedVisitor.registeredBy || tText(tText("ระบบอัตโนมัติ", "Automated System"), "Automated System")}</span>
-                            </div>
+                        {/* All Visitor Information Grid (แสดงข้อมูลทั้งหมด พร้อมปุ่ม ซ่อน/แสดงข้อมูล) */}
+                        <div className="border-t border-slate-800/80 pt-4">
+                          <div className="flex items-center justify-between mb-3 gap-2">
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                              📋 {tText("ข้อมูลผู้ผ่านทางทั้งหมด", "Complete Pass & Visitor Information")}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setHideVisitorDetails(!hideVisitorDetails)}
+                              className="text-[11px] font-extrabold text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 active:bg-blue-500/30 px-3 py-1 rounded-lg border border-blue-500/30 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm"
+                              title={hideVisitorDetails ? 'แสดงรายละเอียดเพิ่มเติม' : 'ซ่อนรายละเอียด'}
+                            >
+                              {hideVisitorDetails ? (
+                                <>
+                                  <ChevronDown className="w-3.5 h-3.5" />
+                                  <span>{tText("แสดงข้อมูลรายละเอียด", "Show Details")}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <ChevronUp className="w-3.5 h-3.5" />
+                                  <span>{tText("ซ่อนข้อมูล", "Hide Details")}</span>
+                                </>
+                              )}
+                            </button>
                           </div>
+
+                          {!hideVisitorDetails && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 bg-slate-900/80 p-4 rounded-xl border border-slate-800/60 text-xs animate-in fade-in duration-200">
+                              <div>
+                                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">ชื่อ-นามสกุล</span>
+                                <span className="text-slate-200 font-extrabold block truncate">{scannedOrSearchedVisitor.name || '-'}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">เลขบัตรประชาชน / Passport</span>
+                                <span className="text-slate-200 font-mono font-bold block truncate">{scannedOrSearchedVisitor.passportId || '-'}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">เบอร์โทรศัพท์</span>
+                                <span className="text-slate-200 font-bold block truncate">{scannedOrSearchedVisitor.phone || '-'}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">ประเภทผู้ติดต่อ</span>
+                                <span className="text-amber-400 font-extrabold block truncate">{scannedOrSearchedVisitor.visitorType || '-'}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">สังกัด / บริษัท</span>
+                                <span className="text-slate-200 font-bold block truncate">{scannedOrSearchedVisitor.company || '-'}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">ทะเบียนรถ</span>
+                                <span className="text-slate-200 font-mono font-bold block truncate">{scannedOrSearchedVisitor.vehiclePlate || '-'}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">พื้นที่เข้าติดต่อ</span>
+                                <span className="text-[#7f98f7] font-extrabold block truncate">{scannedOrSearchedVisitor.contactArea || '-'}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">ที่อยู่ติดต่อ</span>
+                                <span className="text-slate-300 font-medium block truncate" title={scannedOrSearchedVisitor.address}>{scannedOrSearchedVisitor.address || '-'}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">ผู้ออกใบผ่าน</span>
+                                <span className="text-amber-400 font-extrabold block truncate">{scannedOrSearchedVisitor.registeredBy || 'ระบบอัตโนมัติ'}</span>
+                              </div>
+                              <div className="sm:col-span-2 md:col-span-3 border-t border-slate-800/60 pt-2.5 mt-1 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                                <span className="text-slate-400 font-bold">📅 วันที่-เวลาออกใบผ่านลงทะเบียน:</span>
+                                <span className="text-slate-200 font-mono font-bold">
+                                  {scannedOrSearchedVisitor.registeredAt ? new Date(scannedOrSearchedVisitor.registeredAt).toLocaleString('th-TH') : '-'}
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      {/* Status indicator banner */}
+                      {/* Status indicator & Time/Duration summary banner for this visit round */}
                       <div className="mb-6">
-                        {scannedOrSearchedVisitor.status === 'banned' ? (
-                          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl flex items-start gap-3">
-                            <Ban className="w-5 h-5 shrink-0 mt-0.5 text-rose-500 animate-pulse" />
-                            <div>
-                              <h4 className="font-extrabold text-sm uppercase">{tText(tText("พบบุคคลบัญชีดำ", "BLACKLISTED PROFILE IDENTIFIED"), "BLACKLISTED PROFILE IDENTIFIED")}</h4>
-                              <p className="text-xs text-rose-400/80 mt-1 leading-relaxed">
-                                บุคคลนี้ถูกระงับสิทธิ์การเข้าพื้นที่เด็ดขาด! เหตุผล: {scannedOrSearchedVisitor.banReason || tText(tText("ผิดกฎระเบียบความปลอดภัย", "Violating safety and security regulations"), "Violating safety and security regulations")}
-                              </p>
-                            </div>
-                          </div>
-                        ) : scannedOrSearchedVisitor.status && (scannedOrSearchedVisitor.status.startsWith(tText(tText("เช็คอิน", "Check-In"), "Check-In")) || scannedOrSearchedVisitor.status === 'checked-in') ? (
-                          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl flex flex-col gap-3">
-                            <div className="flex items-start gap-3">
-                              <CheckCircle className="w-5 h-5 shrink-0 mt-0.5 text-emerald-500" />
-                              <div className="flex-1">
-                                <h4 className="font-extrabold text-sm uppercase">{tText(tText("อยู่ภายในพื้นที่", "Inside Area"), "Inside Area")}</h4>
-                                <p className="text-xs text-emerald-400/80 mt-1 leading-relaxed">
-                                  {scannedOrSearchedVisitor.status} <span className="text-slate-400 text-[10px] font-mono">({scannedOrSearchedVisitor.lastActivityAt ? new Date(scannedOrSearchedVisitor.lastActivityAt).toLocaleTimeString() : ''})</span>
-                                </p>
+                        {(() => {
+                          const durationInfo = getVisitorDurationInfo(
+                            scannedOrSearchedVisitor.id, 
+                            scannedOrSearchedVisitor.status, 
+                            scannedOrSearchedVisitor.lastActivityAt
+                          );
+
+                          const vLogs = dashboardStats.recentLogs.filter(
+                            l => l.visitorId === scannedOrSearchedVisitor.id
+                          );
+                          const checkInLog = vLogs.find(l => l.action === 'check-in');
+                          const checkOutLog = vLogs.find(l => l.action === 'check-out');
+
+                          const formatDateTime = (isoString?: string) => {
+                            if (!isoString) return null;
+                            try {
+                              const d = new Date(isoString);
+                              if (isNaN(d.getTime())) return null;
+                              return d.toLocaleString('th-TH', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                              }) + ' น.';
+                            } catch {
+                              return null;
+                            }
+                          };
+
+                          const checkInTimeFormatted = formatDateTime(durationInfo.checkInTime) || 
+                            formatDateTime(checkInLog?.timestamp) || 
+                            (scannedOrSearchedVisitor.status?.includes('เช็คอิน') ? formatDateTime(scannedOrSearchedVisitor.lastActivityAt) : null);
+
+                          const checkOutTimeFormatted = formatDateTime(durationInfo.checkOutTime) || 
+                            formatDateTime(checkOutLog?.timestamp) || 
+                            (scannedOrSearchedVisitor.status?.includes('เช็คเอาท์') ? formatDateTime(scannedOrSearchedVisitor.lastActivityAt) : null);
+
+                          if (scannedOrSearchedVisitor.status === 'banned') {
+                            return (
+                              <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl flex items-start gap-3">
+                                <Ban className="w-5 h-5 shrink-0 mt-0.5 text-rose-500 animate-pulse" />
+                                <div>
+                                  <h4 className="font-extrabold text-sm uppercase">{tText(tText("พบบุคคลบัญชีดำ", "BLACKLISTED PROFILE IDENTIFIED"), "BLACKLISTED PROFILE IDENTIFIED")}</h4>
+                                  <p className="text-xs text-rose-400/80 mt-1 leading-relaxed">
+                                    บุคคลนี้ถูกระงับสิทธิ์การเข้าพื้นที่เด็ดขาด! เหตุผล: {scannedOrSearchedVisitor.banReason || tText(tText("ผิดกฎระเบียบความปลอดภัย", "Violating safety and security regulations"), "Violating safety and security regulations")}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                            
-                            {/* Live Duration Counter Badge */}
-                            {(() => {
-                              const durationInfo = getVisitorDurationInfo(scannedOrSearchedVisitor.id, scannedOrSearchedVisitor.status, scannedOrSearchedVisitor.lastActivityAt);
-                              return (
-                                <div className="pt-2 border-t border-emerald-500/20 flex flex-wrap items-center justify-between gap-2 bg-emerald-950/40 p-2.5 rounded-lg">
-                                  <span className="text-xs text-emerald-300 font-bold flex items-center gap-1.5">
-                                    <Clock className="w-4 h-4 text-emerald-400 animate-pulse" />
-                                    {tText("ระยะเวลาอยู่ในพื้นที่ขณะนี้:", "Time spent inside area:")}
-                                  </span>
-                                  <span className="text-xs font-black font-mono text-emerald-200 bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-500/30">
-                                    {durationInfo.durationText}
+                            );
+                          }
+
+                          const isCheckedIn = scannedOrSearchedVisitor.status && (
+                            scannedOrSearchedVisitor.status.startsWith(tText(tText("เช็คอิน", "Check-In"), "Check-In")) || 
+                            scannedOrSearchedVisitor.status === 'checked-in' ||
+                            scannedOrSearchedVisitor.status.includes('เช็คอิน')
+                          );
+
+                          const isCheckedOut = scannedOrSearchedVisitor.status && (
+                            scannedOrSearchedVisitor.status === 'checked-out' || 
+                            scannedOrSearchedVisitor.status.startsWith(tText(tText("เช็คเอาท์", "Check-Out"), "Check-Out")) ||
+                            scannedOrSearchedVisitor.status.includes('เช็คเอาท์')
+                          );
+
+                          return (
+                            <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-5 flex flex-col gap-4">
+                              {/* Status Badge Line */}
+                              <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                                <div className="flex items-center gap-2">
+                                  {isCheckedIn ? (
+                                    <span className="flex h-3 w-3 relative">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                                    </span>
+                                  ) : isCheckedOut ? (
+                                    <span className="h-3 w-3 rounded-full bg-amber-500"></span>
+                                  ) : (
+                                    <span className="h-3 w-3 rounded-full bg-slate-500"></span>
+                                  )}
+                                  <span className="font-extrabold text-sm uppercase text-slate-200">
+                                    {isCheckedIn 
+                                      ? tText("สถานะ: อยู่ภายในพื้นที่ (Checked-In)", "Status: Inside Area") 
+                                      : isCheckedOut 
+                                      ? tText("สถานะ: เช็คเอาท์ออกพื้นที่เรียบร้อยแล้ว", "Status: Checked Out") 
+                                      : tText("สถานะ: ยังไม่ได้เช็คอิน (อยู่ภายนอกพื้นที่)", "Status: Outside Area")}
                                   </span>
                                 </div>
-                              );
-                            })()}
-                          </div>
-                        ) : (
-                          <div className="bg-slate-950/80 border border-slate-800 text-slate-400 p-4 rounded-xl flex items-start gap-3">
-                            <div className="w-2.5 h-2.5 rounded-full bg-slate-600 mt-1.5 animate-pulse shrink-0"></div>
-                            <div>
-                              <h4 className="font-extrabold text-sm uppercase">{tText(tText("อยู่ภายนอกพื้นที่", "Outside Area"), "Outside Area")}</h4>
-                              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                                {scannedOrSearchedVisitor.status || tText(tText("ยังไม่ถูกเช็คอิน (พร้อมลงทะเบียนเช็คอินเข้าพื้นที่)", "Not checked in"), "Not checked in")}
-                              </p>
+                                <span className="text-[10px] text-slate-400 font-mono">
+                                  {scannedOrSearchedVisitor.status || 'พร้อมเช็คอิน'}
+                                </span>
+                              </div>
+
+                              {/* Timestamps & Area Duration Table */}
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                                {/* Check-In Time */}
+                                <div className="bg-white border border-emerald-400/80 p-3 rounded-xl flex flex-col justify-between gap-1 shadow-sm">
+                                  <span className="text-[10px] font-black text-[#00d86e] uppercase tracking-wider flex items-center gap-1">
+                                    <LogIn className="w-3.5 h-3.5 text-[#00d86e]" />
+                                    {tText("เวลาเช็คอินเข้าพื้นที่", "Check-In Time")}
+                                  </span>
+                                  <span className="font-mono font-black text-[#00d86e] text-xs mt-1">
+                                    {checkInTimeFormatted || (isCheckedIn ? 'บันทึกแล้ว' : 'ยังไม่ได้เช็คอิน')}
+                                  </span>
+                                </div>
+
+                                {/* Check-Out Time */}
+                                <div className="bg-white border border-amber-400/80 p-3 rounded-xl flex flex-col justify-between gap-1 shadow-sm">
+                                  <span className="text-[10px] font-black text-[#ffb900] uppercase tracking-wider flex items-center gap-1">
+                                    <LogOut className="w-3.5 h-3.5 text-[#ffb900]" />
+                                    {tText("เวลาเช็คเอาท์ออกพื้นที่", "Check-Out Time")}
+                                  </span>
+                                  <span className="font-mono font-black text-[#ffb900] text-xs mt-1">
+                                    {checkOutTimeFormatted || (isCheckedIn ? 'กำลังอยู่ในพื้นที่' : 'ยังไม่มีเวลาเช็คเอาท์')}
+                                  </span>
+                                </div>
+
+                                {/* Duration in Area */}
+                                <div className="bg-white border border-blue-400/80 p-3 rounded-xl flex flex-col justify-between gap-1 shadow-sm">
+                                  <span className="text-[10px] font-black text-[#006eff] uppercase tracking-wider flex items-center gap-1">
+                                    <Clock className="w-3.5 h-3.5 text-[#006eff] animate-pulse" />
+                                    {tText("ระยะเวลาอยู่ในพื้นที่รอบนี้", "Duration in Area")}
+                                  </span>
+                                  <span className="font-mono font-black text-[#006eff] text-xs mt-1">
+                                    {durationInfo.durationText && durationInfo.durationText !== '-' 
+                                      ? (
+                                          durationInfo.diffMs && durationInfo.diffMs >= 3600000
+                                            ? `${durationInfo.durationText} (รวม ${Math.floor(durationInfo.diffMs / 60000)} นาที)`
+                                            : durationInfo.durationText
+                                        ) 
+                                      : (isCheckedIn ? 'กำลังคำนวณ...' : '0 นาที')}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          );
+                        })()}
                       </div>
 
                       {/* Submit Section */}
@@ -4414,7 +4615,7 @@ export default function App() {
                                   {lang === 'TH' ? tText(tText("กำลังส่งข้อมูลบันทึกเวลา...", "Submitting transaction log..."), "Submitting transaction log...") : 'Sending transaction...'}
                                 </span>
                               ) : (
-                                <span>
+                                <span className="text-black font-black">
                                   {gateLogAction === 'check-in' 
                                     ? (lang === 'TH' ? tText(tText("🟢 บันทึกเวลาเข้าพื้นที่", "🟢 CONFIRM CHECK-IN"), "🟢 CONFIRM CHECK-IN") : 'Confirm Check-In')
                                     : (lang === 'TH' ? tText(tText("🔴 บันทึกเวลาออกพื้นที่", "🔴 CONFIRM CHECK-OUT"), "🔴 CONFIRM CHECK-OUT") : 'Confirm Check-Out')
@@ -8822,7 +9023,67 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Expanded Image Lightbox Modal */}
+      <AnimatePresence>
+        {expandedImage && (
+          <div 
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200"
+            onClick={() => setExpandedImage(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-4xl max-h-[90vh] w-full flex flex-col items-center bg-slate-900/95 border border-slate-700/80 rounded-3xl p-4 shadow-2xl overflow-hidden"
+            >
+              {/* Top Control Bar */}
+              <div className="w-full flex items-center justify-between pb-3 border-b border-slate-800 gap-4">
+                <span className="text-xs font-black text-slate-200 truncate">
+                  {expandedImage.title || 'ดูรูปขนาดขยาย'}
+                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <a
+                    href={expandedImage.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-1.5 rounded-full bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition"
+                    title="เปิดรูปในแท็บใหม่"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedImage(null)}
+                    className="p-1.5 rounded-full bg-slate-800 text-slate-300 hover:text-white hover:bg-rose-600 transition cursor-pointer"
+                    title="ปิด"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
 
+              {/* Main Image Display */}
+              <div className="relative w-full flex-1 flex items-center justify-center overflow-auto p-2 my-2">
+                <img
+                  src={expandedImage.url}
+                  alt="Expanded Preview"
+                  className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-lg border border-slate-800"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=600';
+                  }}
+                />
+              </div>
+
+              {/* Bottom hint */}
+              <div className="text-[11px] text-slate-400 font-bold">
+                คลิกที่บริเวณด้านนอก หรือกดปุ่ม ✕ / ESC เพื่อปิด
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
