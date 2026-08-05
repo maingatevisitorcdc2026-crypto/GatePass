@@ -4532,6 +4532,42 @@ export default function App() {
                                   <span className="text-slate-200 font-bold block truncate">{scannedOrSearchedVisitor.nationality}</span>
                                 </div>
                               )}
+                              {scannedOrSearchedVisitor.dob && (
+                                <div>
+                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">วันเกิด / อายุ</span>
+                                  <span className="text-slate-200 font-bold block truncate">
+                                    {scannedOrSearchedVisitor.dob} {scannedOrSearchedVisitor.age ? `(${scannedOrSearchedVisitor.age} ปี)` : ''}
+                                  </span>
+                                </div>
+                              )}
+                              {scannedOrSearchedVisitor.passportNumber && (
+                                <div>
+                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">เลขพาสปอร์ต (Passport)</span>
+                                  <span className="text-amber-300 font-mono font-bold block truncate">{scannedOrSearchedVisitor.passportNumber}</span>
+                                </div>
+                              )}
+                              {scannedOrSearchedVisitor.passportExpiryDate && (
+                                <div>
+                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">วันหมดอายุพาสปอร์ต</span>
+                                  <span className={`font-mono font-bold block truncate ${checkWorkPermitExpired(scannedOrSearchedVisitor.passportExpiryDate) ? 'text-rose-400' : 'text-slate-200'}`}>
+                                    {scannedOrSearchedVisitor.passportExpiryDate} {checkWorkPermitExpired(scannedOrSearchedVisitor.passportExpiryDate) ? '⛔ หมดอายุ' : ''}
+                                  </span>
+                                </div>
+                              )}
+                              {scannedOrSearchedVisitor.workPermitNumber && (
+                                <div>
+                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">เลข Work Permit</span>
+                                  <span className="text-blue-300 font-mono font-bold block truncate">{scannedOrSearchedVisitor.workPermitNumber}</span>
+                                </div>
+                              )}
+                              {scannedOrSearchedVisitor.workPermitExpiryDate && (
+                                <div>
+                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">วันหมดอายุ Work Permit</span>
+                                  <span className={`font-mono font-bold block truncate ${checkWorkPermitExpired(scannedOrSearchedVisitor.workPermitExpiryDate) ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                    {scannedOrSearchedVisitor.workPermitExpiryDate} {checkWorkPermitExpired(scannedOrSearchedVisitor.workPermitExpiryDate) ? '⛔ หมดอายุ' : '✅ ปกติ'}
+                                  </span>
+                                </div>
+                              )}
                               <div className="sm:col-span-2 md:col-span-3 border-t border-slate-800/60 pt-2.5 mt-1 flex flex-wrap items-center justify-between gap-2 text-[11px]">
                                 <span className="text-slate-400 font-bold">📅 วันที่-เวลาออกใบผ่านลงทะเบียน:</span>
                                 <span className="text-slate-200 font-mono font-bold">
@@ -5666,9 +5702,26 @@ export default function App() {
                                   </td>
                                   <td className="py-3 px-4 font-extrabold text-slate-100">
                                     {visitor.name}
-                                    <div className="text-[10px] text-slate-500 font-mono font-normal mt-0.5">
-                                      เลขบัตร: {visitor.passportId || tText(tText("ไม่ได้ระบุ", "Unspecified"), "Unspecified")}
+                                    {visitor.registrationCategory === 'foreigner' && (
+                                      <span className="ml-2 text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">
+                                        {visitor.nationality || 'ต่างด้าว'}
+                                      </span>
+                                    )}
+                                    <div className="text-[10px] text-slate-500 font-mono font-normal mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                      <span>เลขบัตร: {visitor.passportId || tText(tText("ไม่ได้ระบุ", "Unspecified"), "Unspecified")}</span>
+                                      {visitor.dob && (
+                                        <span className="text-slate-400">| เกิด: {visitor.dob} {visitor.age ? `(${visitor.age} ปี)` : ''}</span>
+                                      )}
+                                      {visitor.gender && (
+                                        <span className="text-slate-400">| เพศ: {visitor.gender}</span>
+                                      )}
                                     </div>
+                                    {(visitor.passportNumber || visitor.workPermitNumber) && (
+                                      <div className="text-[10px] font-mono text-amber-300/90 font-bold mt-0.5 flex flex-wrap items-center gap-x-2">
+                                        {visitor.passportNumber && <span>Passport: {visitor.passportNumber}</span>}
+                                        {visitor.workPermitNumber && <span>WorkPermit: {visitor.workPermitNumber}</span>}
+                                      </div>
+                                    )}
                                     <div className="text-[10px] text-amber-400/90 font-mono font-normal mt-0.5">
                                       ออกใบผ่านโดย: {visitor.registeredBy || tText(tText("ระบบอัตโนมัติ", "Automated System"), "Automated System")}
                                     </div>
@@ -5728,6 +5781,16 @@ export default function App() {
                                   <div>
                                     <h5 className="font-extrabold text-xs text-slate-200">{visitor.name}</h5>
                                     <p className="text-[9px] text-slate-500 font-mono">ID: {visitor.id}</p>
+                                    {(visitor.dob || visitor.gender || visitor.nationality) && (
+                                      <p className="text-[9px] text-slate-400">
+                                        {[visitor.gender, visitor.nationality, visitor.dob ? `เกิด ${visitor.dob}` : null, visitor.age ? `อายุ ${visitor.age} ปี` : null].filter(Boolean).join(' | ')}
+                                      </p>
+                                    )}
+                                    {(visitor.passportNumber || visitor.workPermitNumber) && (
+                                      <p className="text-[9px] text-amber-300 font-mono">
+                                        {[visitor.passportNumber ? `Passport: ${visitor.passportNumber}` : null, visitor.workPermitNumber ? `WP: ${visitor.workPermitNumber}` : null].filter(Boolean).join(' | ')}
+                                      </p>
+                                    )}
                                     <p className="text-[9px] text-amber-400/90 font-mono">ออกโดย: {visitor.registeredBy || tText(tText("ระบบอัตโนมัติ", "Automated System"), "Automated System")}</p>
                                   </div>
                                 </div>
