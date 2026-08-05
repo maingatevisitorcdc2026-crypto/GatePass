@@ -103,7 +103,17 @@ function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     var action = data.action;
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var targetSpreadsheetId = data.spreadsheetId;
+    var ss;
+    if (targetSpreadsheetId) {
+      try {
+        ss = SpreadsheetApp.openById(targetSpreadsheetId);
+      } catch (err) {
+        ss = SpreadsheetApp.getActiveSpreadsheet();
+      }
+    } else {
+      ss = SpreadsheetApp.getActiveSpreadsheet();
+    }
     
     if (action === "sheets.metadata.get") {
       var sheets = ss.getSheets();

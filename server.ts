@@ -30,18 +30,27 @@ async function safeFetchAppsScriptJson(appsScriptUrl: string, payload: any): Pro
 }
 
 function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
+  const getTargetSpreadsheetId = (paramsSpreadsheetId?: string) => {
+    if (paramsSpreadsheetId && paramsSpreadsheetId !== 'appsscript-active-sheet') {
+      return paramsSpreadsheetId;
+    }
+    const fallback = loadFallbackDB();
+    return fallback.branding?.googleSpreadsheetId || '1ZWUD33aJak-GV3auuLjdAE6liGjp5EHvH6nQIIuUiwM';
+  };
+
   return {
     spreadsheets: {
       create: async (params: any) => {
-        return { data: { spreadsheetId: 'appsscript-active-sheet' } };
+        return { data: { spreadsheetId: getTargetSpreadsheetId(params?.spreadsheetId) } };
       },
       get: async (params: any) => {
         try {
-          const json = await safeFetchAppsScriptJson(appsScriptUrl, { action: 'sheets.metadata.get' });
+          const spId = getTargetSpreadsheetId(params?.spreadsheetId);
+          const json = await safeFetchAppsScriptJson(appsScriptUrl, { action: 'sheets.metadata.get', spreadsheetId: spId });
           if (json && Array.isArray(json.sheetNames)) {
             return {
               data: {
-                spreadsheetId: json.spreadsheetId || 'appsscript-active-sheet',
+                spreadsheetId: json.spreadsheetId || spId,
                 sheets: json.sheetNames.map((name: string) => ({ properties: { title: name } }))
               }
             };
@@ -51,7 +60,7 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
         }
         return {
           data: {
-            spreadsheetId: 'appsscript-active-sheet',
+            spreadsheetId: getTargetSpreadsheetId(params?.spreadsheetId),
             sheets: [
               { properties: { title: 'Visitors' } },
               { properties: { title: 'Logs' } },
@@ -64,10 +73,11 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
       },
       batchUpdate: async (params: any) => {
         try {
+          const spId = getTargetSpreadsheetId(params?.spreadsheetId);
           const requests = params.requestBody?.requests || [];
           for (const req of requests) {
             if (req.addSheet) {
-              await safeFetchAppsScriptJson(appsScriptUrl, { action: 'sheets.sheets.create', title: req.addSheet.properties.title });
+              await safeFetchAppsScriptJson(appsScriptUrl, { action: 'sheets.sheets.create', title: req.addSheet.properties.title, spreadsheetId: spId });
             }
           }
           return { data: { success: true } };
@@ -79,7 +89,8 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
       values: {
         get: async (params: any) => {
           try {
-            const json = await safeFetchAppsScriptJson(appsScriptUrl, { action: 'sheets.values.get', range: params.range });
+            const spId = getTargetSpreadsheetId(params?.spreadsheetId);
+            const json = await safeFetchAppsScriptJson(appsScriptUrl, { action: 'sheets.values.get', range: params.range, spreadsheetId: spId });
             return { data: { values: json.values || [] } };
           } catch (err: any) {
             console.warn('[AppsScript API values.get notice]:', err.message);
@@ -88,10 +99,12 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
         },
         update: async (params: any) => {
           try {
+            const spId = getTargetSpreadsheetId(params?.spreadsheetId);
             await safeFetchAppsScriptJson(appsScriptUrl, {
               action: 'sheets.values.update',
               range: params.range,
-              values: params.requestBody?.values || []
+              values: params.requestBody?.values || [],
+              spreadsheetId: spId
             });
             return { data: { success: true } };
           } catch (err: any) {
@@ -101,10 +114,12 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
         },
         append: async (params: any) => {
           try {
+            const spId = getTargetSpreadsheetId(params?.spreadsheetId);
             await safeFetchAppsScriptJson(appsScriptUrl, {
               action: 'sheets.values.append',
               range: params.range,
-              values: params.requestBody?.values || []
+              values: params.requestBody?.values || [],
+              spreadsheetId: spId
             });
             return { data: { success: true } };
           } catch (err: any) {
@@ -114,9 +129,11 @@ function createAppsScriptSheetsProxy(appsScriptUrl: string): any {
         },
         clear: async (params: any) => {
           try {
+            const spId = getTargetSpreadsheetId(params?.spreadsheetId);
             await safeFetchAppsScriptJson(appsScriptUrl, {
               action: 'sheets.values.clear',
-              range: params.range
+              range: params.range,
+              spreadsheetId: spId
             });
             return { data: { success: true } };
           } catch (err: any) {
