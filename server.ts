@@ -2246,10 +2246,14 @@ app.post('/api/clear-mock-visitors', async (req, res) => {
 
 // Register new visitor (creates pass)
 app.post('/api/register', async (req, res) => {
-  const { name, passportId, phone, vehiclePlate, address, company, visitorType, contactArea, photoBase64, registeredBy } = req.body;
+  const { 
+    name, passportId, phone, vehiclePlate, address, company, visitorType, contactArea, photoBase64, registeredBy,
+    nationality, dob, age, registrationCategory, passportNumber, workPermitNumber, workPermitIssueDate, workPermitExpiryDate, isWorkPermitExpired
+  } = req.body;
   try {
-    if (!name || !passportId || !photoBase64) {
-      return res.status(400).json({ error: 'ชื่อ, เลขบัตรประชาชน และรูปถ่ายหน้าตรง มีความจำเป็น' });
+    const effectivePassportId = passportId || passportNumber || 'REG-' + Date.now();
+    if (!name || !effectivePassportId || !photoBase64) {
+      return res.status(400).json({ error: 'ชื่อ, เลขบัตรประจำตัว/พาสปอร์ต และรูปถ่ายหน้าตรง มีความจำเป็น' });
     }
 
     const registeredAt = new Date().toISOString();
@@ -2261,7 +2265,7 @@ app.post('/api/register', async (req, res) => {
       const fallback = loadFallbackDB();
       id = await getNextVisitorId(null, '', fallback);
 
-      const existingBanned = fallback.visitors.find(v => v.passportId === passportId && v.status === 'banned');
+      const existingBanned = fallback.visitors.find(v => (v.passportId === effectivePassportId || (v.passportNumber && v.passportNumber === passportNumber)) && v.status === 'banned');
       if (existingBanned) {
         return res.status(403).json({ error: `ไม่สามารถออกใบผ่านได้: บุคคลนี้ถูกระงับสิทธิ์การเข้าพื้นที่ (แบน) เนื่องจาก: ${existingBanned.banReason || 'ผิดกฎระเบียบของบริษัท'}` });
       }
@@ -2272,7 +2276,16 @@ app.post('/api/register', async (req, res) => {
       const visitor = {
         id,
         name,
-        passportId,
+        passportId: effectivePassportId,
+        nationality: nationality || (registrationCategory === 'foreigner' ? 'ต่างด้าว' : 'ไทย'),
+        dob: dob || '',
+        age: age || undefined,
+        registrationCategory: registrationCategory || 'thai',
+        passportNumber: passportNumber || '',
+        workPermitNumber: workPermitNumber || '',
+        workPermitIssueDate: workPermitIssueDate || '',
+        workPermitExpiryDate: workPermitExpiryDate || '',
+        isWorkPermitExpired: isWorkPermitExpired || false,
         phone,
         vehiclePlate,
         address,

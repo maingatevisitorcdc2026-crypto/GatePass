@@ -7,6 +7,15 @@ export interface Visitor {
   id: string; // Auto-generated ID, e.g., pass ID or index
   name: string;
   passportId: string; // เลขบัตรประชาชน / Passport
+  nationality?: string; // สัญชาติ
+  dob?: string; // วันเดือนปีเกิด YYYY-MM-DD
+  age?: number; // อายุ (คำนวณอัตโนมัติ)
+  registrationCategory?: 'thai' | 'foreigner'; // ประเภทฟอร์ม: 'thai' | 'foreigner'
+  passportNumber?: string; // หมายเลขพาสปอร์ต
+  workPermitNumber?: string; // เลขใบอนุญาตทำงาน Work Permit
+  workPermitIssueDate?: string; // วันที่ออกบัตรใบอนุญาตทำงาน
+  workPermitExpiryDate?: string; // วันหมดอายุใบอนุญาตทำงาน
+  isWorkPermitExpired?: boolean; // สถานะหมดอายุใบอนุญาตทำงาน
   phone: string;
   vehiclePlate: string;
   address: string;

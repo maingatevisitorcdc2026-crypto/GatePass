@@ -847,16 +847,47 @@ export default function App() {
     }
   };
 
+  // Helpers for Age & Work Permit Validation
+  const calculateAgeFromDob = (dobStr: string): number | null => {
+    if (!dobStr) return null;
+    const birthDate = new Date(dobStr);
+    if (isNaN(birthDate.getTime())) return null;
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const checkWorkPermitExpired = (expiryStr: string): boolean => {
+    if (!expiryStr) return false;
+    const expiryDate = new Date(expiryStr);
+    if (isNaN(expiryDate.getTime())) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return expiryDate.getTime() < today.getTime();
+  };
+
   // Visitor Registration States
   const [regForm, setRegForm] = useState({
+    registrationCategory: 'thai' as 'thai' | 'foreigner',
     name: '',
-    passportId: '',
+    passportId: '', // เลขบัตรประจำตัวประชาชน (คนไทย)
+    nationality: 'ไทย',
+    dob: '',
     phone: '',
     vehiclePlate: '',
     address: '',
     company: '',
     visitorType: 'โหลดเดอร์',
     contactArea: 'MainGate',
+    // Foreigner / Migrant Worker fields
+    passportNumber: '',
+    workPermitNumber: '',
+    workPermitIssueDate: '',
+    workPermitExpiryDate: '',
   });
   const [regPhoto, setRegPhoto] = useState<string | null>(null);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -2637,6 +2668,37 @@ export default function App() {
       }
     }
 
+    // 1. Validation for Foreigner Work Permit Expiry
+    if (regForm.registrationCategory === 'foreigner') {
+      if (checkWorkPermitExpired(regForm.workPermitExpiryDate)) {
+        setCustomNotification({
+          isOpen: true,
+          type: 'error',
+          title: '⛔ ไม่อนุญาตให้เข้าพื้นที่ (เอกสารหมดอายุ)',
+          message: 'เอกสารใบอนุญาตทำงาน (Work Permit) หรือวีซ่าของแรงงานต่างด้าวหมดอายุแล้ว',
+          subMessage: `วันหมดอายุในระบบ: ${regForm.workPermitExpiryDate || 'ไม่ได้ระบุ'} - ระบบปฏิเสธการออกใบผ่านสำหรับเอกสารที่หมดอายุแล้ว`
+        });
+        return;
+      }
+    }
+
+    // 2. Validation for Age limit (18 - 55 years old rule for Loaders and Workers)
+    const calculatedAge = calculateAgeFromDob(regForm.dob);
+    const isLoaderType = regForm.visitorType.includes('โหลดเดอร์') || regForm.visitorType.toLowerCase().includes('loader');
+
+    if (calculatedAge !== null && (isLoaderType || regForm.registrationCategory === 'foreigner')) {
+      if (calculatedAge < 18 || calculatedAge > 55) {
+        setCustomNotification({
+          isOpen: true,
+          type: 'error',
+          title: '⛔ ไม่อนุญาตให้เข้าพื้นที่ (ผิดเงื่อนไขอายุ)',
+          message: `ผู้มาติดต่อประเภท "${regForm.visitorType}" ต้องมีอายุระหว่าง 18 - 55 ปีเท่านั้น`,
+          subMessage: `อายุที่คำนวณได้จากวันเกิดคือ ${calculatedAge} ปี (${calculatedAge < 18 ? 'ต่ำกว่า 18 ปี' : 'เกิน 55 ปี'}) - ระบบไม่อนุญาตให้เข้าพื้นที่ตามกฎระเบียบความปลอดภัย`
+        });
+        return;
+      }
+    }
+
     if (!regPhoto) {
       setCustomNotification({
         isOpen: true,
@@ -2661,11 +2723,20 @@ export default function App() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      const effectivePassportId = regForm.registrationCategory === 'foreigner' 
+        ? (regForm.passportNumber || regForm.passportId)
+        : regForm.passportId;
+
+      const isExpired = regForm.registrationCategory === 'foreigner' && checkWorkPermitExpired(regForm.workPermitExpiryDate);
+
       const response = await fetch('/api/register', {
         method: 'POST',
         headers,
         body: JSON.stringify({
           ...regForm,
+          passportId: effectivePassportId,
+          age: calculatedAge || undefined,
+          isWorkPermitExpired: isExpired,
           photoBase64: regPhoto,
           registeredBy: loggedInSystemUser?.name || tText(tText("ไม่ได้ระบุ", "Unspecified"), "Unspecified"),
         }),
@@ -2681,14 +2752,21 @@ export default function App() {
         setActiveTab('pass');
         // Clear form
         setRegForm({
+          registrationCategory: 'thai',
           name: '',
           passportId: '',
+          nationality: 'ไทย',
+          dob: '',
           phone: '',
           vehiclePlate: '',
           address: '',
           company: '',
           visitorType: 'โหลดเดอร์',
           contactArea: 'MainGate',
+          passportNumber: '',
+          workPermitNumber: '',
+          workPermitIssueDate: '',
+          workPermitExpiryDate: '',
         });
         setRegPhoto(null);
         fetchDashboardData(token);
@@ -2733,14 +2811,21 @@ export default function App() {
     if (localMatch) {
       setRegForm(prev => ({
         ...prev,
+        registrationCategory: localMatch.registrationCategory || (localMatch.nationality && localMatch.nationality !== 'ไทย' ? 'foreigner' : 'thai'),
         name: String(localMatch.name || prev.name || ''),
         passportId: String(localMatch.passportId || rawPassport),
+        nationality: String(localMatch.nationality || (localMatch.registrationCategory === 'foreigner' ? 'ต่างด้าว' : 'ไทย')),
+        dob: String(localMatch.dob || prev.dob || ''),
         phone: String(localMatch.phone || prev.phone || ''),
         vehiclePlate: String(localMatch.vehiclePlate || prev.vehiclePlate || ''),
         address: String(localMatch.address || prev.address || ''),
         company: String(localMatch.company || prev.company || ''),
         visitorType: String(localMatch.visitorType || prev.visitorType || 'โหลดเดอร์'),
         contactArea: String(localMatch.contactArea || prev.contactArea || 'MainGate'),
+        passportNumber: String(localMatch.passportNumber || prev.passportNumber || ''),
+        workPermitNumber: String(localMatch.workPermitNumber || prev.workPermitNumber || ''),
+        workPermitIssueDate: String(localMatch.workPermitIssueDate || prev.workPermitIssueDate || ''),
+        workPermitExpiryDate: String(localMatch.workPermitExpiryDate || prev.workPermitExpiryDate || ''),
       }));
       if (localMatch.photoUrl) {
         setRegPhoto(localMatch.photoUrl);
@@ -4900,29 +4985,82 @@ export default function App() {
                       )}
                     </div>
 
-                    {/* Right Column: Standard Registration Fields */}
+                    {/* Right Column: Registration Fields (Thai vs Foreigner) */}
                     <div className="lg:col-span-8 flex flex-col gap-3.5">
-                      <label className="block text-xs uppercase tracking-wider text-slate-400 font-black text-center lg:text-left">
-                        กรอกข้อมูลผู้ติดต่อ
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {config.requiredFields.name && (
-                          <div>
-                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('nameLabel')} <span className="text-rose-500">*</span></label>
-                            <input
-                              type="text"
-                              required
-                              value={regForm.name}
-                              onChange={(e) => setRegForm({ ...regForm, name: e.target.value })}
-                              placeholder={t('namePlaceholder')}
-                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
-                            />
-                          </div>
-                        )}
+                      {/* Registration Category Switcher */}
+                      <div className="grid grid-cols-2 gap-2 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRegForm(prev => ({
+                              ...prev,
+                              registrationCategory: 'thai',
+                              nationality: 'ไทย'
+                            }));
+                          }}
+                          className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                            regForm.registrationCategory === 'thai'
+                              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 ring-2 ring-blue-400/50'
+                              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                          }`}
+                        >
+                          <span className="font-bold">{lang === 'TH' ? 'คนไทย' : 'Thai Citizen'}</span>
+                        </button>
 
-                        {config.requiredFields.passportId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRegForm(prev => ({
+                              ...prev,
+                              registrationCategory: 'foreigner',
+                              nationality: prev.nationality === 'ไทย' ? 'พม่า' : prev.nationality
+                            }));
+                          }}
+                          className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                            regForm.registrationCategory === 'foreigner'
+                              ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30 ring-2 ring-amber-400/50'
+                              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                          }`}
+                        >
+                          <span className="font-bold">{lang === 'TH' ? 'แรงงานต่างด้าว / ต่างชาติ' : 'Foreigner Worker'}</span>
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs uppercase tracking-wider text-slate-300 font-black">
+                          {regForm.registrationCategory === 'thai'
+                            ? '📋 ฟอร์มลงทะเบียนบุคคลสัญชาติไทย'
+                            : '📋 ฟอร์มลงทะเบียนแรงงานต่างด้าว / ผู้ติดต่อต่างชาติ'}
+                        </label>
+                        <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
+                          regForm.registrationCategory === 'thai' 
+                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' 
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                        }`}>
+                          {regForm.registrationCategory === 'thai' ? 'สัญชาติไทย' : 'แรงงานต่างด้าว'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Name */}
+                        <div>
+                          <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('nameLabel')} <span className="text-rose-500">*</span></label>
+                          <input
+                            type="text"
+                            required
+                            value={regForm.name}
+                            onChange={(e) => setRegForm({ ...regForm, name: e.target.value })}
+                            placeholder={t('namePlaceholder')}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* THAI FORM: Citizen ID */}
+                        {regForm.registrationCategory === 'thai' && (
                           <div>
-                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('passportLabel')} <span className="text-rose-500">*</span></label>
+                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
+                              เลขบัตรประจำตัวประชาชน 13 หลัก <span className="text-rose-500">*</span>
+                            </label>
                             <div className="relative flex items-center">
                               <input
                                 type="text"
@@ -4940,7 +5078,7 @@ export default function App() {
                                     handleRetrieveByPassport();
                                   }
                                 }}
-                                placeholder={t('passportPlaceholder')}
+                                placeholder="X-XXXX-XXXXX-XX-X"
                                 className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3 pr-[110px] py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
                               />
                               <button
@@ -4954,97 +5092,273 @@ export default function App() {
                                 }`}
                               >
                                 <Sparkles className="w-3 h-3" />
-                                {isRetrievingByPassport ? tText(tText("กำลังดึง...", "Retrieving..."), "Retrieving...") : tText(tText("ดึงข้อมูลเก่า", "Retrieve Profile"), "Retrieve Profile")}
+                                {isRetrievingByPassport ? 'กำลังดึง...' : 'ดึงประวัติ'}
                               </button>
                             </div>
                           </div>
                         )}
 
-                        {config.requiredFields.phone && (
+                        {/* FOREIGNER FORM: Nationality Select */}
+                        {regForm.registrationCategory === 'foreigner' && (
                           <div>
-                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('phoneLabel')} <span className="text-rose-500">*</span></label>
-                            <input
-                              type="tel"
-                              required
-                              value={regForm.phone}
-                              onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
-                              placeholder={t('phonePlaceholder')}
-                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
-                            />
-                          </div>
-                        )}
-
-                        {config.requiredFields.vehiclePlate && (
-                          <div>
-                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('plateLabel')}</label>
-                            <input
-                              type="text"
-                              value={regForm.vehiclePlate}
-                              onChange={(e) => setRegForm({ ...regForm, vehiclePlate: e.target.value })}
-                              placeholder={t('platePlaceholder')}
-                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
-                            />
-                          </div>
-                        )}
-
-                        {config.requiredFields.company && (
-                          <div>
-                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('companyLabel')} <span className="text-rose-500">*</span></label>
-                            <input
-                              type="text"
-                              required
-                              value={regForm.company}
-                              onChange={(e) => setRegForm({ ...regForm, company: e.target.value })}
-                              placeholder={t('companyPlaceholder')}
-                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
-                            />
-                          </div>
-                        )}
-
-                        {config.requiredFields.visitorType && (
-                          <div>
-                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('visitorTypeLabel')} <span className="text-rose-500">*</span></label>
+                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
+                              สัญชาติ (Nationality) <span className="text-rose-500">*</span>
+                            </label>
                             <select
-                              value={regForm.visitorType}
-                              onChange={(e) => setRegForm({ ...regForm, visitorType: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none cursor-pointer text-slate-300"
+                              value={regForm.nationality}
+                              onChange={(e) => setRegForm({ ...regForm, nationality: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-amber-500 focus:outline-none cursor-pointer"
                             >
-                              {VISITOR_TYPES.map(t => (
-                                <option key={t} value={t} className="bg-slate-900 text-slate-100">{t}</option>
-                              ))}
+                              <option value="พม่า">🇲🇲 พม่า (Myanmar)</option>
+                              <option value="กัมพูชา">🇰🇭 กัมพูชา (Cambodia)</option>
+                              <option value="ลาว">🇱🇦 ลาว (Laos)</option>
+                              <option value="เวียดนาม">🇻🇳 เวียดนาม (Vietnam)</option>
+                              <option value="ต่างชาติอื่นๆ">🌐 อื่นๆ (Other Foreigner)</option>
                             </select>
                           </div>
                         )}
 
-                        {config.requiredFields.contactArea && (
-                          <div className="sm:col-span-2">
-                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('contactAreaLabel')} <span className="text-rose-500">*</span></label>
-                            <select
-                              value={regForm.contactArea}
-                              onChange={(e) => setRegForm({ ...regForm, contactArea: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none cursor-pointer text-slate-300"
-                            >
-                              {CONTACT_AREAS.map(a => (
-                                <option key={a} value={a} className="bg-slate-900 text-slate-100">{a}</option>
-                              ))}
-                            </select>
+                        {/* FOREIGNER FORM: Passport Number */}
+                        {regForm.registrationCategory === 'foreigner' && (
+                          <div>
+                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
+                              หมายเลขพาสปอร์ต (Passport No.) <span className="text-rose-500">*</span>
+                            </label>
+                            <div className="relative flex items-center">
+                              <input
+                                type="text"
+                                required
+                                value={regForm.passportNumber}
+                                onChange={(e) => setRegForm({ ...regForm, passportNumber: e.target.value, passportId: e.target.value })}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleRetrieveByPassport();
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (String(regForm.passportNumber || '').trim().length >= 4 && !regForm.name) {
+                                    handleRetrieveByPassport();
+                                  }
+                                }}
+                                placeholder="ระบุเลขพาสปอร์ต..."
+                                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3 pr-[110px] py-2.5 text-slate-100 text-xs focus:border-amber-500 focus:outline-none"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleRetrieveByPassport}
+                                disabled={isRetrievingByPassport || !String(regForm.passportNumber || '').trim()}
+                                className={`absolute right-1.5 text-[10px] font-extrabold px-2 py-1 rounded-lg transition duration-150 flex items-center gap-1 cursor-pointer select-none ${
+                                  !String(regForm.passportNumber || '').trim()
+                                    ? 'text-slate-500 cursor-not-allowed bg-slate-900/40'
+                                    : 'text-[#7f98f7] hover:text-[#7f98f7]/80 bg-[#7f98f7]/10 border border-[#7f98f7]/20 hover:bg-[#7f98f7]/20'
+                                }`}
+                              >
+                                <Sparkles className="w-3 h-3" />
+                                {isRetrievingByPassport ? 'กำลังดึง...' : 'ดึงประวัติ'}
+                              </button>
+                            </div>
                           </div>
                         )}
 
-                        {config.requiredFields.address && (
-                          <div className="sm:col-span-2">
-                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('addressLabel')} <span className="text-rose-500">*</span></label>
-                            <textarea
+                        {/* FOREIGNER FORM: Work Permit Number */}
+                        {regForm.registrationCategory === 'foreigner' && (
+                          <div>
+                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
+                              เลขใบอนุญาตทำงาน (Work Permit No.) <span className="text-rose-500">*</span>
+                            </label>
+                            <input
+                              type="text"
                               required
-                              rows={2}
-                              value={regForm.address}
-                              onChange={(e) => setRegForm({ ...regForm, address: e.target.value })}
-                              placeholder={t('addressPlaceholder')}
-                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none resize-none"
+                              value={regForm.workPermitNumber}
+                              onChange={(e) => setRegForm({ ...regForm, workPermitNumber: e.target.value })}
+                              placeholder="ระบุเลขใบอนุญาตทำงาน..."
+                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-amber-500 focus:outline-none"
                             />
                           </div>
                         )}
+
+                        {/* FOREIGNER FORM: Work Permit Issue Date */}
+                        {regForm.registrationCategory === 'foreigner' && (
+                          <div>
+                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
+                              วันที่ออกบัตรใบอนุญาต
+                            </label>
+                            <input
+                              type="date"
+                              value={regForm.workPermitIssueDate}
+                              onChange={(e) => setRegForm({ ...regForm, workPermitIssueDate: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-amber-500 focus:outline-none"
+                            />
+                          </div>
+                        )}
+
+                        {/* FOREIGNER FORM: Work Permit Expiry Date */}
+                        {regForm.registrationCategory === 'foreigner' && (
+                          <div>
+                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
+                              วันหมดอายุใบอนุญาตทำงาน <span className="text-rose-500">*</span>
+                            </label>
+                            <input
+                              type="date"
+                              required
+                              value={regForm.workPermitExpiryDate}
+                              onChange={(e) => setRegForm({ ...regForm, workPermitExpiryDate: e.target.value })}
+                              className={`w-full bg-slate-950 border rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:outline-none ${
+                                regForm.workPermitExpiryDate && checkWorkPermitExpired(regForm.workPermitExpiryDate)
+                                  ? 'border-rose-500 text-rose-300 font-bold bg-rose-950/20'
+                                  : 'border-slate-800 focus:border-amber-500'
+                              }`}
+                            />
+                          </div>
+                        )}
+
+                        {/* BOTH FORMS: Date of Birth & Live Age Calculation */}
+                        <div>
+                          <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
+                            วันเกิด <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="date"
+                            required
+                            value={regForm.dob}
+                            onChange={(e) => setRegForm({ ...regForm, dob: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
+                          />
+                          {regForm.dob && (() => {
+                            const calculatedAge = calculateAgeFromDob(regForm.dob);
+                            if (calculatedAge === null) return null;
+                            const isLoader = regForm.visitorType.includes('โหลดเดอร์') || regForm.visitorType.toLowerCase().includes('loader');
+                            const isRestricted = (isLoader || regForm.registrationCategory === 'foreigner') && (calculatedAge < 18 || calculatedAge > 55);
+                            return (
+                              <div className={`mt-1.5 px-2.5 py-1 rounded-lg text-[11px] font-black flex items-center gap-1.5 ${
+                                isRestricted
+                                  ? 'bg-rose-500/20 border border-rose-500/40 text-rose-300'
+                                  : 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                              }`}>
+                                {isRestricted ? (
+                                  <>
+                                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                                    <span>อายุ {calculatedAge} ปี (⚠️ นอกเกณฑ์ 18-55 ปี)</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
+                                    <span>อายุ {calculatedAge} ปี (ผ่านเกณฑ์ 18-55 ปี)</span>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
+
+                        {/* Phone */}
+                        <div>
+                          <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('phoneLabel')} <span className="text-rose-500">*</span></label>
+                          <input
+                            type="tel"
+                            required
+                            value={regForm.phone}
+                            onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
+                            placeholder={t('phonePlaceholder')}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* Vehicle Plate */}
+                        <div>
+                          <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('plateLabel')}</label>
+                          <input
+                            type="text"
+                            value={regForm.vehiclePlate}
+                            onChange={(e) => setRegForm({ ...regForm, vehiclePlate: e.target.value })}
+                            placeholder={t('platePlaceholder')}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* Company */}
+                        <div>
+                          <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('companyLabel')} <span className="text-rose-500">*</span></label>
+                          <input
+                            type="text"
+                            required
+                            value={regForm.company}
+                            onChange={(e) => setRegForm({ ...regForm, company: e.target.value })}
+                            placeholder={t('companyPlaceholder')}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+
+                        {/* Visitor Type */}
+                        <div>
+                          <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('visitorTypeLabel')} <span className="text-rose-500">*</span></label>
+                          <select
+                            value={regForm.visitorType}
+                            onChange={(e) => setRegForm({ ...regForm, visitorType: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none cursor-pointer text-slate-300"
+                          >
+                            {VISITOR_TYPES.map(t => (
+                              <option key={t} value={t} className="bg-slate-900 text-slate-100">{t}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Contact Area */}
+                        <div className="sm:col-span-2">
+                          <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('contactAreaLabel')} <span className="text-rose-500">*</span></label>
+                          <select
+                            value={regForm.contactArea}
+                            onChange={(e) => setRegForm({ ...regForm, contactArea: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none cursor-pointer text-slate-300"
+                          >
+                            {CONTACT_AREAS.map(a => (
+                              <option key={a} value={a} className="bg-slate-900 text-slate-100">{a}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Address */}
+                        <div className="sm:col-span-2">
+                          <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">{t('addressLabel')} <span className="text-rose-500">*</span></label>
+                          <textarea
+                            required
+                            rows={2}
+                            value={regForm.address}
+                            onChange={(e) => setRegForm({ ...regForm, address: e.target.value })}
+                            placeholder={t('addressPlaceholder')}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none resize-none"
+                          />
+                        </div>
                       </div>
+
+                      {/* Live Warnings Banner before submit */}
+                      {regForm.registrationCategory === 'foreigner' && regForm.workPermitExpiryDate && checkWorkPermitExpired(regForm.workPermitExpiryDate) && (
+                        <div className="bg-rose-500/15 border border-rose-500/40 rounded-2xl p-3 text-rose-300 text-xs font-bold flex items-start gap-2.5 animate-pulse">
+                          <AlertTriangle className="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
+                          <div>
+                            <div className="font-extrabold text-rose-200">⛔ เอกสารใบอนุญาตทำงาน (Work Permit) หมดอายุแล้ว!</div>
+                            <div className="text-[11px] text-rose-300 mt-0.5">วันหมดอายุ: {regForm.workPermitExpiryDate} — ไม่อนุญาตให้ผ่านเข้าพื้นที่สำหรับเอกสารที่หมดอายุ</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {regForm.dob && (() => {
+                        const calculatedAge = calculateAgeFromDob(regForm.dob);
+                        const isLoader = regForm.visitorType.includes('โหลดเดอร์') || regForm.visitorType.toLowerCase().includes('loader');
+                        if (calculatedAge !== null && (isLoader || regForm.registrationCategory === 'foreigner') && (calculatedAge < 18 || calculatedAge > 55)) {
+                          return (
+                            <div className="bg-rose-500/15 border border-rose-500/40 rounded-2xl p-3 text-rose-300 text-xs font-bold flex items-start gap-2.5 animate-pulse">
+                              <AlertTriangle className="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
+                              <div>
+                                <div className="font-extrabold text-rose-200">⛔ ไม่อนุญาตให้เข้าพื้นที่ (คำนวณอายุได้ {calculatedAge} ปี)</div>
+                                <div className="text-[11px] text-rose-300 mt-0.5">ผู้มาติดต่อประเภท "{regForm.visitorType}" หรือต่างด้าว ต้องมีอายุระหว่าง 18 - 55 ปีเท่านั้น</div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
 
                       <button
                         type="submit"
