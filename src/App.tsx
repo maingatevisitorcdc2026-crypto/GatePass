@@ -2796,7 +2796,11 @@ export default function App() {
 
   // Retrieve previous registration details using National ID/Passport (Optimized ultra-fast autofill)
   const handleRetrieveByPassport = async () => {
-    const rawPassport = String(regForm.passportId || '').trim();
+    const rawPassport = String(
+      regForm.registrationCategory === 'foreigner' 
+        ? (regForm.passportNumber || regForm.passportId || '')
+        : (regForm.passportId || '')
+    ).trim();
     if (!rawPassport) return;
     const token = getAccessToken() || '';
 
@@ -5091,7 +5095,13 @@ export default function App() {
                             setRegForm(prev => ({
                               ...prev,
                               registrationCategory: 'thai',
-                              nationality: 'ไทย'
+                              nationality: 'ไทย',
+                              passportNumber: '',
+                              passportIssueDate: '',
+                              passportExpiryDate: '',
+                              workPermitNumber: '',
+                              workPermitIssueDate: '',
+                              workPermitExpiryDate: '',
                             }));
                           }}
                           className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
@@ -5109,7 +5119,8 @@ export default function App() {
                             setRegForm(prev => ({
                               ...prev,
                               registrationCategory: 'foreigner',
-                              nationality: prev.nationality === 'ไทย' ? 'พม่า' : prev.nationality
+                              nationality: prev.nationality === 'ไทย' ? 'พม่า' : prev.nationality,
+                              passportId: '',
                             }));
                           }}
                           className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
@@ -5226,7 +5237,7 @@ export default function App() {
                                 type="text"
                                 required
                                 value={regForm.passportNumber}
-                                onChange={(e) => setRegForm({ ...regForm, passportNumber: e.target.value, passportId: e.target.value })}
+                                onChange={(e) => setRegForm({ ...regForm, passportNumber: e.target.value })}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     e.preventDefault();

@@ -2450,7 +2450,7 @@ app.post('/api/register', async (req, res) => {
       valueInputOption: 'RAW',
       requestBody: {
         values: [[
-          id, name, passportId, phone, vehiclePlate, address, company, 
+          id, name, effectivePassportId, phone, vehiclePlate, address, company, 
           visitorType, contactArea, photoUrl, photoDriveId, 'ยังไม่ถูกเช็คอิน', '', registeredAt, '', registeredBy || '',
           registrationCategory || 'thai', nationality || (registrationCategory === 'foreigner' ? 'ต่างด้าว' : 'ไทย'),
           dob || '', age ? String(age) : '', gender || '', passportNumber || '', passportIssueDate || '', passportExpiryDate || '',
