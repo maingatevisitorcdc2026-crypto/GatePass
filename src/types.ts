@@ -8,6 +8,7 @@ export interface Visitor {
   name: string;
   passportId: string; // เลขบัตรประชาชน / Passport
   nationality?: string; // สัญชาติ
+  gender?: string; // เพศ (ชาย / หญิง / อื่นๆ)
   dob?: string; // วันเดือนปีเกิด YYYY-MM-DD
   age?: number; // อายุ (คำนวณอัตโนมัติ)
   registrationCategory?: 'thai' | 'foreigner'; // ประเภทฟอร์ม: 'thai' | 'foreigner'

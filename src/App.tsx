@@ -2872,11 +2872,14 @@ export default function App() {
       if (visitorToUse) {
         setRegForm(prev => ({
           ...prev,
+          registrationCategory: visitorToUse.registrationCategory || (visitorToUse.nationality && visitorToUse.nationality !== 'ไทย' ? 'foreigner' : 'thai'),
           name: String(visitorToUse.name || prev.name || ''),
           passportId: String(visitorToUse.passportId || rawPassport),
           nationality: String(visitorToUse.nationality || prev.nationality || ''),
           gender: String(visitorToUse.gender || prev.gender || ''),
           dob: String(visitorToUse.dob || prev.dob || ''),
+          phone: String(visitorToUse.phone || prev.phone || ''),
+          vehiclePlate: String(visitorToUse.vehiclePlate || prev.vehiclePlate || ''),
           address: String(visitorToUse.address || prev.address || ''),
           company: String(visitorToUse.company || prev.company || ''),
           visitorType: String(visitorToUse.visitorType || prev.visitorType || 'โหลดเดอร์'),
@@ -2926,6 +2929,28 @@ export default function App() {
         if (data.matchFound) {
           const vis = data.visitor;
           setMatchedVisitorToImport(vis);
+          setRegForm(prev => ({
+            ...prev,
+            registrationCategory: vis.registrationCategory || (vis.nationality && vis.nationality !== 'ไทย' ? 'foreigner' : 'thai'),
+            name: String(vis.name || prev.name || ''),
+            passportId: String(vis.passportId || prev.passportId || ''),
+            nationality: String(vis.nationality || (vis.registrationCategory === 'foreigner' ? 'ต่างด้าว' : 'ไทย')),
+            gender: String(vis.gender || prev.gender || ''),
+            dob: String(vis.dob || prev.dob || ''),
+            phone: String(vis.phone || prev.phone || ''),
+            vehiclePlate: String(vis.vehiclePlate || prev.vehiclePlate || ''),
+            address: String(vis.address || prev.address || ''),
+            company: String(vis.company || prev.company || ''),
+            visitorType: String(vis.visitorType || prev.visitorType || 'โหลดเดอร์'),
+            contactArea: String(vis.contactArea || prev.contactArea || 'MainGate'),
+            passportNumber: String(vis.passportNumber || prev.passportNumber || ''),
+            passportIssueDate: String(vis.passportIssueDate || prev.passportIssueDate || ''),
+            passportExpiryDate: String(vis.passportExpiryDate || prev.passportExpiryDate || ''),
+            workPermitNumber: String(vis.workPermitNumber || prev.workPermitNumber || ''),
+            workPermitIssueDate: String(vis.workPermitIssueDate || prev.workPermitIssueDate || ''),
+            workPermitExpiryDate: String(vis.workPermitExpiryDate || prev.workPermitExpiryDate || ''),
+          }));
+          if (vis.photoUrl) setRegPhoto(vis.photoUrl);
           setRetrievalStatus(lang === 'TH' ? `ระบบพบประวัติเก่าของคุณ ${vis.name} ในคลังข้อมูล!` : `System found existing records for ${vis.name} in the repository!`);
           setShowFaceRetrievalCamera(false);
         } else {

@@ -996,6 +996,46 @@ async function ensureAllDatabaseSheets(sheets: any, spreadsheetId: string) {
       },
     }).catch((e: any) => console.warn('Could not update Visitors headers:', e.message));
 
+    // Auto-backfill default values for existing rows missing columns Q-AB
+    try {
+      const existingVis = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: 'Visitors!A2:AB',
+      });
+      if (existingVis.data.values && existingVis.data.values.length > 0) {
+        let needsUpdate = false;
+        const updatedRows = existingVis.data.values.map(row => {
+          const newRow = [...row];
+          while (newRow.length < 28) {
+            newRow.push('');
+          }
+          if (!newRow[16]) {
+            newRow[16] = 'thai';
+            needsUpdate = true;
+          }
+          if (!newRow[17]) {
+            newRow[17] = newRow[16] === 'foreigner' ? 'ต่างด้าว' : 'ไทย';
+            needsUpdate = true;
+          }
+          return newRow;
+        });
+
+        if (needsUpdate) {
+          await sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Visitors!A2:AB${updatedRows.length + 1}`,
+            valueInputOption: 'RAW',
+            requestBody: {
+              values: updatedRows,
+            },
+          });
+          console.log(`Backfilled default columns Q-AB for ${updatedRows.length} visitors in Google Sheets.`);
+        }
+      }
+    } catch (bfErr: any) {
+      console.warn('Could not backfill existing visitor rows in Google Sheets:', bfErr.message);
+    }
+
     if (!existingTitles.includes('Logs')) {
       await sheets.spreadsheets.values.update({
         spreadsheetId,
