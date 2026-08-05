@@ -142,49 +142,42 @@ const VISITOR_TYPES = [
 ];
 
 const ROLE_PERMISSIONS: Record<string, { desc: string; allowed: boolean }[]> = {
-  'Staff': [
-    { desc: 'สแกนใบหน้าและบันทึกประวัติ ณ จุดตรวจเข้า-ออก', allowed: true },
-    { desc: 'เพิ่มใบผ่านผู้ติดต่อและบันทึกประวัติรูปหน้าใหม่', allowed: true },
-    { desc: 'จัดการสถานะผู้ติดต่อและแบนบุคคลต้องห้าม', allowed: false },
-    { desc: 'เข้าถึงสถิติแดชบอร์ดภาพรวมและรายงานส่งออก', allowed: false },
-    { desc: 'แก้ไขค่าปรับแต่งตราสัญลักษณ์ & การเชื่อมต่อระบบคลาวด์', allowed: false }
+  'User': [
+    { desc: 'สแกนใบหน้าและบันทึกประวัติ ณ จุดตรวจเข้า-ออก (Check-In / Check-Out)', allowed: true },
+    { desc: 'ลงทะเบียนผู้ติดต่อใหม่และบันทึกภาพสแกนใบหน้า (New Visitor Registration)', allowed: true },
+    { desc: 'ค้นหาและสั่งพิมพ์ใบผ่านเข้า-ออก (Print Visitor Pass)', allowed: true },
+    { desc: 'เข้าถึงแดชบอร์ดสรุปสถิติและรายงานส่งออก (Dashboard & Reports)', allowed: false },
+    { desc: 'จัดการรายชื่อผู้ติดต่อและสถานะแบน (Visitor & Ban Management)', allowed: false },
+    { desc: 'จัดการข้อมูลเจ้าหน้าที่ จุดตรวจ และผู้ใช้งานออนไลน์ (Staff & Checkpoint Management)', allowed: false },
+    { desc: 'แก้ไขการตั้งค่าองค์กร โลโก้ และการเชื่อมต่อคลาวด์ (Organization Config & Cloud Sync)', allowed: false },
+    { desc: 'จัดการและแก้ไขสิทธิ์ใช้งานตามตำแหน่ง (Role Menu Permissions)', allowed: false }
   ],
-  'Security Guard': [
-    { desc: 'สแกนใบหน้าและบันทึกประวัติ ณ จุดตรวจเข้า-ออก', allowed: true },
-    { desc: 'เพิ่มใบผ่านผู้ติดต่อและบันทึกประวัติรูปหน้าใหม่', allowed: true },
-    { desc: 'จัดการสถานะผู้ติดต่อและแบนบุคคลต้องห้าม', allowed: false },
-    { desc: 'เข้าถึงสถิติแดชบอร์ดภาพรวมและรายงานส่งออก', allowed: false },
-    { desc: 'แก้ไขค่าปรับแต่งตราสัญลักษณ์ & การเชื่อมต่อระบบคลาวด์', allowed: false }
+  'Admin': [
+    { desc: 'สแกนใบหน้าและบันทึกประวัติ ณ จุดตรวจเข้า-ออก (Check-In / Check-Out)', allowed: true },
+    { desc: 'ลงทะเบียนผู้ติดต่อใหม่และบันทึกภาพสแกนใบหน้า (New Visitor Registration)', allowed: true },
+    { desc: 'ค้นหาและสั่งพิมพ์ใบผ่านเข้า-ออก (Print Visitor Pass)', allowed: true },
+    { desc: 'เข้าถึงแดชบอร์ดสรุปสถิติและรายงานส่งออก (Dashboard & Reports)', allowed: true },
+    { desc: 'จัดการรายชื่อผู้ติดต่อและสถานะแบน (Visitor & Ban Management)', allowed: true },
+    { desc: 'จัดการข้อมูลเจ้าหน้าที่ จุดตรวจ และผู้ใช้งานออนไลน์ (Staff & Checkpoint Management)', allowed: true },
+    { desc: 'แก้ไขการตั้งค่าองค์กร โลโก้ และการเชื่อมต่อคลาวด์ (Organization Config & Cloud Sync)', allowed: false },
+    { desc: 'จัดการและแก้ไขสิทธิ์ใช้งานตามตำแหน่ง (Role Menu Permissions)', allowed: false }
   ],
-  'Supervisor': [
-    { desc: 'สแกนใบหน้าและบันทึกประวัติ ณ จุดตรวจเข้า-ออก', allowed: true },
-    { desc: 'เพิ่มใบผ่านผู้ติดต่อและบันทึกประวัติรูปหน้าใหม่', allowed: true },
-    { desc: 'จัดการสถานะผู้ติดต่อและแบนบุคคลต้องห้าม', allowed: true },
-    { desc: 'เข้าถึงสถิติแดชบอร์ดภาพรวมและรายงานส่งออก', allowed: true },
-    { desc: 'แก้ไขค่าปรับแต่งตราสัญลักษณ์ & การเชื่อมต่อระบบคลาวด์', allowed: false }
-  ],
-  'Manager': [
-    { desc: 'สแกนใบหน้าและบันทึกประวัติ ณ จุดตรวจเข้า-ออก', allowed: true },
-    { desc: 'เพิ่มใบผ่านผู้ติดต่อและบันทึกประวัติรูปหน้าใหม่', allowed: true },
-    { desc: 'จัดการสถานะผู้ติดต่อและแบนบุคคลต้องห้าม', allowed: true },
-    { desc: 'เข้าถึงสถิติแดชบอร์ดภาพรวมและรายงานส่งออก', allowed: true },
-    { desc: 'แก้ไขค่าปรับแต่งตราสัญลักษณ์ & การเชื่อมต่อระบบคลาวด์', allowed: true }
-  ],
-  'Administrator': [
-    { desc: 'สแกนใบหน้าและบันทึกประวัติ ณ จุดตรวจเข้า-ออก', allowed: true },
-    { desc: 'เพิ่มใบผ่านผู้ติดต่อและบันทึกประวัติรูปหน้าใหม่', allowed: true },
-    { desc: 'จัดการสถานะผู้ติดต่อและแบนบุคคลต้องห้าม', allowed: true },
-    { desc: 'เข้าถึงสถิติแดชบอร์ดภาพรวมและรายงานส่งออก', allowed: true },
-    { desc: 'แก้ไขค่าปรับแต่งตราสัญลักษณ์ & การเชื่อมต่อระบบคลาวด์', allowed: true }
+  'SuperAdmin': [
+    { desc: 'สแกนใบหน้าและบันทึกประวัติ ณ จุดตรวจเข้า-ออก (Check-In / Check-Out)', allowed: true },
+    { desc: 'ลงทะเบียนผู้ติดต่อใหม่และบันทึกภาพสแกนใบหน้า (New Visitor Registration)', allowed: true },
+    { desc: 'ค้นหาและสั่งพิมพ์ใบผ่านเข้า-ออก (Print Visitor Pass)', allowed: true },
+    { desc: 'เข้าถึงแดชบอร์ดสรุปสถิติและรายงานส่งออก (Dashboard & Reports)', allowed: true },
+    { desc: 'จัดการรายชื่อผู้ติดต่อและสถานะแบน (Visitor & Ban Management)', allowed: true },
+    { desc: 'จัดการข้อมูลเจ้าหน้าที่ จุดตรวจ และผู้ใช้งานออนไลน์ (Staff & Checkpoint Management)', allowed: true },
+    { desc: 'แก้ไขการตั้งค่าองค์กร โลโก้ และการเชื่อมต่อคลาวด์ (Organization Config & Cloud Sync)', allowed: true },
+    { desc: 'จัดการและแก้ไขสิทธิ์ใช้งานตามตำแหน่ง (Role Menu Permissions)', allowed: true }
   ]
 };
 
 const ROLES_LIST = [
-  'Administrator',
-  'Manager',
-  'Supervisor',
-  'Staff',
-  'Security Guard'
+  'SuperAdmin',
+  'Admin',
+  'User'
 ];
 
 const CONTACT_AREAS = [
@@ -664,7 +657,8 @@ export default function App() {
     faceMatchThreshold: 0.80,
     googleAuthType: 'apps_script',
     googleServiceAccountJson: '',
-    googleAppsScriptUrl: 'https://script.google.com/macros/s/AKfycbzyU27Baxs9_C-ux3LwS_2Db4BpZ7G9W7sJoiuLf-MqlVgmJ2v3fxJdoPj8AnsypO1e/exec',
+    googleSpreadsheetId: '1ZWUD33aJak-GV3auuLjdAE6liGjp5EHvH6nQIIuUiwM',
+    googleAppsScriptUrl: 'https://script.google.com/macros/s/AKfycbxwc6IOug_J8ktWe9NjrOWjOvEvm6mDxmSXYV9hc-DSxZOVPZgeWRfnXs0dBBWyICKmGg/exec',
     emailServiceType: 'gmail_api',
     smtpHost: '',
     smtpPort: '587',
@@ -876,7 +870,6 @@ export default function App() {
     name: '',
     passportId: '', // เลขบัตรประจำตัวประชาชน (คนไทย)
     nationality: 'ไทย',
-    gender: '', // เพศ (ชาย / หญิง / อื่นๆ)
     dob: '',
     phone: '',
     vehiclePlate: '',
@@ -886,7 +879,6 @@ export default function App() {
     contactArea: 'MainGate',
     // Foreigner / Migrant Worker fields
     passportNumber: '',
-    passportIssueDate: '',
     passportExpiryDate: '',
     workPermitNumber: '',
     workPermitIssueDate: '',
@@ -940,6 +932,15 @@ export default function App() {
   const [adminPassword, setAdminPassword] = useState('');
   const [adminError, setAdminError] = useState<string | null>(null);
 
+  // Helper to map old roles to the 3-tier system: 'SuperAdmin' | 'Admin' | 'User'
+  const normalizeUserRole = (roleStr: string): string => {
+    if (!roleStr) return 'User';
+    const r = roleStr.toLowerCase();
+    if (r.includes('superadmin') || r.includes('super admin') || r.includes('ผู้ดูแลระบบระดับสูง')) return 'SuperAdmin';
+    if (r.includes('admin') || r.includes('administrator') || r.includes('manager') || r.includes('supervisor') || r.includes('ผู้ดูแลระบบ') || r.includes('ผู้จัดการ') || r.includes('หัวหน้า')) return 'Admin';
+    return 'User';
+  };
+
   // System Users for Guard/Admin Login & Registration
   const [systemUsers, setSystemUsers] = useState<any[]>(() => {
     const saved = localStorage.getItem('systemUsers');
@@ -949,25 +950,41 @@ export default function App() {
         password: 'Admin**5596',
         name: 'Super Admin',
         email: 'kittisak.s99631@gmail.com',
-        role: tText(tText("ผู้ดูแลระบบระดับสูง", "Administrator"), "Administrator"),
+        role: 'SuperAdmin',
+        createdAt: new Date().toISOString()
+      },
+      {
+        username: 'Admin',
+        password: 'Admin**1234',
+        name: 'System Admin',
+        email: 'admin@maingate.com',
+        role: 'Admin',
+        createdAt: new Date().toISOString()
+      },
+      {
+        username: 'User',
+        password: 'User**1234',
+        name: 'General User',
+        email: 'user@maingate.com',
+        role: 'User',
         createdAt: new Date().toISOString()
       }
     ];
-    return list.map((u: any) => {
-      if (u.role === 'Safety Officer' || u.role === 'เจ้าหน้าที่ความปลอดภัย' || u.role === 'เจ้าหน้าที่ระบบ') {
-        return { ...u, role: 'Staff' };
-      }
-      return u;
-    });
+    return list.map((u: any) => ({
+      ...u,
+      role: normalizeUserRole(u.role)
+    }));
   });
   const [loggedInSystemUser, setLoggedInSystemUser] = useState<any>(() => {
     const saved = localStorage.getItem('loggedInSystemUser');
     if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed && (parsed.role === 'Safety Officer' || parsed.role === 'เจ้าหน้าที่ความปลอดภัย' || parsed.role === 'เจ้าหน้าที่ระบบ')) {
-        parsed.role = 'Staff';
-      }
-      return parsed;
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed) {
+          parsed.role = normalizeUserRole(parsed.role);
+          return parsed;
+        }
+      } catch (e) {}
     }
     return null;
   });
@@ -1015,49 +1032,42 @@ export default function App() {
     username: '',
     password: '',
     confirmPassword: '',
-    role: tText(tText("เจ้าหน้าที่รักษาความปลอดภัย", "Security Guard"), "Security Guard"),
+    role: 'User',
   });
   const [signUpError, setSignUpError] = useState<string | null>(null);
   const [signUpSuccess, setSignUpSuccess] = useState<string | null>(null);
 
   const [roleMenuPermissions, setRoleMenuPermissions] = useState<Record<string, any>>(() => {
     const saved = localStorage.getItem('roleMenuPermissions');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed) {
-          if (parsed['Safety Officer']) {
-            parsed['Staff'] = parsed['Safety Officer'];
-            delete parsed['Safety Officer'];
-          }
-          return parsed;
-        }
-      } catch (e) {
-        // ignore fallback to default
-      }
-    }
-    return {
-      'Administrator': {
+    const defaultPerms = {
+      'SuperAdmin': {
         gate: true, register: true, pass: true, admin: true,
         admin_dashboard: true, admin_visitors: true, admin_staff: true, admin_online: true, admin_checkpoints: true, admin_reports: true, admin_config: true, admin_permissions: true
       },
-      'Manager': {
-        gate: true, register: true, pass: true, admin: true,
-        admin_dashboard: true, admin_visitors: true, admin_staff: true, admin_online: true, admin_checkpoints: true, admin_reports: true, admin_config: true, admin_permissions: true
-      },
-      'Supervisor': {
+      'Admin': {
         gate: true, register: true, pass: true, admin: true,
         admin_dashboard: true, admin_visitors: true, admin_staff: true, admin_online: true, admin_checkpoints: true, admin_reports: true, admin_config: false, admin_permissions: false
       },
-      'Staff': {
-        gate: true, register: true, pass: true, admin: false,
-        admin_dashboard: false, admin_visitors: false, admin_staff: false, admin_online: false, admin_checkpoints: false, admin_reports: false, admin_config: false, admin_permissions: false
-      },
-      'Security Guard': {
+      'User': {
         gate: true, register: true, pass: true, admin: false,
         admin_dashboard: false, admin_visitors: false, admin_staff: false, admin_online: false, admin_checkpoints: false, admin_reports: false, admin_config: false, admin_permissions: false
       }
     };
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed) {
+          return {
+            'SuperAdmin': parsed['SuperAdmin'] || parsed['Administrator'] || parsed['ผู้ดูแลระบบระดับสูง (Administrator)'] || defaultPerms['SuperAdmin'],
+            'Admin': parsed['Admin'] || parsed['Manager'] || parsed['Supervisor'] || parsed['ผู้จัดการ (Manager)'] || defaultPerms['Admin'],
+            'User': parsed['User'] || parsed['Staff'] || parsed['Security Guard'] || parsed['เจ้าหน้าที่ความปลอดภัย (Staff)'] || defaultPerms['User']
+          };
+        }
+      } catch (e) {
+        // ignore fallback
+      }
+    }
+    return defaultPerms;
   });
 
   useEffect(() => {
@@ -1106,7 +1116,7 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [roleMenuPermissions, isConfigLoaded]);
 
-  const [selectedRoleToConfig, setSelectedRoleToConfig] = useState<string>(tText(tText("ผู้ดูแลระบบระดับสูง", "Administrator"), "Administrator"));
+  const [selectedRoleToConfig, setSelectedRoleToConfig] = useState<string>('SuperAdmin');
 
   const [adminTab, setAdminTab] = useState<'dashboard' | 'visitors' | 'staff' | 'online' | 'config' | 'reports' | 'checkpoints' | 'permissions'>('dashboard');
   const [onlineUsersList, setOnlineUsersList] = useState<any[]>([]);
@@ -1213,6 +1223,11 @@ export default function App() {
   const [bannedVisitorId, setBannedVisitorId] = useState<string | null>(null);
   const [banReason, setBanReason] = useState('');
   const [submittingBan, setSubmittingBan] = useState(false);
+
+  // Adminmaingate Verification Modal State for Google Sheet & AppsScript Changes
+  const [showAdminMaingateAuthModal, setShowAdminMaingateAuthModal] = useState(false);
+  const [adminMaingatePassInput, setAdminMaingatePassInput] = useState('');
+  const [adminMaingateAuthError, setAdminMaingateAuthError] = useState('');
 
   // Fullscreen state & handler
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -1465,7 +1480,7 @@ export default function App() {
     }
   };
 
-  const handleSaveBranding = async () => {
+  const performSaveBrandingConfig = async () => {
     try {
       setSavingBranding(true);
       const token = getAccessToken();
@@ -1480,13 +1495,39 @@ export default function App() {
       if (res.ok) {
         showSuccessNotification(
           lang === 'TH' ? 'บันทึกการตั้งค่าสำเร็จ' : 'Settings Saved',
-          lang === 'TH' ? 'ปรับเปลี่ยนการตั้งค่าองค์กรเรียบร้อยแล้ว' : 'Brand settings updated.'
+          lang === 'TH' ? 'ปรับเปลี่ยนการตั้งค่าองค์กรและระบบเชื่อมต่อเรียบร้อยแล้ว' : 'Settings updated.'
         );
       }
     } catch (err) {
       console.error(err);
     } finally {
       setSavingBranding(false);
+    }
+  };
+
+  const handleSaveBranding = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (configSubTab === 'integration') {
+      setAdminMaingatePassInput('');
+      setAdminMaingateAuthError('');
+      setShowAdminMaingateAuthModal(true);
+    } else {
+      await performSaveBrandingConfig();
+    }
+  };
+
+  const handleConfirmAdminMaingatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const adminUser = systemUsers.find(u => u && String(u.username).toLowerCase() === 'adminmaingate');
+    const validPassword = adminUser?.password || 'Admin**5596';
+
+    if (adminMaingatePassInput === validPassword) {
+      setShowAdminMaingateAuthModal(false);
+      setAdminMaingatePassInput('');
+      setAdminMaingateAuthError('');
+      await performSaveBrandingConfig();
+    } else {
+      setAdminMaingateAuthError('❌ รหัสผ่าน Adminmaingate ไม่ถูกต้อง ไม่สามารถบันทึกการเปลี่ยนแปลงได้');
     }
   };
 
@@ -1509,6 +1550,10 @@ export default function App() {
 
   const handleClearMockData = async () => {
     await handleClearMockVisitors();
+  };
+
+  const handleClearAllData = async () => {
+    await handleClearAllVisitorsData();
   };
 
   // Sync and tick token expiry session timer
@@ -1548,69 +1593,6 @@ export default function App() {
     localStorage.setItem('guardAssignments', JSON.stringify(guardAssignments));
   }, [guardAssignments]);
 
-  // Sync loggedInSystemUser with localStorage and administrative privilege state
-  useEffect(() => {
-    if (loggedInSystemUser) {
-      localStorage.setItem('loggedInSystemUser', JSON.stringify(loggedInSystemUser));
-      // Allow Admin Portal based on dynamic role permissions state
-      const userPermissions = roleMenuPermissions[loggedInSystemUser.role] || { admin: false };
-      const hasAdminRights = !!userPermissions.admin;
-      setIsAdminLoggedIn(hasAdminRights);
-    } else {
-      localStorage.removeItem('loggedInSystemUser');
-      setIsAdminLoggedIn(false);
-    }
-  }, [loggedInSystemUser, roleMenuPermissions]);
-
-  // Redirect activeTab & adminTab based on dynamic role permissions state
-  useEffect(() => {
-    if (loggedInSystemUser) {
-      const perms = roleMenuPermissions[loggedInSystemUser.role];
-      if (perms) {
-        // 1. Validate activeTab
-        const isTabAllowed = !!perms[activeTab];
-        if (!isTabAllowed) {
-          const mainTabs: ('gate' | 'register' | 'pass' | 'admin')[] = ['gate', 'register', 'pass', 'admin'];
-          const firstAllowed = mainTabs.find(tab => !!perms[tab]);
-          if (firstAllowed) {
-            setActiveTab(firstAllowed);
-          }
-        }
-
-        // 2. Validate adminTab
-        if (activeTab === 'admin') {
-          const adminTabKey = `admin_${adminTab}` as keyof typeof perms;
-          const isAdminTabAllowed = adminTab === 'staff'
-            ? (perms.admin_staff !== undefined ? !!perms.admin_staff : !!perms.admin_visitors)
-            : adminTab === 'online'
-            ? (perms.admin_online !== undefined ? !!perms.admin_online : true)
-            : !!perms[adminTabKey];
-          if (!isAdminTabAllowed) {
-            const adminSubTabs: ('dashboard' | 'visitors' | 'staff' | 'online' | 'checkpoints' | 'reports' | 'config' | 'permissions')[] = [
-              'dashboard', 'visitors', 'staff', 'online', 'checkpoints', 'reports', 'config', 'permissions'
-            ];
-            const firstAllowedAdmin = adminSubTabs.find(tab => {
-              const p = perms[`admin_${tab}` as keyof typeof perms];
-              if (tab === 'staff') {
-                return p !== undefined ? !!p : !!perms.admin_visitors;
-              }
-              if (tab === 'online') {
-                return p !== undefined ? !!p : true;
-              }
-              return !!p;
-            });
-            if (firstAllowedAdmin) {
-              setAdminTab(firstAllowedAdmin);
-            }
-          }
-        }
-      }
-    }
-  }, [loggedInSystemUser, activeTab, adminTab, roleMenuPermissions]);
-
-  // Ref to track last user interaction timestamp for inactivity auto-logout
-  const lastActivityRef = useRef<number>(Date.now());
-
   // Helper to check if a user is Super Admin
   const isSuperAdminUser = (user: any) => {
     if (!user) return false;
@@ -1620,12 +1602,149 @@ export default function App() {
 
     return (
       username === 'adminmaingate' ||
-      name === 'super admin' ||
+      username === 'admin' ||
+      name.includes('super admin') ||
       role.includes('administrator') ||
       role.includes('ผู้ดูแลระบบระดับสูง') ||
-      role.includes('super admin')
+      role.includes('super admin') ||
+      role.includes('superadmin') ||
+      role === 'superadmin' ||
+      role === 'admin'
     );
   };
+
+  // Helper to get permissions for any user
+  const getUserPermissions = (user: any) => {
+    if (!user) {
+      return {
+        gate: true, register: true, pass: true, admin: false,
+        admin_dashboard: false, admin_visitors: false, admin_staff: false,
+        admin_online: false, admin_checkpoints: false, admin_reports: false,
+        admin_config: false, admin_permissions: false
+      };
+    }
+
+    // Super Admin accounts always have 100% access to all capabilities
+    if (isSuperAdminUser(user)) {
+      return {
+        gate: true, register: true, pass: true, admin: true,
+        admin_dashboard: true, admin_visitors: true, admin_staff: true,
+        admin_online: true, admin_checkpoints: true, admin_reports: true,
+        admin_config: true, admin_permissions: true
+      };
+    }
+
+    const rawRole = String(user.role || '');
+    const norm = normalizeUserRole(rawRole); // 'SuperAdmin' | 'Admin' | 'User'
+
+    if (norm === 'SuperAdmin') {
+      return {
+        gate: true, register: true, pass: true, admin: true,
+        admin_dashboard: true, admin_visitors: true, admin_staff: true,
+        admin_online: true, admin_checkpoints: true, admin_reports: true,
+        admin_config: true, admin_permissions: true
+      };
+    }
+
+    // Look up in roleMenuPermissions using rawRole, normalized role, or default role
+    const p = roleMenuPermissions[rawRole] || roleMenuPermissions[norm] || roleMenuPermissions[norm === 'Admin' ? 'Admin' : 'User'] || {};
+
+    if (norm === 'Admin') {
+      return {
+        gate: p.gate ?? true,
+        register: p.register ?? true,
+        pass: p.pass ?? true,
+        admin: p.admin ?? true,
+        admin_dashboard: p.admin_dashboard ?? true,
+        admin_visitors: p.admin_visitors ?? true,
+        admin_staff: p.admin_staff ?? true,
+        admin_online: p.admin_online ?? true,
+        admin_checkpoints: p.admin_checkpoints ?? true,
+        admin_reports: p.admin_reports ?? true,
+        admin_config: p.admin_config ?? false,
+        admin_permissions: p.admin_permissions ?? false
+      };
+    }
+
+    return {
+      gate: p.gate ?? true,
+      register: p.register ?? true,
+      pass: p.pass ?? true,
+      admin: !!p.admin,
+      admin_dashboard: !!p.admin_dashboard,
+      admin_visitors: !!p.admin_visitors,
+      admin_staff: !!(p.admin_staff ?? p.admin_visitors),
+      admin_online: p.admin_online ?? true,
+      admin_checkpoints: !!p.admin_checkpoints,
+      admin_reports: !!p.admin_reports,
+      admin_config: !!p.admin_config,
+      admin_permissions: !!p.admin_permissions
+    };
+  };
+
+  const hasPermission = (user: any, key: string): boolean => {
+    const perms = getUserPermissions(user);
+    return !!perms[key];
+  };
+
+  // Sync loggedInSystemUser with localStorage and administrative privilege state
+  useEffect(() => {
+    if (loggedInSystemUser) {
+      localStorage.setItem('loggedInSystemUser', JSON.stringify(loggedInSystemUser));
+      const perms = getUserPermissions(loggedInSystemUser);
+      setIsAdminLoggedIn(!!perms.admin);
+    } else {
+      localStorage.removeItem('loggedInSystemUser');
+      setIsAdminLoggedIn(false);
+    }
+  }, [loggedInSystemUser, roleMenuPermissions]);
+
+  // Redirect activeTab & adminTab based on dynamic role permissions state
+  useEffect(() => {
+    if (loggedInSystemUser) {
+      const perms = getUserPermissions(loggedInSystemUser);
+      // 1. Validate activeTab
+      const isTabAllowed = !!perms[activeTab as keyof typeof perms];
+      if (!isTabAllowed) {
+        const mainTabs: ('gate' | 'register' | 'pass' | 'admin')[] = ['gate', 'register', 'pass', 'admin'];
+        const firstAllowed = mainTabs.find(tab => !!perms[tab]);
+        if (firstAllowed) {
+          setActiveTab(firstAllowed);
+        }
+      }
+
+      // 2. Validate adminTab
+      if (activeTab === 'admin') {
+        const adminTabKey = `admin_${adminTab}` as keyof typeof perms;
+        const isAdminTabAllowed = adminTab === 'staff'
+          ? (perms.admin_staff !== undefined ? !!perms.admin_staff : !!perms.admin_visitors)
+          : adminTab === 'online'
+          ? (perms.admin_online !== undefined ? !!perms.admin_online : true)
+          : !!perms[adminTabKey];
+        if (!isAdminTabAllowed) {
+          const adminSubTabs: ('dashboard' | 'visitors' | 'staff' | 'online' | 'checkpoints' | 'reports' | 'config' | 'permissions')[] = [
+            'dashboard', 'visitors', 'staff', 'online', 'checkpoints', 'reports', 'config', 'permissions'
+          ];
+          const firstAllowedAdmin = adminSubTabs.find(tab => {
+            const p = perms[`admin_${tab}` as keyof typeof perms];
+            if (tab === 'staff') {
+              return p !== undefined ? !!p : !!perms.admin_visitors;
+            }
+            if (tab === 'online') {
+              return p !== undefined ? !!p : true;
+            }
+            return !!p;
+          });
+          if (firstAllowedAdmin) {
+            setAdminTab(firstAllowedAdmin);
+          }
+        }
+      }
+    }
+  }, [loggedInSystemUser, activeTab, adminTab, roleMenuPermissions]);
+
+  // Ref to track last user interaction timestamp for inactivity auto-logout
+  const lastActivityRef = useRef<number>(Date.now());
 
   // Listen to user interaction events to keep activity timer fresh
   useEffect(() => {
@@ -2766,7 +2885,6 @@ export default function App() {
           name: '',
           passportId: '',
           nationality: 'ไทย',
-          gender: '',
           dob: '',
           phone: '',
           vehiclePlate: '',
@@ -2775,7 +2893,6 @@ export default function App() {
           visitorType: 'โหลดเดอร์',
           contactArea: 'MainGate',
           passportNumber: '',
-          passportIssueDate: '',
           passportExpiryDate: '',
           workPermitNumber: '',
           workPermitIssueDate: '',
@@ -2796,11 +2913,7 @@ export default function App() {
 
   // Retrieve previous registration details using National ID/Passport (Optimized ultra-fast autofill)
   const handleRetrieveByPassport = async () => {
-    const rawPassport = String(
-      regForm.registrationCategory === 'foreigner' 
-        ? (regForm.passportNumber || regForm.passportId || '')
-        : (regForm.passportId || '')
-    ).trim();
+    const rawPassport = String(regForm.passportId || '').trim();
     if (!rawPassport) return;
     const token = getAccessToken() || '';
 
@@ -2832,7 +2945,6 @@ export default function App() {
         name: String(localMatch.name || prev.name || ''),
         passportId: String(localMatch.passportId || rawPassport),
         nationality: String(localMatch.nationality || (localMatch.registrationCategory === 'foreigner' ? 'ต่างด้าว' : 'ไทย')),
-        gender: String(localMatch.gender || prev.gender || ''),
         dob: String(localMatch.dob || prev.dob || ''),
         phone: String(localMatch.phone || prev.phone || ''),
         vehiclePlate: String(localMatch.vehiclePlate || prev.vehiclePlate || ''),
@@ -2841,7 +2953,6 @@ export default function App() {
         visitorType: String(localMatch.visitorType || prev.visitorType || 'โหลดเดอร์'),
         contactArea: String(localMatch.contactArea || prev.contactArea || 'MainGate'),
         passportNumber: String(localMatch.passportNumber || prev.passportNumber || ''),
-        passportIssueDate: String(localMatch.passportIssueDate || prev.passportIssueDate || ''),
         passportExpiryDate: String(localMatch.passportExpiryDate || prev.passportExpiryDate || ''),
         workPermitNumber: String(localMatch.workPermitNumber || prev.workPermitNumber || ''),
         workPermitIssueDate: String(localMatch.workPermitIssueDate || prev.workPermitIssueDate || ''),
@@ -2876,12 +2987,8 @@ export default function App() {
       if (visitorToUse) {
         setRegForm(prev => ({
           ...prev,
-          registrationCategory: visitorToUse.registrationCategory || (visitorToUse.nationality && visitorToUse.nationality !== 'ไทย' ? 'foreigner' : 'thai'),
           name: String(visitorToUse.name || prev.name || ''),
           passportId: String(visitorToUse.passportId || rawPassport),
-          nationality: String(visitorToUse.nationality || prev.nationality || ''),
-          gender: String(visitorToUse.gender || prev.gender || ''),
-          dob: String(visitorToUse.dob || prev.dob || ''),
           phone: String(visitorToUse.phone || prev.phone || ''),
           vehiclePlate: String(visitorToUse.vehiclePlate || prev.vehiclePlate || ''),
           address: String(visitorToUse.address || prev.address || ''),
@@ -2889,7 +2996,6 @@ export default function App() {
           visitorType: String(visitorToUse.visitorType || prev.visitorType || 'โหลดเดอร์'),
           contactArea: String(visitorToUse.contactArea || prev.contactArea || 'MainGate'),
           passportNumber: String(visitorToUse.passportNumber || prev.passportNumber || ''),
-          passportIssueDate: String(visitorToUse.passportIssueDate || prev.passportIssueDate || ''),
           passportExpiryDate: String(visitorToUse.passportExpiryDate || prev.passportExpiryDate || ''),
           workPermitNumber: String(visitorToUse.workPermitNumber || prev.workPermitNumber || ''),
           workPermitIssueDate: String(visitorToUse.workPermitIssueDate || prev.workPermitIssueDate || ''),
@@ -2933,28 +3039,6 @@ export default function App() {
         if (data.matchFound) {
           const vis = data.visitor;
           setMatchedVisitorToImport(vis);
-          setRegForm(prev => ({
-            ...prev,
-            registrationCategory: vis.registrationCategory || (vis.nationality && vis.nationality !== 'ไทย' ? 'foreigner' : 'thai'),
-            name: String(vis.name || prev.name || ''),
-            passportId: String(vis.passportId || prev.passportId || ''),
-            nationality: String(vis.nationality || (vis.registrationCategory === 'foreigner' ? 'ต่างด้าว' : 'ไทย')),
-            gender: String(vis.gender || prev.gender || ''),
-            dob: String(vis.dob || prev.dob || ''),
-            phone: String(vis.phone || prev.phone || ''),
-            vehiclePlate: String(vis.vehiclePlate || prev.vehiclePlate || ''),
-            address: String(vis.address || prev.address || ''),
-            company: String(vis.company || prev.company || ''),
-            visitorType: String(vis.visitorType || prev.visitorType || 'โหลดเดอร์'),
-            contactArea: String(vis.contactArea || prev.contactArea || 'MainGate'),
-            passportNumber: String(vis.passportNumber || prev.passportNumber || ''),
-            passportIssueDate: String(vis.passportIssueDate || prev.passportIssueDate || ''),
-            passportExpiryDate: String(vis.passportExpiryDate || prev.passportExpiryDate || ''),
-            workPermitNumber: String(vis.workPermitNumber || prev.workPermitNumber || ''),
-            workPermitIssueDate: String(vis.workPermitIssueDate || prev.workPermitIssueDate || ''),
-            workPermitExpiryDate: String(vis.workPermitExpiryDate || prev.workPermitExpiryDate || ''),
-          }));
-          if (vis.photoUrl) setRegPhoto(vis.photoUrl);
           setRetrievalStatus(lang === 'TH' ? `ระบบพบประวัติเก่าของคุณ ${vis.name} ในคลังข้อมูล!` : `System found existing records for ${vis.name} in the repository!`);
           setShowFaceRetrievalCamera(false);
         } else {
@@ -3288,6 +3372,84 @@ export default function App() {
     }
   };
 
+  const handleClearAllVisitorsData = async () => {
+    const token = getAccessToken() || '';
+    const confirmClear = confirm(lang === 'TH'
+      ? '⚠️ คุณยืนยันว่าต้องการล้างข้อมูลผู้ลงทะเบียนและประวัติการเข้า-ออกทั้งหมดในระบบหลังบ้านใช่หรือไม่?\n\n(ข้อมูลทั้งหมดบนเซิร์ฟเวอร์/Google Sheets จะถูกลบถาวร ไม่สามารถกู้คืนได้)'
+      : '⚠️ Are you sure you want to CLEAR ALL visitors and logs in the backend?\n\n(This action is permanent and cannot be undone)');
+    if (!confirmClear) return;
+
+    try {
+      setClearingMock(true);
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch('/api/clear-all-data', {
+        method: 'POST',
+        headers,
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        showSuccessNotification(
+          lang === 'TH' ? 'ล้างข้อมูลสำเร็จ!' : 'Data Cleared!',
+          data.message || (lang === 'TH' ? 'ล้างข้อมูลทั้งหมดเรียบร้อยแล้ว' : 'All backend data has been cleared.')
+        );
+        fetchDashboardData(token);
+      } else {
+        alert(data.error || 'เกิดข้อผิดพลาดในการล้างข้อมูล');
+      }
+    } catch (err: any) {
+      console.error('Failed to clear all data:', err);
+      alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + err.message);
+    } finally {
+      setClearingMock(false);
+    }
+  };
+
+  const handleCreateNewDriveDatabase = async () => {
+    const token = getAccessToken() || '';
+    const confirmCreate = confirm(lang === 'TH'
+      ? '🚀 คุณต้องการสร้างฐานข้อมูล Google Drive / หลังบ้านใหม่ทั้งหมดใช่หรือไม่?\n\n(ระบบจะรีเซ็ตและสร้าง Spreadsheet ฐานข้อมูลใหม่บน Google Drive)'
+      : '🚀 Do you want to CREATE A BRAND NEW Google Drive / Backend Database?\n\n(This will reset and create a fresh new Google Sheet DB in Google Drive)');
+    if (!confirmCreate) return;
+
+    try {
+      setClearingMock(true);
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch('/api/create-new-drive-database', {
+        method: 'POST',
+        headers,
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        showSuccessNotification(
+          lang === 'TH' ? 'สร้างหลังบ้านใหม่สำเร็จ!' : 'New Database Created!',
+          data.message || (lang === 'TH' ? 'สร้างฐานข้อมูลใหม่บน Google Drive เรียบร้อยแล้ว' : 'New Google Drive database initialized.')
+        );
+        fetchDashboardData(token);
+      } else {
+        alert(data.error || 'เกิดข้อผิดพลาดในการสร้างฐานข้อมูลใหม่');
+      }
+    } catch (err: any) {
+      console.error('Failed to create new drive database:', err);
+      alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + err.message);
+    } finally {
+      setClearingMock(false);
+    }
+  };
+
   // Send Manual Daily summary email to Security Department
   const handleSendReportEmail = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3575,30 +3737,67 @@ export default function App() {
 
               {/* Navigation Items in Drawer */}
               <div className="flex flex-col gap-2">
-                {!!(roleMenuPermissions[loggedInSystemUser?.role]?.register ?? true) && (
-                  <button
-                    onClick={() => {
-                      setActiveTab('register');
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`relative flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-sm font-bold tracking-wide transition cursor-pointer text-left ${
-                      activeTab === 'register' 
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/60 animate-pulse' 
-                        : 'text-blue-200 bg-blue-950/40 border border-blue-500/30 hover:text-white hover:bg-blue-900/40 animate-pulse'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 truncate">
-                      <UserPlus className="w-5 h-5 shrink-0 text-blue-300" />
-                      <span className="truncate text-[15px] font-extrabold">{t('tabRegister')}</span>
-                    </div>
-                    <span className="relative flex h-2.5 w-2.5 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80"></span>
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                    </span>
-                  </button>
+                {hasPermission(loggedInSystemUser, 'register') && (
+                  <>
+                    {/* Thai Registration Menu Button */}
+                    <button
+                      onClick={() => {
+                        setActiveTab('register');
+                        setRegForm(prev => ({
+                          ...prev,
+                          registrationCategory: 'thai',
+                          nationality: 'ไทย'
+                        }));
+                        setIsMobileMenuOpen(false);
+                      }}
+                      title={lang === 'TH' ? 'ลงทะเบียนคนไทย (TH)' : 'Thai Registration'}
+                      className={`relative flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-sm font-bold tracking-wide transition cursor-pointer text-left ${
+                        activeTab === 'register' && regForm.registrationCategory === 'thai' 
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/60 animate-pulse' 
+                          : 'text-blue-200 bg-blue-950/40 border border-blue-500/30 hover:text-white hover:bg-blue-900/40 animate-pulse'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 truncate">
+                        <span className="text-lg shrink-0">🇹🇭</span>
+                        <span className="truncate text-[14px] font-extrabold">{lang === 'TH' ? 'ลงทะเบียนคนไทย' : 'Thai Register'}</span>
+                      </div>
+                      <span className="relative flex h-2.5 w-2.5 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      </span>
+                    </button>
+
+                    {/* Foreigner Registration Menu Button (Pulsing Orange) */}
+                    <button
+                      onClick={() => {
+                        setActiveTab('register');
+                        setRegForm(prev => ({
+                          ...prev,
+                          registrationCategory: 'foreigner',
+                          nationality: prev.nationality === 'ไทย' ? 'ต่างด้าว' : prev.nationality
+                        }));
+                        setIsMobileMenuOpen(false);
+                      }}
+                      title={lang === 'TH' ? 'ลงทะเบียนต่างด้าว (FW)' : 'Foreigner Registration'}
+                      className={`relative flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-sm font-bold tracking-wide transition cursor-pointer text-left ${
+                        activeTab === 'register' && regForm.registrationCategory === 'foreigner' 
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30 ring-2 ring-amber-400/60 animate-pulse' 
+                          : 'text-amber-200 bg-amber-950/40 border border-amber-500/30 hover:text-white hover:bg-amber-900/40 animate-pulse'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 truncate">
+                        <span className="text-lg shrink-0">🌐</span>
+                        <span className="truncate text-[14px] font-extrabold">{lang === 'TH' ? 'ลงทะเบียนต่างด้าว' : 'Foreigner Register'}</span>
+                      </div>
+                      <span className="relative flex h-2.5 w-2.5 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-80"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                      </span>
+                    </button>
+                  </>
                 )}
 
-                {!!(roleMenuPermissions[loggedInSystemUser?.role]?.gate ?? true) && (
+                {hasPermission(loggedInSystemUser, 'gate') && (
                   <button
                     onClick={() => {
                       setActiveTab('gate');
@@ -3615,7 +3814,7 @@ export default function App() {
                   </button>
                 )}
 
-                {!!(roleMenuPermissions[loggedInSystemUser?.role]?.pass ?? true) && (
+                {hasPermission(loggedInSystemUser, 'pass') && (
                   <button
                     onClick={() => {
                       setActiveTab('pass');
@@ -3632,7 +3831,7 @@ export default function App() {
                   </button>
                 )}
 
-                {!!(roleMenuPermissions[loggedInSystemUser?.role]?.admin ?? false) && (
+                {hasPermission(loggedInSystemUser, 'admin') && (
                   <div className="flex flex-col gap-1 w-full mt-2 pt-2 border-t border-slate-800">
                     <button
                       onClick={() => {
@@ -3650,7 +3849,7 @@ export default function App() {
                     </button>
 
                     <div className="pl-4 border-l border-slate-800 ml-5 flex flex-col gap-1 mt-1">
-                      {!!roleMenuPermissions[loggedInSystemUser?.role]?.admin_dashboard && (
+                      {hasPermission(loggedInSystemUser, 'admin_dashboard') && (
                         <button
                           onClick={() => {
                             setAdminTab('dashboard');
@@ -3668,7 +3867,7 @@ export default function App() {
                         </button>
                       )}
 
-                      {!!roleMenuPermissions[loggedInSystemUser?.role]?.admin_visitors && (
+                      {hasPermission(loggedInSystemUser, 'admin_visitors') && (
                         <button
                           onClick={() => {
                             setAdminTab('visitors');
@@ -3687,7 +3886,7 @@ export default function App() {
                         </button>
                       )}
 
-                      {!!(roleMenuPermissions[loggedInSystemUser?.role]?.admin_staff ?? roleMenuPermissions[loggedInSystemUser?.role]?.admin_visitors) && (
+                      {hasPermission(loggedInSystemUser, 'admin_staff') && (
                         <button
                           onClick={() => {
                             setAdminTab('staff');
@@ -3705,7 +3904,7 @@ export default function App() {
                         </button>
                       )}
 
-                      {!!(roleMenuPermissions[loggedInSystemUser?.role]?.admin_online ?? true) && (
+                      {hasPermission(loggedInSystemUser, 'admin_online') && (
                         <button
                           onClick={() => {
                             setAdminTab('online');
@@ -3729,7 +3928,7 @@ export default function App() {
                         </button>
                       )}
 
-                      {!!roleMenuPermissions[loggedInSystemUser?.role]?.admin_checkpoints && (
+                      {hasPermission(loggedInSystemUser, 'admin_checkpoints') && (
                         <button
                           onClick={() => {
                             setAdminTab('checkpoints');
@@ -3747,7 +3946,7 @@ export default function App() {
                         </button>
                       )}
 
-                      {!!roleMenuPermissions[loggedInSystemUser?.role]?.admin_config && (
+                      {hasPermission(loggedInSystemUser, 'admin_config') && (
                         <button
                           onClick={() => {
                             setAdminTab('config');
@@ -3765,7 +3964,7 @@ export default function App() {
                         </button>
                       )}
 
-                      {!!roleMenuPermissions[loggedInSystemUser?.role]?.admin_permissions && (
+                      {hasPermission(loggedInSystemUser, 'admin_permissions') && (
                         <button
                           onClick={() => {
                             setAdminTab('permissions');
@@ -4028,28 +4227,65 @@ export default function App() {
               </div>
 
               {/* Navigation Items */}
-              {!!(roleMenuPermissions[loggedInSystemUser?.role]?.register ?? true) && (
-                <button
-                  onClick={() => setActiveTab('register')}
-                  title={t('tabRegister')}
-                  className={`relative flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl text-xs font-bold tracking-wide transition-all duration-200 cursor-pointer text-left w-full ${
-                    activeTab === 'register' 
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/60 animate-pulse' 
-                      : 'text-blue-200 bg-blue-950/40 border border-blue-500/30 hover:bg-blue-900/40 hover:text-white animate-pulse'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 truncate">
-                    <UserPlus className="w-5 h-5 shrink-0 text-blue-300" />
-                    <span className="truncate text-[15px] font-extrabold leading-[20px]">{t('tabRegister')}</span>
-                  </div>
-                  <span className="relative flex h-2.5 w-2.5 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                  </span>
-                </button>
+              {hasPermission(loggedInSystemUser, 'register') && (
+                <>
+                  {/* Thai Registration Button */}
+                  <button
+                    onClick={() => {
+                      setActiveTab('register');
+                      setRegForm(prev => ({
+                        ...prev,
+                        registrationCategory: 'thai',
+                        nationality: 'ไทย'
+                      }));
+                    }}
+                    title={lang === 'TH' ? 'ลงทะเบียนคนไทย (TH)' : 'Thai Registration'}
+                    className={`relative flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl text-xs font-bold tracking-wide transition-all duration-200 cursor-pointer text-left w-full ${
+                      activeTab === 'register' && regForm.registrationCategory === 'thai'
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/60 animate-pulse' 
+                        : 'text-blue-200 bg-blue-950/40 border border-blue-500/30 hover:bg-blue-900/40 hover:text-white animate-pulse'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 truncate">
+                      <span className="text-base shrink-0">🇹🇭</span>
+                      <span className="truncate text-[14px] font-extrabold leading-[20px]">{lang === 'TH' ? 'ลงทะเบียนคนไทย' : 'Thai Register'}</span>
+                    </div>
+                    <span className="relative flex h-2.5 w-2.5 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                  </button>
+
+                  {/* Foreigner Registration Button (Pulsing Orange) */}
+                  <button
+                    onClick={() => {
+                      setActiveTab('register');
+                      setRegForm(prev => ({
+                        ...prev,
+                        registrationCategory: 'foreigner',
+                        nationality: prev.nationality === 'ไทย' ? 'ต่างด้าว' : prev.nationality
+                      }));
+                    }}
+                    title={lang === 'TH' ? 'ลงทะเบียนต่างด้าว (FW)' : 'Foreigner Registration'}
+                    className={`relative flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl text-xs font-bold tracking-wide transition-all duration-200 cursor-pointer text-left w-full ${
+                      activeTab === 'register' && regForm.registrationCategory === 'foreigner'
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30 ring-2 ring-amber-400/60 animate-pulse' 
+                        : 'text-amber-200 bg-amber-950/40 border border-amber-500/30 hover:bg-amber-900/40 hover:text-white animate-pulse'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 truncate">
+                      <span className="text-base shrink-0">🌐</span>
+                      <span className="truncate text-[14px] font-extrabold leading-[20px]">{lang === 'TH' ? 'ลงทะเบียนต่างด้าว' : 'Foreigner Register'}</span>
+                    </div>
+                    <span className="relative flex h-2.5 w-2.5 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-80"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                    </span>
+                  </button>
+                </>
               )}
 
-              {!!(roleMenuPermissions[loggedInSystemUser?.role]?.gate ?? true) && (
+              {hasPermission(loggedInSystemUser, 'gate') && (
                 <button
                   onClick={() => setActiveTab('gate')}
                   title={t('tabGate')}
@@ -4064,7 +4300,7 @@ export default function App() {
                 </button>
               )}
 
-              {!!(roleMenuPermissions[loggedInSystemUser?.role]?.pass ?? true) && (
+              {hasPermission(loggedInSystemUser, 'pass') && (
                 <button
                   onClick={() => setActiveTab('pass')}
                   title={t('tabPass')}
@@ -4079,7 +4315,7 @@ export default function App() {
                 </button>
               )}
 
-              {!!(roleMenuPermissions[loggedInSystemUser?.role]?.admin ?? false) && (
+              {hasPermission(loggedInSystemUser, 'admin') && (
                 <div className="flex flex-col gap-1 w-full">
                   <button
                     onClick={() => setActiveTab('admin')}
@@ -4097,7 +4333,7 @@ export default function App() {
 
                   {activeTab === 'admin' && (
                     <div className="pl-3 border-l border-slate-800 ml-4 flex flex-col gap-1 mt-1.5 w-full">
-                      {!!roleMenuPermissions[loggedInSystemUser?.role]?.admin_dashboard && (
+                      {hasPermission(loggedInSystemUser, 'admin_dashboard') && (
                         <button
                           onClick={() => setAdminTab('dashboard')}
                           title={t('adminDashboard')}
@@ -4113,7 +4349,7 @@ export default function App() {
                         </button>
                       )}
 
-                      {!!roleMenuPermissions[loggedInSystemUser?.role]?.admin_visitors && (
+                      {hasPermission(loggedInSystemUser, 'admin_visitors') && (
                         <button
                           onClick={() => {
                             setAdminTab('visitors');
@@ -4132,7 +4368,7 @@ export default function App() {
                         </button>
                       )}
 
-                      {!!(roleMenuPermissions[loggedInSystemUser?.role]?.admin_staff ?? roleMenuPermissions[loggedInSystemUser?.role]?.admin_visitors) && (
+                      {hasPermission(loggedInSystemUser, 'admin_staff') && (
                         <button
                           onClick={() => {
                             setAdminTab('staff');
@@ -4150,7 +4386,7 @@ export default function App() {
                         </button>
                       )}
 
-                      {!!(roleMenuPermissions[loggedInSystemUser?.role]?.admin_online ?? true) && (
+                      {hasPermission(loggedInSystemUser, 'admin_online') && (
                         <button
                           onClick={() => setAdminTab('online')}
                           title={tText("สถานะผู้ใช้งานออนไลน์", "Online Users Status")}
@@ -4172,7 +4408,7 @@ export default function App() {
                         </button>
                       )}
 
-                      {!!roleMenuPermissions[loggedInSystemUser?.role]?.admin_checkpoints && (
+                      {hasPermission(loggedInSystemUser, 'admin_checkpoints') && (
                         <button
                           onClick={() => setAdminTab('checkpoints')}
                           title={t('adminCheckpoints')}
@@ -4188,7 +4424,7 @@ export default function App() {
                         </button>
                       )}
 
-                      {!!roleMenuPermissions[loggedInSystemUser?.role]?.admin_config && (
+                      {hasPermission(loggedInSystemUser, 'admin_config') && (
                         <button
                           onClick={() => setAdminTab('config')}
                           title={t('adminConfig')}
@@ -4204,7 +4440,7 @@ export default function App() {
                         </button>
                       )}
 
-                      {!!roleMenuPermissions[loggedInSystemUser?.role]?.admin_permissions && (
+                      {hasPermission(loggedInSystemUser, 'admin_permissions') && (
                         <button
                           onClick={() => setAdminTab('permissions')}
                           title={t('adminPermissions')}
@@ -4224,81 +4460,6 @@ export default function App() {
                 </div>
               )}
             </div>
-
-            {/* Quick Connect for Cloud Integration (only shown on desktop/sidebar when system user is logged in) */}
-            {loggedInSystemUser && config.googleAuthType !== 'apps_script' && (
-              <div className="hidden md:flex border-t border-slate-800/80 pt-3 mt-auto flex-col gap-2 w-full animate-fadeIn shrink-0">
-                <span className="text-[9px] uppercase tracking-wider font-extrabold text-slate-500 px-3">Google Workspace Cloud Connect</span>
-                {dbConnected ? (
-                  <div className="bg-slate-900 border border-slate-800/80 p-3 rounded-xl flex flex-col gap-2 shadow-inner">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wide">{tText(tText("เชื่อมต่อคลาวด์แล้ว", "Cloud Connection Enabled"), "Cloud Connection Enabled")}</span>
-                      </div>
-                      {tokenExpiry && (
-                        <span className="text-[9px] font-mono text-emerald-400 font-semibold bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-900/30">
-                          {tokenExpiry.formattedTime}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Session Progress Bar */}
-                    {tokenExpiry && (
-                      <div className="flex flex-col gap-1 mt-1">
-                        <div className="flex justify-between text-[8px] text-slate-500 font-bold uppercase tracking-wider">
-                          <span>{tText(tText("ระยะเวลาสิทธิ์เชื่อมต่อ", "Session Token Lifespan"), "Session Token Lifespan")}</span>
-                          <span className={tokenExpiry.percent < 20 ? 'text-rose-400' : tokenExpiry.percent < 50 ? 'text-amber-400' : 'text-emerald-400'}>
-                            {Math.round(tokenExpiry.percent)}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-slate-850 h-1.5 rounded-full overflow-hidden border border-slate-800">
-                          <div 
-                            className={`h-full transition-all duration-1000 rounded-full ${
-                              tokenExpiry.percent > 50 
-                                ? 'bg-gradient-to-r from-emerald-600 to-emerald-400' 
-                                : tokenExpiry.percent > 20 
-                                  ? 'bg-gradient-to-r from-amber-600 to-amber-400 animate-pulse' 
-                                  : 'bg-gradient-to-r from-rose-600 to-rose-400 animate-pulse'
-                            }`}
-                            style={{ width: `${tokenExpiry.percent}%` }}
-                          />
-                        </div>
-                        <span className="text-[8px] text-slate-500 leading-tight">
-                          * มาตรฐาน Google กำหนดอายุเซสชัน 1 ชม. เพื่อความปลอดภัย
-                        </span>
-                      </div>
-                    )}
-
-                    <span className="text-[9px] font-medium text-slate-400 truncate block mt-0.5">เมลแอดมิน: {googleUser?.email || tText(tText("เชื่อมต่อสำเร็จ", "Connected Successfully"), "Connected Successfully")}</span>
-                    
-                    <div className="flex items-center justify-between mt-1.5 border-t border-slate-800/80 pt-2 gap-2">
-                      <button
-                        onClick={handleGoogleConnect}
-                        title={tText(tText("ต่ออายุสิทธิ์ใหม่ (รีเฟรช 1 ชม.)", "Renew Token"), "Renew Token")}
-                        className="text-[9.5px] font-black text-blue-400 hover:text-blue-300 transition cursor-pointer flex items-center gap-0.5"
-                      >
-                        ⚡ ต่ออายุสิทธิ์
-                      </button>
-                      <button
-                        onClick={handleGoogleDisconnect}
-                        className="text-[9.5px] font-bold text-slate-500 hover:text-rose-400 transition cursor-pointer"
-                      >
-                        ยกเลิกผูกสิทธิ์
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={handleGoogleConnect}
-                    className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider shadow cursor-pointer transition"
-                  >
-                    <FileSpreadsheet className="w-3.5 h-3.5" />
-                    เชื่อมต่อ Google Sheet & Drive
-                  </button>
-                )}
-              </div>
-            )}
 
             {/* Logout Button at bottom of Sidebar Navigation */}
             {loggedInSystemUser && (
@@ -4346,7 +4507,7 @@ export default function App() {
         <AnimatePresence mode="wait">
           
           {/* TAB 1: GATE CONTROL */}
-          {activeTab === 'gate' && !!(roleMenuPermissions[loggedInSystemUser?.role]?.gate ?? true) && (
+          {activeTab === 'gate' && hasPermission(loggedInSystemUser, 'gate') && (
             <motion.div
               key="gate-view"
               initial={{ opacity: 0, y: 10 }}
@@ -4524,54 +4685,6 @@ export default function App() {
                                 <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">ผู้ออกใบผ่าน</span>
                                 <span className="text-amber-400 font-extrabold block truncate">{scannedOrSearchedVisitor.registeredBy || 'ระบบอัตโนมัติ'}</span>
                               </div>
-                              {scannedOrSearchedVisitor.gender && (
-                                <div>
-                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">เพศ</span>
-                                  <span className="text-slate-200 font-bold block truncate">{scannedOrSearchedVisitor.gender}</span>
-                                </div>
-                              )}
-                              {scannedOrSearchedVisitor.nationality && (
-                                <div>
-                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">สัญชาติ</span>
-                                  <span className="text-slate-200 font-bold block truncate">{scannedOrSearchedVisitor.nationality}</span>
-                                </div>
-                              )}
-                              {scannedOrSearchedVisitor.dob && (
-                                <div>
-                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">วันเกิด / อายุ</span>
-                                  <span className="text-slate-200 font-bold block truncate">
-                                    {scannedOrSearchedVisitor.dob} {scannedOrSearchedVisitor.age ? `(${scannedOrSearchedVisitor.age} ปี)` : ''}
-                                  </span>
-                                </div>
-                              )}
-                              {scannedOrSearchedVisitor.passportNumber && (
-                                <div>
-                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">เลขพาสปอร์ต (Passport)</span>
-                                  <span className="text-amber-300 font-mono font-bold block truncate">{scannedOrSearchedVisitor.passportNumber}</span>
-                                </div>
-                              )}
-                              {scannedOrSearchedVisitor.passportExpiryDate && (
-                                <div>
-                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">วันหมดอายุพาสปอร์ต</span>
-                                  <span className={`font-mono font-bold block truncate ${checkWorkPermitExpired(scannedOrSearchedVisitor.passportExpiryDate) ? 'text-rose-400' : 'text-slate-200'}`}>
-                                    {scannedOrSearchedVisitor.passportExpiryDate} {checkWorkPermitExpired(scannedOrSearchedVisitor.passportExpiryDate) ? '⛔ หมดอายุ' : ''}
-                                  </span>
-                                </div>
-                              )}
-                              {scannedOrSearchedVisitor.workPermitNumber && (
-                                <div>
-                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">เลข Work Permit</span>
-                                  <span className="text-blue-300 font-mono font-bold block truncate">{scannedOrSearchedVisitor.workPermitNumber}</span>
-                                </div>
-                              )}
-                              {scannedOrSearchedVisitor.workPermitExpiryDate && (
-                                <div>
-                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">วันหมดอายุ Work Permit</span>
-                                  <span className={`font-mono font-bold block truncate ${checkWorkPermitExpired(scannedOrSearchedVisitor.workPermitExpiryDate) ? 'text-rose-400' : 'text-emerald-400'}`}>
-                                    {scannedOrSearchedVisitor.workPermitExpiryDate} {checkWorkPermitExpired(scannedOrSearchedVisitor.workPermitExpiryDate) ? '⛔ หมดอายุ' : '✅ ปกติ'}
-                                  </span>
-                                </div>
-                              )}
                               <div className="sm:col-span-2 md:col-span-3 border-t border-slate-800/60 pt-2.5 mt-1 flex flex-wrap items-center justify-between gap-2 text-[11px]">
                                 <span className="text-slate-400 font-bold">📅 วันที่-เวลาออกใบผ่านลงทะเบียน:</span>
                                 <span className="text-slate-200 font-mono font-bold">
@@ -4921,7 +5034,7 @@ export default function App() {
                                   type="text"
                                   value={gateIdInput}
                                   onChange={(e) => setGateIdInput(e.target.value)}
-                                  placeholder={tText(tText("พิมพ์รหัสใบผ่าน เช่น P123456, ชื่อ, หรือทะเบียนรถ...", "Search Pass ID, name, or vehicle plate..."), "Search Pass ID, name, or vehicle plate...")}
+                                  placeholder={tText(tText("พิมพ์รหัสใบผ่าน เช่น TH000001, FW000001, ชื่อ, หรือทะเบียนรถ...", "Search Pass ID (TH..., FW...), name, or plate..."), "Search Pass ID (TH..., FW...), name, or plate...")}
                                   className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-4 pr-12 py-3.5 text-slate-100 text-sm font-bold focus:border-blue-500 focus:outline-none transition"
                                 />
                                 <button
@@ -5030,7 +5143,7 @@ export default function App() {
           )}
 
           {/* TAB 2: VISITOR REGISTRATION */}
-          {activeTab === 'register' && !!(roleMenuPermissions[loggedInSystemUser?.role]?.register ?? true) && (
+          {activeTab === 'register' && hasPermission(loggedInSystemUser, 'register') && (
             <motion.div
               key="register-view"
               initial={{ opacity: 0, y: 10 }}
@@ -5095,13 +5208,7 @@ export default function App() {
                             setRegForm(prev => ({
                               ...prev,
                               registrationCategory: 'thai',
-                              nationality: 'ไทย',
-                              passportNumber: '',
-                              passportIssueDate: '',
-                              passportExpiryDate: '',
-                              workPermitNumber: '',
-                              workPermitIssueDate: '',
-                              workPermitExpiryDate: '',
+                              nationality: 'ไทย'
                             }));
                           }}
                           className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
@@ -5110,6 +5217,7 @@ export default function App() {
                               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                           }`}
                         >
+                          <span className="text-base">🇹🇭</span>
                           <span className="font-bold">{lang === 'TH' ? 'คนไทย' : 'Thai Citizen'}</span>
                         </button>
 
@@ -5119,8 +5227,7 @@ export default function App() {
                             setRegForm(prev => ({
                               ...prev,
                               registrationCategory: 'foreigner',
-                              nationality: prev.nationality === 'ไทย' ? 'พม่า' : prev.nationality,
-                              passportId: '',
+                              nationality: prev.nationality === 'ไทย' ? 'พม่า' : prev.nationality
                             }));
                           }}
                           className={`py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
@@ -5237,7 +5344,7 @@ export default function App() {
                                 type="text"
                                 required
                                 value={regForm.passportNumber}
-                                onChange={(e) => setRegForm({ ...regForm, passportNumber: e.target.value })}
+                                onChange={(e) => setRegForm({ ...regForm, passportNumber: e.target.value, passportId: e.target.value })}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') {
                                     e.preventDefault();
@@ -5266,21 +5373,6 @@ export default function App() {
                                 {isRetrievingByPassport ? 'กำลังดึง...' : 'ดึงประวัติ'}
                               </button>
                             </div>
-                          </div>
-                        )}
-
-                        {/* FOREIGNER FORM: Passport Issue Date */}
-                        {regForm.registrationCategory === 'foreigner' && (
-                          <div>
-                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
-                              วันออกพาสปอร์ต
-                            </label>
-                            <input
-                              type="date"
-                              value={regForm.passportIssueDate}
-                              onChange={(e) => setRegForm({ ...regForm, passportIssueDate: e.target.value })}
-                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-amber-500 focus:outline-none"
-                            />
                           </div>
                         )}
 
@@ -5316,21 +5408,6 @@ export default function App() {
                               value={regForm.workPermitNumber}
                               onChange={(e) => setRegForm({ ...regForm, workPermitNumber: e.target.value })}
                               placeholder="ระบุเลขใบอนุญาตทำงาน..."
-                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-amber-500 focus:outline-none"
-                            />
-                          </div>
-                        )}
-
-                        {/* FOREIGNER FORM: Work Permit Issue Date */}
-                        {regForm.registrationCategory === 'foreigner' && (
-                          <div>
-                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
-                              วันออกบัตร Work Permit
-                            </label>
-                            <input
-                              type="date"
-                              value={regForm.workPermitIssueDate}
-                              onChange={(e) => setRegForm({ ...regForm, workPermitIssueDate: e.target.value })}
                               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-amber-500 focus:outline-none"
                             />
                           </div>
@@ -5393,23 +5470,6 @@ export default function App() {
                               </div>
                             );
                           })()}
-                        </div>
-
-                        {/* BOTH FORMS: Gender */}
-                        <div>
-                          <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
-                            เพศ
-                          </label>
-                          <select
-                            value={regForm.gender}
-                            onChange={(e) => setRegForm({ ...regForm, gender: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
-                          >
-                            <option value="">-- ไม่ระบุเพศ --</option>
-                            <option value="ชาย">ชาย (Male)</option>
-                            <option value="หญิง">หญิง (Female)</option>
-                            <option value="อื่นๆ">อื่นๆ (Other)</option>
-                          </select>
                         </div>
 
                         {/* Phone */}
@@ -5577,7 +5637,7 @@ export default function App() {
           )}
 
           {/* TAB 3: PASS VIEWER */}
-          {activeTab === 'pass' && !!(roleMenuPermissions[loggedInSystemUser?.role]?.pass ?? true) && (
+          {activeTab === 'pass' && hasPermission(loggedInSystemUser, 'pass') && (
             <motion.div
               key="pass-view"
               initial={{ opacity: 0, y: 10 }}
@@ -5713,26 +5773,9 @@ export default function App() {
                                   </td>
                                   <td className="py-3 px-4 font-extrabold text-slate-100">
                                     {visitor.name}
-                                    {visitor.registrationCategory === 'foreigner' && (
-                                      <span className="ml-2 text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">
-                                        {visitor.nationality || 'ต่างด้าว'}
-                                      </span>
-                                    )}
-                                    <div className="text-[10px] text-slate-500 font-mono font-normal mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                      <span>เลขบัตร: {visitor.passportId || tText(tText("ไม่ได้ระบุ", "Unspecified"), "Unspecified")}</span>
-                                      {visitor.dob && (
-                                        <span className="text-slate-400">| เกิด: {visitor.dob} {visitor.age ? `(${visitor.age} ปี)` : ''}</span>
-                                      )}
-                                      {visitor.gender && (
-                                        <span className="text-slate-400">| เพศ: {visitor.gender}</span>
-                                      )}
+                                    <div className="text-[10px] text-slate-500 font-mono font-normal mt-0.5">
+                                      เลขบัตร: {visitor.passportId || tText(tText("ไม่ได้ระบุ", "Unspecified"), "Unspecified")}
                                     </div>
-                                    {(visitor.passportNumber || visitor.workPermitNumber) && (
-                                      <div className="text-[10px] font-mono text-amber-300/90 font-bold mt-0.5 flex flex-wrap items-center gap-x-2">
-                                        {visitor.passportNumber && <span>Passport: {visitor.passportNumber}</span>}
-                                        {visitor.workPermitNumber && <span>WorkPermit: {visitor.workPermitNumber}</span>}
-                                      </div>
-                                    )}
                                     <div className="text-[10px] text-amber-400/90 font-mono font-normal mt-0.5">
                                       ออกใบผ่านโดย: {visitor.registeredBy || tText(tText("ระบบอัตโนมัติ", "Automated System"), "Automated System")}
                                     </div>
@@ -5792,16 +5835,6 @@ export default function App() {
                                   <div>
                                     <h5 className="font-extrabold text-xs text-slate-200">{visitor.name}</h5>
                                     <p className="text-[9px] text-slate-500 font-mono">ID: {visitor.id}</p>
-                                    {(visitor.dob || visitor.gender || visitor.nationality) && (
-                                      <p className="text-[9px] text-slate-400">
-                                        {[visitor.gender, visitor.nationality, visitor.dob ? `เกิด ${visitor.dob}` : null, visitor.age ? `อายุ ${visitor.age} ปี` : null].filter(Boolean).join(' | ')}
-                                      </p>
-                                    )}
-                                    {(visitor.passportNumber || visitor.workPermitNumber) && (
-                                      <p className="text-[9px] text-amber-300 font-mono">
-                                        {[visitor.passportNumber ? `Passport: ${visitor.passportNumber}` : null, visitor.workPermitNumber ? `WP: ${visitor.workPermitNumber}` : null].filter(Boolean).join(' | ')}
-                                      </p>
-                                    )}
                                     <p className="text-[9px] text-amber-400/90 font-mono">ออกโดย: {visitor.registeredBy || tText(tText("ระบบอัตโนมัติ", "Automated System"), "Automated System")}</p>
                                   </div>
                                 </div>
@@ -5873,7 +5906,7 @@ export default function App() {
               transition={{ duration: 0.15 }}
               className="w-full"
             >
-              {loggedInSystemUser && !roleMenuPermissions[loggedInSystemUser?.role]?.admin ? (
+              {loggedInSystemUser && !hasPermission(loggedInSystemUser, 'admin') ? (
                 /* INSUFFICIENT PERMISSIONS PAGE FOR GUARDS */
                 <div className="max-w-md mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl text-center flex flex-col gap-5">
                   <div className="mx-auto w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center shadow-lg shadow-rose-500/5">
@@ -5930,7 +5963,7 @@ export default function App() {
                   <div className="w-full flex flex-col gap-6">
                     
                     {/* ADMIN VIEW 1: DASHBOARD */}
-                    {adminTab === 'dashboard' && !!roleMenuPermissions[loggedInSystemUser?.role]?.admin_dashboard && (
+                    {adminTab === 'dashboard' && hasPermission(loggedInSystemUser, 'admin_dashboard') && (
                       <div className="flex flex-col gap-6 w-full animate-fade-in">
                         
                         {/* Advanced Filters & Date Range Picker */}
@@ -6098,7 +6131,7 @@ export default function App() {
                         </div>
 
                         {/* Stat Widget Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                           
                           <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-md flex items-center justify-between">
                             <div>
@@ -6154,18 +6187,6 @@ export default function App() {
                             </div>
                             <div className={`w-10 h-10 rounded-xl ${overstay24hVisitors.length > 0 ? 'bg-rose-500/20 border border-rose-500/40 text-rose-400' : 'bg-slate-800/80 border border-slate-700 text-slate-400'} flex items-center justify-center font-bold group-hover:scale-105 transition shrink-0`}>
                               <AlertTriangle className={`w-5 h-5 ${overstay24hVisitors.length > 0 ? 'text-rose-400' : 'text-slate-400'}`} />
-                            </div>
-                          </div>
-
-                          <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-md flex items-center justify-between">
-                            <div>
-                              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">{tText("ผู้ลงทะเบียน ยังไม่เช็คอิน", "Registered but Not Checked In")}</span>
-                              <strong className="text-xl font-black text-amber-400 mt-1 block font-mono">
-                                {loadingDashboard ? '...' : `${dashboardStats.registeredNotCheckedIn ?? 0} ${tText("คน", "persons")}`}
-                              </strong>
-                            </div>
-                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold shrink-0">
-                              <Clock className="w-5 h-5 text-amber-400" />
                             </div>
                           </div>
 
@@ -6433,7 +6454,7 @@ export default function App() {
                     )}
 
                     {/* ADMIN VIEW 2: VISITORS & BAN MANAGEMENT */}
-                    {adminTab === 'visitors' && !!roleMenuPermissions[loggedInSystemUser?.role]?.admin_visitors && (
+                    {adminTab === 'visitors' && hasPermission(loggedInSystemUser, 'admin_visitors') && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col gap-5">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div>
@@ -6745,7 +6766,7 @@ export default function App() {
                     )}
 
                     {/* ADMIN VIEW: SYSTEM USERS & STAFF ACCOUNTS */}
-                    {adminTab === 'staff' && !!(roleMenuPermissions[loggedInSystemUser?.role]?.admin_staff ?? roleMenuPermissions[loggedInSystemUser?.role]?.admin_visitors) && (
+                    {adminTab === 'staff' && hasPermission(loggedInSystemUser, 'admin_staff') && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col gap-5">
                         {/* System Users / Staff Management List */}
                         <div className="text-left">
@@ -6760,7 +6781,7 @@ export default function App() {
                             
                             {/* Actions and Search bar for Staff */}
                             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-                              {(loggedInSystemUser?.role.includes('Administrator') || loggedInSystemUser?.role.includes('Manager')) && (
+                              {hasPermission(loggedInSystemUser, 'admin_staff') && (
                                 <button
                                   type="button"
                                   onClick={openStaffCreate}
@@ -6793,7 +6814,7 @@ export default function App() {
                                   <th className="pb-2 pr-3">{tText(tText("ชื่อ-นามสกุล", "Full Name"), "Full Name")}</th>
                                   <th className="pb-2 px-3">Username</th>
                                   <th className="pb-2 px-3">{tText(tText("บทบาท / ตำแหน่ง", "Role / Title"), "Role / Title")}</th>
-                                  {(loggedInSystemUser?.role.includes('Administrator') || loggedInSystemUser?.role.includes('Manager')) && (
+                                  {hasPermission(loggedInSystemUser, 'admin_staff') && (
                                     <th className="pb-2 px-3 text-center">{tText(tText("การจัดการ", "Actions"), "Actions")}</th>
                                   )}
                                   <th className="pb-2 pl-3 text-right">{tText(tText("วันที่ลงทะเบียน", "Registration Date"), "Registration Date")}</th>
@@ -6822,9 +6843,9 @@ export default function App() {
                                     <td className="py-2.5 px-3 font-mono text-slate-300">{user.username}</td>
                                     <td className="py-2.5 px-3">
                                       <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                                        user.role.includes('Administrator') 
+                                        user.role === 'SuperAdmin' || user.role.includes('Super') || user.role.includes('Administrator') 
                                           ? 'bg-amber-500/10 text-amber-400' 
-                                          : user.role.includes('Manager')
+                                          : user.role === 'Admin' || user.role.includes('Admin') || user.role.includes('Manager')
                                           ? 'bg-purple-500/10 text-purple-400'
                                           : user.role.includes('Supervisor')
                                           ? 'bg-indigo-500/10 text-indigo-400'
@@ -6833,7 +6854,7 @@ export default function App() {
                                         {user.role}
                                       </span>
                                     </td>
-                                    {(loggedInSystemUser?.role.includes('Administrator') || loggedInSystemUser?.role.includes('Manager')) && (
+                                    {hasPermission(loggedInSystemUser, 'admin_staff') && (
                                       <td className="py-2.5 px-3 text-center">
                                         <button
                                           onClick={() => openStaffEdit(user)}
@@ -6872,9 +6893,9 @@ export default function App() {
                                       <h5 className="font-bold text-xs text-slate-200">{user.name}</h5>
                                     </div>
                                     <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                                      user.role.includes('Administrator') 
+                                      user.role === 'SuperAdmin' || user.role.includes('Super') || user.role.includes('Administrator') 
                                         ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' 
-                                        : user.role.includes('Manager')
+                                        : user.role === 'Admin' || user.role.includes('Admin') || user.role.includes('Manager')
                                         ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
                                         : user.role.includes('Supervisor')
                                         ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
@@ -6895,7 +6916,7 @@ export default function App() {
                                       </span>
                                     </div>
                                   </div>
-                                  {(loggedInSystemUser?.role.includes('Administrator') || loggedInSystemUser?.role.includes('Manager')) && (
+                                  {hasPermission(loggedInSystemUser, 'admin_staff') && (
                                     <div className="pt-2 border-t border-slate-900/40 flex justify-end">
                                       <button
                                         onClick={() => openStaffEdit(user)}
@@ -7231,7 +7252,7 @@ export default function App() {
                                       </div>
 
                                       {/* Force Logout Action for Super Admin / Admin */}
-                                      {(loggedInSystemUser?.role?.includes('Administrator') || loggedInSystemUser?.role?.includes('Super Admin')) && !isCurrentUser && (
+                                      {(loggedInSystemUser?.role === 'SuperAdmin' || loggedInSystemUser?.role === 'Admin' || loggedInSystemUser?.role?.includes('Admin') || loggedInSystemUser?.role?.includes('Administrator')) && !isCurrentUser && (
                                         <button
                                           onClick={() => handleForceLogoutUser(user.username)}
                                           className="bg-rose-500/10 hover:bg-rose-500/25 border border-rose-500/20 text-rose-400 font-bold px-2.5 py-1.5 rounded-xl transition cursor-pointer text-[10px] flex items-center gap-1 shrink-0"
@@ -7252,7 +7273,7 @@ export default function App() {
                     )}
 
                     {/* ADMIN VIEW 3: INTERACTIVE PDF REPORT EXPORTER WITH BEAUTIFUL CHARTS */}
-                    {adminTab === 'reports' && !!roleMenuPermissions[loggedInSystemUser?.role]?.admin_reports && (
+                    {adminTab === 'reports' && hasPermission(loggedInSystemUser, 'admin_reports') && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col gap-6">
                         {/* Header */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
@@ -7718,7 +7739,7 @@ export default function App() {
                     )}
 
                     {/* ADMIN VIEW: DAILY CHECKPOINT & GUARD ASSIGNMENTS */}
-                    {adminTab === 'checkpoints' && !!roleMenuPermissions[loggedInSystemUser?.role]?.admin_checkpoints && (
+                    {adminTab === 'checkpoints' && hasPermission(loggedInSystemUser, 'admin_checkpoints') && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col gap-6">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
                           <div>
@@ -7885,7 +7906,7 @@ export default function App() {
                     )}
 
                     {/* ADMIN VIEW 4: CONFIGURATION & BRANDING */}
-                    {adminTab === 'config' && !!roleMenuPermissions[loggedInSystemUser?.role]?.admin_config && (
+                    {adminTab === 'config' && hasPermission(loggedInSystemUser, 'admin_config') && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg animate-fadeIn">
                         <div className="mb-5 border-b border-slate-800 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                           <div>
@@ -7938,7 +7959,7 @@ export default function App() {
                                 : 'bg-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                             }`}
                           >
-                            <span>{tText(tText("🌐 Google Sheets & อีเมล", "Google Sheets & SMTP sync"), "Google Sheets & SMTP sync")}</span>
+                            <span>{tText(tText("🌐 ฐานข้อมูล Google Sheets", "Google Sheets Sync"), "Google Sheets Sync")}</span>
                           </button>
                           <button
                             type="button"
@@ -7959,14 +7980,14 @@ export default function App() {
                             {configSubTab === 'branding' && tText(tText("🎨 ตั้งค่ารูปแบบแบรนด์ขององค์กร", "Brand Identity Design Setup"), "Brand Identity Design Setup")}
                             {configSubTab === 'fields' && tText(tText("📋 ตั้งค่าฟิลด์ความต้องการในแบบฟอร์มลงทะเบียน", "Registration Form Required Fields Setup"), "Registration Form Required Fields Setup")}
                             {configSubTab === 'designer' && tText(tText("🎫 ดีไซน์บัตรผ่านประตูและสลิปความปลอดภัย", "Visitor Pass Layout & Security Slip Designer"), "Visitor Pass Layout & Security Slip Designer")}
-                            {configSubTab === 'integration' && tText(tText("🌐 ตั้งค่าระบบเชื่อมต่อ Google Sheets & ส่งอีเมล", "Google Sheets synchronization and report email setup"), "Google Sheets synchronization and report email setup")}
+                            {configSubTab === 'integration' && tText(tText("🌐 ตั้งค่าระบบเชื่อมต่อ Google Sheets", "Google Sheets synchronization setup"), "Google Sheets synchronization setup")}
                             {configSubTab === 'storage' && tText(tText("💾 การจัดการข้อมูลทดสอบ & พื้นที่จัดเก็บประวัติ", "Mock records setup, sheet capacities and database storage settings"), "Mock records setup, sheet capacities and database storage settings")}
                           </h4>
                           <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
                             {configSubTab === 'branding' && tText(tText("ปรับแต่งชื่อองค์กรหลัก, กำหนดสีธีมระบบ (สีประจำองค์กร/สีไฮไลท์), และอัปโหลดไฟล์ภาพโลโก้แบรนด์ของคุณ", "Customize primary organization name, system theme colors, and brand logo image."), "Customize primary organization name, system theme colors, and brand logo image.")}
                             {configSubTab === 'fields' && tText(tText("กำหนดว่าในการลงทะเบียนเข้าติดต่อ จะต้องบังคับกรอกข้อมูลใดบ้าง เช่น ชื่อ-นามสกุล, ทะเบียนรถ, ชื่อบริษัท หรือประเภทผู้ติดต่อ", "Configure mandatory fields such as Name, Plate, Company, or Visitor Type."), "Configure mandatory fields such as Name, Plate, Company, or Visitor Type.")}
                             {configSubTab === 'designer' && tText(tText("ตกแต่งบัตรผ่านความปลอดภัย แบบ Real-time เช่น รูปแบบโครงสร้างสลิม ความกว้าง ชุดฟอนต์ ขนาดอักษร ความโค้งมน สี และเลือกเปิด/ปิดการแสดงคิวอาร์โค้ด", "Style the security pass in real-time, such as layout width, font, rounded corners, colors, and QR code visibility."), "Style the security pass in real-time, such as layout width, font, rounded corners, colors, and QR code visibility.")}
-                            {configSubTab === 'integration' && tText(tText("เลือกระหว่างเชื่อมต่อผ่าน Google Web App หรือ Service Account และกำหนดค่า SMTP/Gmail สำหรับส่งอีเมลรายงานเข้าออก", "Choose Google Sheets App Script/Service Account and configure SMTP for reports."), "Choose Google Sheets App Script/Service Account and configure SMTP for reports.")}
+                            {configSubTab === 'integration' && tText(tText("เลือกระหว่างเชื่อมต่อผ่าน Google Web App หรือ Service Account และกำหนดค่า Spreadsheet ID สำหรับจัดเก็บประวัติเข้าออก", "Choose Google Sheets App Script/Service Account and configure Spreadsheet ID."), "Choose Google Sheets App Script/Service Account and configure Spreadsheet ID.")}
                             {configSubTab === 'storage' && tText(tText("จำลองข้อมูลทดสอบ 1,000 รายการสำหรับสถิติแดชบอร์ด ตรวจสอบความจุแถวบนแผ่นงานชีต และจัดเก็บประวัติสำรองเพื่อความรวดเร็ว", "Generate 1,000 mock records for dashboard, check sheet row capacity, and archive history."), "Generate 1,000 mock records for dashboard, check sheet row capacity, and archive history.")}
                           </p>
                         </div>
@@ -8013,6 +8034,8 @@ export default function App() {
                             handleSeedMockData={handleSeedMockData}
                             clearingMock={clearingMock}
                             handleClearMockData={handleClearMockData}
+                            handleClearAllData={handleClearAllData}
+                            handleCreateNewDriveData={handleCreateNewDriveDatabase}
                             fetchSheetsStatus={fetchSheetsStatus}
                             loadingSheetsStatus={loadingSheetsStatus}
                             sheetsStatus={sheetsStatus}
@@ -8025,7 +8048,7 @@ export default function App() {
                     )}
 
                     {/* ADMIN VIEW 5: ROLE PERMISSIONS CUSTOMIZATION */}
-                    {adminTab === 'permissions' && !!roleMenuPermissions[loggedInSystemUser?.role]?.admin_permissions && (
+                    {adminTab === 'permissions' && hasPermission(loggedInSystemUser, 'admin_permissions') && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
                         <div className="mb-5 border-b border-slate-800 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                           <div>
@@ -8063,9 +8086,8 @@ export default function App() {
                                 >
                                   <div className="flex items-center gap-2">
                                     <Shield className={`w-4 h-4 ${
-                                      role.includes('Administrator') ? 'text-amber-400' :
-                                      role.includes('Manager') ? 'text-purple-400' :
-                                      role.includes('Supervisor') ? 'text-indigo-400' : 'text-blue-400'
+                                      role === 'SuperAdmin' || role.includes('Super') ? 'text-amber-400' :
+                                      role === 'Admin' || role.includes('Admin') ? 'text-purple-400' : 'text-blue-400'
                                     }`} />
                                     <span className="text-xs">{role.split(' ')[0]}</span>
                                   </div>
@@ -8089,25 +8111,17 @@ export default function App() {
                                 onClick={() => {
                                   // Reset selected role to default
                                   const defaults: any = {
-                                    'Administrator': {
+                                    'SuperAdmin': {
                                       gate: true, register: true, pass: true, admin: true,
-                                      admin_dashboard: true, admin_visitors: true, admin_staff: true, admin_checkpoints: true, admin_reports: true, admin_config: true, admin_permissions: true
+                                      admin_dashboard: true, admin_visitors: true, admin_staff: true, admin_online: true, admin_checkpoints: true, admin_reports: true, admin_config: true, admin_permissions: true
                                     },
-                                    'Manager': {
+                                    'Admin': {
                                       gate: true, register: true, pass: true, admin: true,
-                                      admin_dashboard: true, admin_visitors: true, admin_staff: true, admin_checkpoints: true, admin_reports: true, admin_config: true, admin_permissions: true
+                                      admin_dashboard: true, admin_visitors: true, admin_staff: true, admin_online: true, admin_checkpoints: true, admin_reports: true, admin_config: false, admin_permissions: false
                                     },
-                                    'Supervisor': {
-                                      gate: true, register: true, pass: true, admin: true,
-                                      admin_dashboard: true, admin_visitors: true, admin_staff: true, admin_checkpoints: true, admin_reports: true, admin_config: false, admin_permissions: false
-                                    },
-                                    'Staff': {
+                                    'User': {
                                       gate: true, register: true, pass: true, admin: false,
-                                      admin_dashboard: false, admin_visitors: false, admin_staff: false, admin_checkpoints: false, admin_reports: false, admin_config: false, admin_permissions: false
-                                    },
-                                    'Security Guard': {
-                                      gate: true, register: true, pass: true, admin: false,
-                                      admin_dashboard: false, admin_visitors: false, admin_staff: false, admin_checkpoints: false, admin_reports: false, admin_config: false, admin_permissions: false
+                                      admin_dashboard: false, admin_visitors: false, admin_staff: false, admin_online: false, admin_checkpoints: false, admin_reports: false, admin_config: false, admin_permissions: false
                                     }
                                   };
                                   setRoleMenuPermissions(prev => ({
@@ -8150,7 +8164,7 @@ export default function App() {
                                         checked={isChecked}
                                         onChange={(e) => {
                                           // Prevent administrator from disabling their own admin or permissions tab to avoid lockouts
-                                          if (selectedRoleToConfig.includes('Administrator') && (tab.key === 'admin')) {
+                                          if ((selectedRoleToConfig === 'SuperAdmin' || selectedRoleToConfig.includes('Admin')) && (tab.key === 'admin')) {
                                             alert(tText(tText("ไม่สามารถถอนสิทธิ์เมนูหลัก Administrator สำหรับบัญชีแอดมินสูงสุดได้เพื่อความปลอดภัย", "Administrator permission settings cannot be modified for safety."), "Administrator permission settings cannot be modified for safety."));
                                             return;
                                           }
@@ -8220,7 +8234,7 @@ export default function App() {
                                         checked={roleMenuPermissions[selectedRoleToConfig]?.admin ? isChecked : false}
                                         onChange={(e) => {
                                           // Prevent administrator from disabling their own permissions tab to avoid lockouts
-                                          if (selectedRoleToConfig.includes('Administrator') && (sub.key === 'admin_permissions')) {
+                                          if ((selectedRoleToConfig === 'SuperAdmin' || selectedRoleToConfig.includes('Admin')) && (sub.key === 'admin_permissions')) {
                                             alert(tText(tText("ไม่สามารถถอนสิทธิ์การตั้งค่าสิทธิ์สำหรับแอดมินสูงสุดได้ เพื่อป้องกันปัญหาการเข้าถึงของแอดมิน", "Administrator role constraints cannot be cleared to ensure system access."), "Administrator role constraints cannot be cleared to ensure system access."));
                                             return;
                                           }
@@ -8588,10 +8602,7 @@ export default function App() {
                   
                   <div className="flex flex-col gap-2.5 mt-1">
                     {(() => {
-                      const perms = roleMenuPermissions[loggedInSystemUser.role] || {
-                        gate: true, register: true, pass: true, admin: false,
-                        admin_dashboard: false, admin_visitors: false, admin_checkpoints: false, admin_reports: false, admin_config: false, admin_permissions: false
-                      };
+                      const perms = getUserPermissions(loggedInSystemUser);
                       const dynamicList = [
                         { desc: tText(tText("สแกนเช็คอิน เข้า-ออก", "Check-In / Out Gate Access"), "Check-In / Out Gate Access"), allowed: !!perms.gate },
                         { desc: tText(tText("ลงทะเบียนใบผ่านใหม่", "Register Pass"), "Register Pass"), allowed: !!perms.register },
@@ -8896,11 +8907,9 @@ export default function App() {
                         onChange={(e) => setStaffForm(prev => ({ ...prev, role: e.target.value }))}
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
                       >
-                        <option value={tText("เจ้าหน้าที่ระบบ", "Staff")}>{tText(tText("เจ้าหน้าที่ระบบ", "Staff"), "Staff")}</option>
-                        <option value={tText("เจ้าหน้าที่รักษาความปลอดภัย", "Security Guard")}>{tText(tText("เจ้าหน้าที่รักษาความปลอดภัย", "Security Guard"), "Security Guard")}</option>
-                        <option value={tText("หัวหน้าฝ่ายความปลอดภัย", "Supervisor")}>{tText(tText("หัวหน้าฝ่ายความปลอดภัย", "Supervisor"), "Supervisor")}</option>
-                        <option value={tText("ผู้จัดการ", "Manager")}>{tText(tText("ผู้จัดการ", "Manager"), "Manager")}</option>
-                        <option value={tText("ผู้ดูแลระบบระดับสูง", "Administrator")}>{tText(tText("ผู้ดูแลระบบระดับสูง", "Administrator"), "Administrator")}</option>
+                        <option value="User">User ({tText("ผู้ใช้งานทั่วไป", "General User")})</option>
+                        <option value="Admin">Admin ({tText("ผู้ดูแลระบบ", "System Admin")})</option>
+                        <option value="SuperAdmin">SuperAdmin ({tText("ผู้ดูแลระบบสูงสุด", "Super Admin")})</option>
                       </select>
                     </div>
                   </div>
@@ -9252,6 +9261,85 @@ export default function App() {
             >
               {tText("รับทราบและทำตามขั้นตอน", "Understood, follow guidelines")}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Adminmaingate Password Authentication Modal for Google Sheets Settings */}
+      {showAdminMaingateAuthModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in no-print" id="adminmaingate-auth-modal">
+          <div className="bg-slate-900 border border-amber-500/30 rounded-3xl max-w-md w-full p-6 shadow-2xl relative flex flex-col gap-5">
+            <button 
+              onClick={() => {
+                setShowAdminMaingateAuthModal(false);
+                setAdminMaingatePassInput('');
+                setAdminMaingateAuthError('');
+              }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-200 transition p-1.5 rounded-full hover:bg-slate-800 cursor-pointer"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex flex-col items-center text-center gap-3 mt-1">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/10">
+                <Lock className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-100">
+                  🔐 ยืนยันรหัสผ่าน Adminmaingate
+                </h3>
+                <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                  การปรับเปลี่ยน Google Spreadsheet ID หรือ Apps Script Web App URL ต้องได้รับการยืนยันสิทธิ์โดยป้อนรหัสผ่านของบัญชี <strong className="text-amber-400">Adminmaingate</strong> เท่านั้น
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleConfirmAdminMaingatePassword} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
+                  รหัสผ่านผู้ดูแลระบบสูงสุด (Adminmaingate Password)
+                </label>
+                <input
+                  type="password"
+                  autoFocus
+                  required
+                  value={adminMaingatePassInput}
+                  onChange={(e) => {
+                    setAdminMaingatePassInput(e.target.value);
+                    setAdminMaingateAuthError('');
+                  }}
+                  placeholder="ป้อนรหัสผ่าน Adminmaingate"
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500 rounded-xl px-4 py-3 text-slate-100 text-xs focus:outline-none font-mono tracking-wider"
+                />
+              </div>
+
+              {adminMaingateAuthError && (
+                <div className="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-xs font-bold flex items-center gap-2">
+                  <span>{adminMaingateAuthError}</span>
+                </div>
+              )}
+
+              <div className="flex gap-3 mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAdminMaingateAuthModal(false);
+                    setAdminMaingatePassInput('');
+                    setAdminMaingateAuthError('');
+                  }}
+                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 px-4 rounded-xl text-xs transition cursor-pointer"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black py-3 px-4 rounded-xl text-xs shadow-lg shadow-amber-500/20 transition cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Lock className="w-4 h-4" /> ยืนยันและบันทึก
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

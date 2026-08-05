@@ -8,7 +8,6 @@ export interface Visitor {
   name: string;
   passportId: string; // เลขบัตรประชาชน / Passport
   nationality?: string; // สัญชาติ
-  gender?: string; // เพศ (ชาย / หญิง / อื่นๆ)
   dob?: string; // วันเดือนปีเกิด YYYY-MM-DD
   age?: number; // อายุ (คำนวณอัตโนมัติ)
   registrationCategory?: 'thai' | 'foreigner'; // ประเภทฟอร์ม: 'thai' | 'foreigner'
@@ -17,7 +16,8 @@ export interface Visitor {
   workPermitNumber?: string; // เลขใบอนุญาตทำงาน Work Permit
   workPermitIssueDate?: string; // วันที่ออกบัตรใบอนุญาตทำงาน
   workPermitExpiryDate?: string; // วันหมดอายุใบอนุญาตทำงาน
-  isWorkPermitExpired?: boolean; // สถานะหมดอายุใบอนุญาตทำงาน
+  idCardExpiryDate?: string; // วันหมดอายุบัตรประชาชน (คนไทย)
+  isWorkPermitExpired?: boolean; // สถานะหมดอายุใบอนุญาตทำงาน/เอกสาร
   phone: string;
   vehiclePlate: string;
   address: string;

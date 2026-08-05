@@ -8,6 +8,9 @@ import {
   RefreshCw,
   AlertTriangle,
   Download,
+  ExternalLink,
+  Folder,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 interface StorageSectionProps {
@@ -15,6 +18,8 @@ interface StorageSectionProps {
   handleSeedMockData: () => void;
   clearingMock?: boolean;
   handleClearMockData?: () => void;
+  handleClearAllData?: () => void;
+  handleCreateNewDriveData?: () => void;
   fetchSheetsStatus: () => void;
   loadingSheetsStatus: boolean;
   sheetsStatus: any;
@@ -28,6 +33,8 @@ export const StorageSection: React.FC<StorageSectionProps> = ({
   handleSeedMockData,
   clearingMock = false,
   handleClearMockData,
+  handleClearAllData,
+  handleCreateNewDriveData,
   fetchSheetsStatus,
   loadingSheetsStatus,
   sheetsStatus,
@@ -88,7 +95,51 @@ export const StorageSection: React.FC<StorageSectionProps> = ({
                 ) : (
                   <>
                     <Trash2 className="w-4 h-4" />
-                    <span>ลบข้อมูลจำลองทั้งหมด</span>
+                    <span>ลบข้อมูลจำลอง</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            {handleClearAllData && (
+              <button
+                id="clearAllDataBtn"
+                type="button"
+                onClick={handleClearAllData}
+                disabled={clearingMock || seedingMock}
+                className="px-4 py-2.5 bg-rose-700 hover:bg-rose-600 text-white border border-rose-500/40 disabled:opacity-50 font-extrabold text-xs rounded-xl transition duration-150 shadow-lg shadow-rose-700/20 cursor-pointer flex items-center gap-2"
+              >
+                {clearingMock ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>กำลังล้างระบบ...</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-4 h-4 text-rose-200" />
+                    <span>ล้างข้อมูลหลังบ้านทั้งหมด (Reset All)</span>
+                  </>
+                )}
+              </button>
+            )}
+
+            {handleCreateNewDriveData && (
+              <button
+                id="createNewDriveDataBtn"
+                type="button"
+                onClick={handleCreateNewDriveData}
+                disabled={clearingMock || seedingMock}
+                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white border border-blue-500/40 disabled:opacity-50 font-extrabold text-xs rounded-xl transition duration-150 shadow-lg shadow-blue-600/20 cursor-pointer flex items-center gap-2"
+              >
+                {clearingMock ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>กำลังสร้างฐานข้อมูลใหม่...</span>
+                  </>
+                ) : (
+                  <>
+                    <HardDrive className="w-4 h-4 text-blue-200" />
+                    <span>สร้างฐานข้อมูล Google Drive ใหม่ทั้งหมด</span>
                   </>
                 )}
               </button>
@@ -125,6 +176,52 @@ export const StorageSection: React.FC<StorageSectionProps> = ({
         {archiveSuccessMsg && (
           <div className="mb-5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-xl text-xs font-semibold whitespace-pre-line leading-relaxed">
             {archiveSuccessMsg}
+          </div>
+        )}
+
+        {/* Google Drive / Sheets Backend Link Card */}
+        {sheetsStatus && sheetsStatus.isGoogleConnected && (
+          <div className="mb-5 bg-gradient-to-r from-blue-950/60 to-slate-900 border border-blue-500/30 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-md">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
+                <FileSpreadsheet className="w-5 h-5 text-blue-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-slate-100 uppercase tracking-wide">ฐานข้อมูลหลังบ้าน Google Drive</span>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/30 font-bold">
+                    เชื่อมต่ออยู่
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 font-mono mt-0.5 truncate max-w-md">
+                  ID: {sheetsStatus.sheetId || 'CDC_GatePass_System_Database'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href={sheetsStatus.spreadsheetUrl || `https://docs.google.com/spreadsheets/d/${sheetsStatus.sheetId}/edit`}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-lg transition flex items-center gap-1.5 shadow-md cursor-pointer"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>เปิดไฟล์ Google Sheets</span>
+                <ExternalLink className="w-3 h-3 text-emerald-200" />
+              </a>
+
+              <a
+                href={sheetsStatus.driveFolderUrl || "https://drive.google.com/drive/folders/1an6N6l0Prp9q_ThtF1EhM3MCeiR3XG_W"}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-extrabold text-xs rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <Folder className="w-3.5 h-3.5 text-amber-400" />
+                <span>เปิดโฟลเดอร์ Google Drive</span>
+                <ExternalLink className="w-3 h-3 text-slate-400" />
+              </a>
+            </div>
           </div>
         )}
 

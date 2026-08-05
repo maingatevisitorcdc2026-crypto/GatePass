@@ -296,7 +296,7 @@ function loadTokenFromDisk(): string | null {
 }
 
 // In-memory cache for sheet ID, last token, and report history
-let dbSpreadsheetId: string | null = '17bfDUWPaTfmULl9WApmkbdqNsIXdhxceaYQ5uRK5PtA';
+let dbSpreadsheetId: string | null = null;
 let cachedAccessToken: string | null = loadTokenFromDisk();
 const invalidTokens = new Set<string>();
 let lastReportSentDate: string | null = null; // format "YYYY-MM-DD"
@@ -338,6 +338,7 @@ const FALLBACK_DB_PATH = path.join(process.cwd(), '.local_fallback_db.json');
 interface FallbackDB {
   branding: any;
   visitors: any[];
+  foreigners?: any[];
   activityLogs: any[];
   systemUsers?: any[];
 }
@@ -360,25 +361,29 @@ const DEFAULT_FALLBACK_DB: FallbackDB = {
       contactArea: true,
     },
     roleMenuPermissions: {
+      'SuperAdmin': {
+        gate: true, register: true, pass: true, admin: true,
+        admin_dashboard: true, admin_visitors: true, admin_staff: true, admin_online: true, admin_checkpoints: true, admin_reports: true, admin_config: true, admin_permissions: true
+      },
       'ผู้ดูแลระบบระดับสูง (Administrator)': {
         gate: true, register: true, pass: true, admin: true,
-        admin_dashboard: true, admin_visitors: true, admin_checkpoints: true, admin_reports: true, admin_config: true, admin_permissions: true
+        admin_dashboard: true, admin_visitors: true, admin_staff: true, admin_online: true, admin_checkpoints: true, admin_reports: true, admin_config: true, admin_permissions: true
+      },
+      'Admin': {
+        gate: true, register: true, pass: true, admin: true,
+        admin_dashboard: true, admin_visitors: true, admin_staff: true, admin_online: true, admin_checkpoints: true, admin_reports: true, admin_config: false, admin_permissions: false
       },
       'ผู้จัดการ (Manager)': {
         gate: true, register: true, pass: true, admin: true,
-        admin_dashboard: true, admin_visitors: true, admin_checkpoints: true, admin_reports: true, admin_config: true, admin_permissions: true
+        admin_dashboard: true, admin_visitors: true, admin_staff: true, admin_online: true, admin_checkpoints: true, admin_reports: true, admin_config: false, admin_permissions: false
       },
-      'หัวหน้าฝ่ายความปลอดภัย (Supervisor)': {
-        gate: true, register: true, pass: true, admin: true,
-        admin_dashboard: true, admin_visitors: true, admin_checkpoints: true, admin_reports: true, admin_config: false, admin_permissions: false
+      'User': {
+        gate: true, register: true, pass: true, admin: false,
+        admin_dashboard: false, admin_visitors: false, admin_staff: false, admin_online: false, admin_checkpoints: false, admin_reports: false, admin_config: false, admin_permissions: false
       },
       'เจ้าหน้าที่ความปลอดภัย (Staff)': {
         gate: true, register: true, pass: true, admin: false,
-        admin_dashboard: false, admin_visitors: false, admin_checkpoints: false, admin_reports: false, admin_config: false, admin_permissions: false
-      },
-      'เจ้าหน้าที่รักษาความปลอดภัย (Guard)': {
-        gate: true, register: true, pass: true, admin: false,
-        admin_dashboard: false, admin_visitors: false, admin_checkpoints: false, admin_reports: false, admin_config: false, admin_permissions: false
+        admin_dashboard: false, admin_visitors: false, admin_staff: false, admin_online: false, admin_checkpoints: false, admin_reports: false, admin_config: false, admin_permissions: false
       }
     },
     passTemplate: {
@@ -411,10 +416,11 @@ const DEFAULT_FALLBACK_DB: FallbackDB = {
     },
     googleAuthType: 'apps_script',
     googleServiceAccountJson: '',
-    googleSpreadsheetId: '',
-    googleAppsScriptUrl: 'https://script.google.com/macros/s/AKfycbzyU27Baxs9_C-ux3LwS_2Db4BpZ7G9W7sJoiuLf-MqlVgmJ2v3fxJdoPj8AnsypO1e/exec'
+    googleSpreadsheetId: '1ZWUD33aJak-GV3auuLjdAE6liGjp5EHvH6nQIIuUiwM',
+    googleAppsScriptUrl: 'https://script.google.com/macros/s/AKfycbxwc6IOug_J8ktWe9NjrOWjOvEvm6mDxmSXYV9hc-DSxZOVPZgeWRfnXs0dBBWyICKmGg/exec'
   },
   visitors: [],
+  foreigners: [],
   activityLogs: [],
   systemUsers: [
     {
@@ -433,12 +439,17 @@ function loadFallbackDB(): FallbackDB {
   try {
     if (fs.existsSync(FALLBACK_DB_PATH)) {
       const data = fs.readFileSync(FALLBACK_DB_PATH, 'utf8');
-      return JSON.parse(data);
+      const db = JSON.parse(data);
+      if (!db.foreigners) db.foreigners = [];
+      if (!db.visitors) db.visitors = [];
+      return db;
     }
   } catch (err) {
     console.error('Failed to load local fallback DB:', err);
   }
-  return JSON.parse(JSON.stringify(DEFAULT_FALLBACK_DB));
+  const fallback = JSON.parse(JSON.stringify(DEFAULT_FALLBACK_DB));
+  if (!fallback.foreigners) fallback.foreigners = [];
+  return fallback;
 }
 
 function saveFallbackDB(db: FallbackDB) {
@@ -867,43 +878,49 @@ function base64ToStream(base64Str: string): Readable {
   return stream;
 }
 
-// Helper: Generate next sequential Visitor/Pass ID (e.g. P000001, P000002...)
-async function getNextVisitorId(sheets: any, sheetId: string, fallback: any, providedIds?: string[]): Promise<string> {
+// Helper: Generate next sequential Visitor/Pass ID (e.g. TH000001 for Thai, FW000001 for Foreigner)
+async function getNextVisitorId(sheets: any, sheetId: string, fallback: any, providedIds?: string[], category: string = 'thai'): Promise<string> {
+  const isForeigner = category === 'foreigner';
+  const targetPrefix = isForeigner ? 'FW' : 'TH';
+  const targetSheet = isForeigner ? 'Foreigners' : 'Visitors';
   let ids: string[] = providedIds ? [...providedIds] : [];
   if (!providedIds && sheets && sheetId) {
     try {
       const res = await sheets.spreadsheets.values.get({
         spreadsheetId: sheetId,
-        range: 'Visitors!A2:A',
+        range: `${targetSheet}!A2:A`,
       });
       if (res.data.values) {
         ids = res.data.values.map((row: any) => row[0]).filter(Boolean);
       }
     } catch (err: any) {
-      console.error('Error getting visitor IDs from Google Sheets:', err.message);
+      console.error(`Error getting visitor IDs from Google Sheets (${targetSheet}):`, err.message);
     }
   }
 
   // Also include/fallback to local database to ensure synchronization
-  if (fallback && fallback.visitors) {
-    const fallbackIds = fallback.visitors.map((v: any) => v.id).filter(Boolean);
+  if (fallback) {
+    const fallbackList = isForeigner ? (fallback.foreigners || []) : (fallback.visitors || []);
+    const fallbackIds = fallbackList.map((v: any) => v.id).filter(Boolean);
     ids = Array.from(new Set([...ids, ...fallbackIds]));
   }
 
   let maxNum = 0;
+  const targetRegex = new RegExp(`^${targetPrefix}0*([1-9]\\d*)$`, 'i');
+  const genericRegex = new RegExp(`^${targetPrefix}(\\d+)$`, 'i');
+
   for (const id of ids) {
-    // Extract digit parts from ID (e.g. "P000123" -> "000123" -> 123, or "123" -> 123)
-    const match = id.match(/^(?:P|p)?0*([1-9]\d*)$/);
+    if (!id) continue;
+    const match = id.match(targetRegex);
     if (match) {
       const num = parseInt(match[1], 10);
       if (num > maxNum) {
         maxNum = num;
       }
     } else {
-      // Fallback matching for any digits if the above strict pattern missed something
-      const digitMatch = id.match(/\d+/);
-      if (digitMatch) {
-        const num = parseInt(digitMatch[0], 10);
+      const genericMatch = id.match(genericRegex);
+      if (genericMatch) {
+        const num = parseInt(genericMatch[1], 10);
         if (num > maxNum) {
           maxNum = num;
         }
@@ -912,7 +929,55 @@ async function getNextVisitorId(sheets: any, sheetId: string, fallback: any, pro
   }
 
   const nextNum = maxNum + 1;
-  return 'P' + String(nextNum).padStart(6, '0');
+  return targetPrefix + String(nextNum).padStart(6, '0');
+}
+
+// Helper to locate visitor row in either Visitors (Thai) or Foreigners (Foreigner) sheet
+async function findVisitorInSheets(sheets: any, sheetId: string, queryStr: string) {
+  if (!queryStr) return null;
+  const query = queryStr.toString().trim();
+  const cleanQuery = query.toLowerCase();
+
+  const isForeignerId = query.toUpperCase().startsWith('FW');
+
+  const rangesToFetch = isForeignerId 
+    ? ['Foreigners!A2:T', 'Visitors!A2:P']
+    : ['Visitors!A2:P', 'Foreigners!A2:T'];
+
+  const [res1, res2] = await Promise.all([
+    sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: rangesToFetch[0] }).catch(() => ({ data: { values: [] } })),
+    sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: rangesToFetch[1] }).catch(() => ({ data: { values: [] } }))
+  ]);
+
+  const sheet1Name = rangesToFetch[0].split('!')[0];
+  const sheet2Name = rangesToFetch[1].split('!')[0];
+
+  const rows1 = res1.data.values || [];
+  const rows2 = res2.data.values || [];
+
+  let idx1 = rows1.findIndex((r: any) => (r[0] && String(r[0]).toLowerCase() === cleanQuery) || (r[2] && String(r[2]).toLowerCase() === cleanQuery));
+  if (idx1 !== -1) {
+    return {
+      sheetName: sheet1Name,
+      rowIndex: idx1,
+      actualSheetRow: idx1 + 2,
+      row: rows1[idx1],
+      rows: rows1
+    };
+  }
+
+  let idx2 = rows2.findIndex((r: any) => (r[0] && String(r[0]).toLowerCase() === cleanQuery) || (r[2] && String(r[2]).toLowerCase() === cleanQuery));
+  if (idx2 !== -1) {
+    return {
+      sheetName: sheet2Name,
+      rowIndex: idx2,
+      actualSheetRow: idx2 + 2,
+      row: rows2[idx2],
+      rows: rows2
+    };
+  }
+
+  return null;
 }
 
 const ensuredSheetIds = new Set<string>();
@@ -932,6 +997,9 @@ async function ensureAllDatabaseSheets(sheets: any, spreadsheetId: string) {
     
     if (!existingTitles.includes('Visitors')) {
       requests.push({ addSheet: { properties: { title: 'Visitors' } } });
+    }
+    if (!existingTitles.includes('Foreigners')) {
+      requests.push({ addSheet: { properties: { title: 'Foreigners' } } });
     }
     if (!existingTitles.includes('Logs')) {
       requests.push({ addSheet: { properties: { title: 'Logs' } } });
@@ -965,10 +1033,10 @@ async function ensureAllDatabaseSheets(sheets: any, spreadsheetId: string) {
             ['📊 SECURITY MONITORING & SYSTEM OVERVIEW DASHBOARD', '', ''],
             ['', '', ''],
             ['สถานะภาพรวมระบบ (Real-time Metric)', 'จำนวน (Value)', 'คำอธิบาย (Description)'],
-            ['ลงทะเบียนทั้งหมด (Total Registered Visitors)', '=IFERROR(COUNTA(Visitors!A2:A), 0)', 'จำนวนรายชื่อผู้มีใบผ่านที่ลงทะเบียนในระบบ'],
-            ['อยู่ในพื้นที่ขณะนี้ (Currently Checked-In)', '=IFERROR(COUNTIF(Visitors!L2:L, "checked-in"), 0)', 'จำนวนคนที่สแกนเข้าและยังไม่สแกนออก'],
-            ['ถูกระงับสิทธิ์ (Banned Visitors)', '=IFERROR(COUNTIF(Visitors!L2:L, "banned"), 0)', 'ผู้ที่โดนระงับการเข้าพื้นที่ (Blacklist)'],
-            ['ผู้มีสิทธิ์ทั่วไป (Normal/Approved)', '=IFERROR(COUNTIF(Visitors!L2:L, "approved"), 0)', 'ผู้มีใบผ่านปกติที่อยู่นอกพื้นที่'],
+            ['ลงทะเบียนทั้งหมด (Total Registered Visitors)', '=IFERROR(COUNTA(Visitors!A2:A), 0) + IFERROR(COUNTA(Foreigners!A2:A), 0)', 'จำนวนรายชื่อผู้มีใบผ่านที่ลงทะเบียนในระบบ'],
+            ['อยู่ในพื้นที่ขณะนี้ (Currently Checked-In)', '=IFERROR(COUNTIF(Visitors!L2:L, "checked-in"), 0) + IFERROR(COUNTIF(Foreigners!L2:L, "checked-in"), 0)', 'จำนวนคนที่สแกนเข้าและยังไม่สแกนออก'],
+            ['ถูกระงับสิทธิ์ (Banned Visitors)', '=IFERROR(COUNTIF(Visitors!L2:L, "banned"), 0) + IFERROR(COUNTIF(Foreigners!L2:L, "banned"), 0)', 'ผู้ที่โดนระงับการเข้าพื้นที่ (Blacklist)'],
+            ['ผู้มีสิทธิ์ทั่วไป (Normal/Approved)', '=IFERROR(COUNTIF(Visitors!L2:L, "approved"), 0) + IFERROR(COUNTIF(Foreigners!L2:L, "approved"), 0)', 'ผู้มีใบผ่านปกติที่อยู่นอกพื้นที่'],
             ['', '', ''],
             ['ประวัติการสแกน (Scan Logs Metric)', 'จำนวน (Value)', 'คำอธิบาย (Description)'],
             ['จำนวนการสแกนทั้งหมด (Total Scan Logs)', '=IFERROR(COUNTA(Logs!A2:A), 0)', 'ประวัติการบันทึกสแกนเข้า-ออกทั้งหมด'],
@@ -979,61 +1047,36 @@ async function ensureAllDatabaseSheets(sheets: any, spreadsheetId: string) {
       });
     }
 
-    // Always update or ensure Visitors headers include all foreigner, passport, work permit, DOB, and Gender fields
-    await sheets.spreadsheets.values.update({
-      spreadsheetId,
-      range: 'Visitors!A1:AB1',
-      valueInputOption: 'RAW',
-      requestBody: {
-        values: [[
-          'ID', 'Name', 'Passport ID', 'Phone', 'Vehicle Plate', 'Address', 
-          'Company', 'Visitor Type', 'Contact Area', 'Photo URL', 'Photo Drive ID', 
-          'Status', 'Ban Reason', 'Registered At', 'Last Activity At', 'Registered By',
-          'Registration Category', 'Nationality', 'DOB', 'Age', 'Gender',
-          'Passport Number', 'Passport Issue Date', 'Passport Expiry Date',
-          'Work Permit Number', 'Work Permit Issue Date', 'Work Permit Expiry Date', 'Is Work Permit Expired'
-        ]],
-      },
-    }).catch((e: any) => console.warn('Could not update Visitors headers:', e.message));
-
-    // Auto-backfill default values for existing rows missing columns Q-AB
-    try {
-      const existingVis = await sheets.spreadsheets.values.get({
+    if (!existingTitles.includes('Visitors')) {
+      await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: 'Visitors!A2:AB',
+        range: 'Visitors!A1:Q1',
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: [[
+            'ID', 'Name', 'Passport ID', 'Phone', 'Vehicle Plate', 'Address', 
+            'Company', 'Visitor Type', 'Contact Area', 'Photo URL', 'Photo Drive ID', 
+            'Status', 'Ban Reason', 'Registered At', 'Last Activity At', 'Registered By',
+            'ID Card Expiry'
+          ]],
+        },
       });
-      if (existingVis.data.values && existingVis.data.values.length > 0) {
-        let needsUpdate = false;
-        const updatedRows = existingVis.data.values.map(row => {
-          const newRow = [...row];
-          while (newRow.length < 28) {
-            newRow.push('');
-          }
-          if (!newRow[16]) {
-            newRow[16] = 'thai';
-            needsUpdate = true;
-          }
-          if (!newRow[17]) {
-            newRow[17] = newRow[16] === 'foreigner' ? 'ต่างด้าว' : 'ไทย';
-            needsUpdate = true;
-          }
-          return newRow;
-        });
+    }
 
-        if (needsUpdate) {
-          await sheets.spreadsheets.values.update({
-            spreadsheetId,
-            range: `Visitors!A2:AB${updatedRows.length + 1}`,
-            valueInputOption: 'RAW',
-            requestBody: {
-              values: updatedRows,
-            },
-          });
-          console.log(`Backfilled default columns Q-AB for ${updatedRows.length} visitors in Google Sheets.`);
-        }
-      }
-    } catch (bfErr: any) {
-      console.warn('Could not backfill existing visitor rows in Google Sheets:', bfErr.message);
+    if (!existingTitles.includes('Foreigners')) {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: 'Foreigners!A1:V1',
+        valueInputOption: 'RAW',
+        requestBody: {
+          values: [[
+            'ID', 'Name', 'Passport ID', 'Phone', 'Vehicle Plate', 'Address', 
+            'Company', 'Visitor Type', 'Contact Area', 'Photo URL', 'Photo Drive ID', 
+            'Status', 'Ban Reason', 'Registered At', 'Last Activity At', 'Registered By',
+            'Nationality', 'Passport Number', 'Passport Expiry', 'Work Permit Number', 'Work Permit Issue Date', 'Work Permit Expiry'
+          ]],
+        },
+      });
     }
 
     if (!existingTitles.includes('Logs')) {
@@ -1117,23 +1160,6 @@ async function getOrCreateDatabase(oauth2Client: any): Promise<string> {
     return dbSpreadsheetId;
   }
 
-  // Set default spreadsheet ID to the shared sheet provided by the user
-  dbSpreadsheetId = '17bfDUWPaTfmULl9WApmkbdqNsIXdhxceaYQ5uRK5PtA';
-  console.log(`Using default shared Google Spreadsheet ID: ${dbSpreadsheetId}`);
-
-  try {
-    const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
-    await ensureAllDatabaseSheets(sheets, dbSpreadsheetId);
-    return dbSpreadsheetId;
-  } catch (err: any) {
-    console.error('Error ensuring sheets on default spreadsheet ID:', err.message);
-    const isAuthErr = handleGoogleError(err, oauth2Client);
-    if (isAuthErr) {
-      console.warn('[GOOGLE AUTH ERROR] Invalid credentials. Aborting.');
-      throw err;
-    }
-  }
-
   const drive = google.drive({ version: 'v3', auth: oauth2Client });
   const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
 
@@ -1178,16 +1204,13 @@ async function getOrCreateDatabase(oauth2Client: any): Promise<string> {
     // Add headers to 'Visitors'
     await sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
-      range: 'Visitors!A1:AB1',
+      range: 'Visitors!A1:P1',
       valueInputOption: 'RAW',
       requestBody: {
         values: [[
           'ID', 'Name', 'Passport ID', 'Phone', 'Vehicle Plate', 'Address', 
           'Company', 'Visitor Type', 'Contact Area', 'Photo URL', 'Photo Drive ID', 
-          'Status', 'Ban Reason', 'Registered At', 'Last Activity At', 'Registered By',
-          'Registration Category', 'Nationality', 'DOB', 'Age', 'Gender',
-          'Passport Number', 'Passport Issue Date', 'Passport Expiry Date',
-          'Work Permit Number', 'Work Permit Issue Date', 'Work Permit Expiry Date', 'Is Work Permit Expired'
+          'Status', 'Ban Reason', 'Registered At', 'Last Activity At', 'Registered By'
         ]],
       },
     });
@@ -2245,7 +2268,7 @@ app.post('/api/clear-mock-visitors', async (req, res) => {
         const sheetId = await getOrCreateDatabase(auth);
         const sheets = google.sheets({ version: 'v4', auth });
 
-        const vRes = await sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:AB' });
+        const vRes = await sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:P' });
         const vRows = vRes.data.values || [];
         const filteredVRows = vRows.filter(row => row[10] !== 'mock_seed' && row[15] !== 'ระบบอัตโนมัติ');
 
@@ -2255,7 +2278,7 @@ app.post('/api/clear-mock-visitors', async (req, res) => {
         const lRows = lRes.data.values || [];
         const filteredLRows = lRows.filter(row => !mockIdsInSheet.has(row[1]) && row[9] !== 'Adminmaingate');
 
-        await sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Visitors!A2:AB' });
+        await sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Visitors!A2:P' });
         await sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Logs!A2:K' });
 
         if (filteredVRows.length > 0) {
@@ -2289,13 +2312,132 @@ app.post('/api/clear-mock-visitors', async (req, res) => {
   }
 });
 
+// Clear ALL visitors & activity logs from backend (Reset DB)
+app.post('/api/clear-all-data', async (req, res) => {
+  try {
+    const isGoogle = isGoogleConnected(req);
+    const fallback = loadFallbackDB();
+    const deletedVisitorsCount = (fallback.visitors || []).length;
+    const deletedLogsCount = (fallback.activityLogs || []).length;
+
+    fallback.visitors = [];
+    fallback.activityLogs = [];
+    saveFallbackDB(fallback);
+
+    dbSpreadsheetId = null;
+
+    if (isGoogle) {
+      try {
+        const auth = getOAuth2Client(req);
+        const sheetId = await getOrCreateDatabase(auth);
+        const sheets = google.sheets({ version: 'v4', auth });
+        await sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Visitors!A2:Z' });
+        await sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Logs!A2:Z' });
+      } catch (sheetsErr: any) {
+        console.warn('Google Sheets clear all data error:', sheetsErr.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `ล้างข้อมูลหลังบ้านทั้งหมดเรียบร้อยแล้ว (ลบผู้ลงทะเบียน ${deletedVisitorsCount} รายการ และประวัติ ${deletedLogsCount} รายการ)`,
+    });
+  } catch (err: any) {
+    console.error('Error clearing all data:', err);
+    res.status(500).json({ error: err.message || 'Failed to clear all data' });
+  }
+});
+
+// Create a brand NEW Google Drive Database Spreadsheet
+app.post('/api/create-new-drive-database', async (req, res) => {
+  try {
+    const isGoogle = isGoogleConnected(req);
+    if (!isGoogle) {
+      // Create new clean local database
+      const fallback = loadFallbackDB();
+      fallback.visitors = [];
+      fallback.activityLogs = [];
+      fallback.branding.googleSpreadsheetId = '';
+      saveFallbackDB(fallback);
+      dbSpreadsheetId = null;
+      return res.json({
+        success: true,
+        message: 'รีเซ็ตข้อมูลหลังบ้านใน Local Database เรียบร้อยแล้ว (เริ่มต้นระบบใหม่ทั้งหมด)',
+      });
+    }
+
+    const auth = getOAuth2Client(req);
+    const sheets = google.sheets({ version: 'v4', auth });
+    
+    // Force create a brand NEW spreadsheet on Google Drive
+    const title = `CDC_GatePass_System_Database_${new Date().toISOString().slice(0,10)}`;
+    const createRes = await sheets.spreadsheets.create({
+      requestBody: {
+        properties: { title },
+        sheets: [
+          { properties: { title: 'Visitors' } },
+          { properties: { title: 'Logs' } },
+          { properties: { title: 'BrandingConfig' } },
+          { properties: { title: 'SystemUsers' } },
+          { properties: { title: 'Checkpoints' } },
+          { properties: { title: 'Blacklist' } },
+        ],
+      },
+    });
+
+    const newSheetId = createRes.data.spreadsheetId!;
+    dbSpreadsheetId = newSheetId;
+
+    // Try to move newly created database file into user's target Google Drive folder
+    try {
+      const drive = google.drive({ version: 'v3', auth });
+      const targetFolderId = '1an6N6l0Prp9q_ThtF1EhM3MCeiR3XG_W';
+      const file = await drive.files.get({ fileId: newSheetId, fields: 'parents' });
+      const previousParents = (file.data.parents || []).join(',');
+      await drive.files.update({
+        fileId: newSheetId,
+        addParents: targetFolderId,
+        removeParents: previousParents,
+        fields: 'id, parents',
+      });
+      console.log(`[Drive] Moved new database sheet ${newSheetId} into folder ${targetFolderId}`);
+    } catch (moveErr: any) {
+      console.warn('[Drive] Could not move sheet to target folder:', moveErr.message);
+    }
+
+    // Save custom spreadsheet ID into fallback database config
+    const fallback = loadFallbackDB();
+    if (!fallback.branding) fallback.branding = {} as any;
+    fallback.branding.googleSpreadsheetId = newSheetId;
+    fallback.visitors = [];
+    fallback.activityLogs = [];
+    saveFallbackDB(fallback);
+
+    // Initialize headers in the new spreadsheet
+    await ensureAllDatabaseSheets(sheets, newSheetId);
+
+    res.json({
+      success: true,
+      spreadsheetId: newSheetId,
+      spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${newSheetId}/edit`,
+      driveFolderUrl: 'https://drive.google.com/drive/folders/1an6N6l0Prp9q_ThtF1EhM3MCeiR3XG_W',
+      message: `สร้างฐานข้อมูล Google Drive หลังบ้านใหม่เรียบร้อยแล้ว (Spreadsheet ID: ${newSheetId})`,
+    });
+  } catch (err: any) {
+    console.error('Error creating new Google Drive database:', err);
+    res.status(500).json({ error: err.message || 'Failed to create new Google Drive database' });
+  }
+});
+
 // Register new visitor (creates pass)
 app.post('/api/register', async (req, res) => {
   const { 
     name, passportId, phone, vehiclePlate, address, company, visitorType, contactArea, photoBase64, registeredBy,
-    nationality, gender, dob, age, registrationCategory, passportNumber, passportIssueDate, passportExpiryDate, workPermitNumber, workPermitIssueDate, workPermitExpiryDate, isWorkPermitExpired
+    nationality, dob, age, registrationCategory, passportNumber, passportExpiryDate, workPermitNumber, workPermitIssueDate, workPermitExpiryDate, idCardExpiryDate, isWorkPermitExpired
   } = req.body;
   try {
+    const isForeigner = registrationCategory === 'foreigner';
+    const targetSheet = isForeigner ? 'Foreigners' : 'Visitors';
     const effectivePassportId = passportId || passportNumber || 'REG-' + Date.now();
     if (!name || !effectivePassportId || !photoBase64) {
       return res.status(400).json({ error: 'ชื่อ, เลขบัตรประจำตัว/พาสปอร์ต และรูปถ่ายหน้าตรง มีความจำเป็น' });
@@ -2306,11 +2448,12 @@ app.post('/api/register', async (req, res) => {
 
     if (!isGoogleConnected(req)) {
       // Local fallback mode
-      console.log('Registering visitor in local fallback DB...');
+      console.log(`Registering visitor in local fallback DB (${targetSheet})...`);
       const fallback = loadFallbackDB();
-      id = await getNextVisitorId(null, '', fallback);
+      id = await getNextVisitorId(null, '', fallback, undefined, registrationCategory || 'thai');
 
-      const existingBanned = fallback.visitors.find(v => (v.passportId === effectivePassportId || (v.passportNumber && v.passportNumber === passportNumber)) && v.status === 'banned');
+      const targetList = isForeigner ? (fallback.foreigners || []) : (fallback.visitors || []);
+      const existingBanned = targetList.find(v => (v.passportId === effectivePassportId || (v.passportNumber && v.passportNumber === passportNumber)) && v.status === 'banned');
       if (existingBanned) {
         return res.status(403).json({ error: `ไม่สามารถออกใบผ่านได้: บุคคลนี้ถูกระงับสิทธิ์การเข้าพื้นที่ (แบน) เนื่องจาก: ${existingBanned.banReason || 'ผิดกฎระเบียบของบริษัท'}` });
       }
@@ -2322,17 +2465,16 @@ app.post('/api/register', async (req, res) => {
         id,
         name,
         passportId: effectivePassportId,
-        nationality: nationality || (registrationCategory === 'foreigner' ? 'ต่างด้าว' : 'ไทย'),
-        gender: gender || '',
+        nationality: nationality || (isForeigner ? 'ต่างด้าว' : 'ไทย'),
         dob: dob || '',
         age: age || undefined,
         registrationCategory: registrationCategory || 'thai',
         passportNumber: passportNumber || '',
-        passportIssueDate: passportIssueDate || '',
         passportExpiryDate: passportExpiryDate || '',
         workPermitNumber: workPermitNumber || '',
         workPermitIssueDate: workPermitIssueDate || '',
         workPermitExpiryDate: workPermitExpiryDate || '',
+        idCardExpiryDate: idCardExpiryDate || '',
         isWorkPermitExpired: isWorkPermitExpired || false,
         phone,
         vehiclePlate,
@@ -2347,7 +2489,13 @@ app.post('/api/register', async (req, res) => {
         registeredBy: registeredBy || '',
       };
 
-      fallback.visitors.push(visitor);
+      if (isForeigner) {
+        if (!fallback.foreigners) fallback.foreigners = [];
+        fallback.foreigners.push(visitor);
+      } else {
+        if (!fallback.visitors) fallback.visitors = [];
+        fallback.visitors.push(visitor);
+      }
       saveFallbackDB(fallback);
 
       return res.json({
@@ -2363,17 +2511,17 @@ app.post('/api/register', async (req, res) => {
 
     const fallbackForId = loadFallbackDB();
     
-    // Perform a SINGLE query to Google Sheets for both ban check and ID generation
+    // Perform query to Google Sheets for the target sheet
     const checkRes = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: 'Visitors!A2:O',
-    });
+      range: `${targetSheet}!A2:V`,
+    }).catch(() => ({ data: { values: [] } }));
 
     const rows = checkRes.data.values || [];
     const existingIds = rows.map(row => row[0]).filter(Boolean);
-    id = await getNextVisitorId(null, '', fallbackForId, existingIds);
+    id = await getNextVisitorId(null, '', fallbackForId, existingIds, registrationCategory || 'thai');
 
-    const existingBanned = rows.find(row => row[2] === passportId && row[11] === 'banned');
+    const existingBanned = rows.find(row => (row[2] === effectivePassportId || (row[17] && row[17] === passportNumber)) && row[11] === 'banned');
     if (existingBanned) {
       return res.status(403).json({ error: `ไม่สามารถออกใบผ่านได้: บุคคลนี้ถูกระงับสิทธิ์การเข้าพื้นที่ (แบน) เนื่องจาก: ${existingBanned[12] || 'ผิดกฎระเบียบของบริษัท'}` });
     }
@@ -2399,7 +2547,7 @@ app.post('/api/register', async (req, res) => {
       const mediaStream = base64ToStream(photoBase64);
 
       const fileMetadata = {
-        name: `pass_${passportId}_${Date.now()}.jpg`,
+        name: `pass_${effectivePassportId}_${Date.now()}.jpg`,
         parents: [folderId],
       };
 
@@ -2426,43 +2574,51 @@ app.post('/api/register', async (req, res) => {
       photoUrl = `/api/photo/${photoDriveId}`;
     }
 
-    const newVisitorObj = {
-      id, name, passportId, phone, vehiclePlate, address, company, 
-      visitorType, contactArea, photoUrl, photoDriveId, status: 'ยังไม่ถูกเช็คอิน' as any, banReason: '', registeredAt, lastActivityAt: '', registeredBy: registeredBy || '',
+    // Append to target sheet ('Foreigners' or 'Visitors')
+    const sheetValues = isForeigner 
+      ? [
+          id, name, effectivePassportId, phone || '', vehiclePlate || '', address || '', company || '', 
+          visitorType || '', contactArea || '', photoUrl, photoDriveId, 'ยังไม่ถูกเช็คอิน', '', registeredAt, '', registeredBy || '',
+          nationality || 'ต่างด้าว', passportNumber || '', passportExpiryDate || '', workPermitNumber || '', workPermitIssueDate || '', workPermitExpiryDate || ''
+        ]
+      : [
+          id, name, effectivePassportId, phone || '', vehiclePlate || '', address || '', company || '', 
+          visitorType || '', contactArea || '', photoUrl, photoDriveId, 'ยังไม่ถูกเช็คอิน', '', registeredAt, '', registeredBy || '',
+          idCardExpiryDate || ''
+        ];
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: sheetId,
+      range: `${targetSheet}!A2`,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [sheetValues],
+      },
+    });
+
+    const visitorObj = {
+      id, name, passportId: effectivePassportId, phone, vehiclePlate, address, company, 
+      visitorType, contactArea, photoUrl, photoDriveId, status: 'ยังไม่ถูกเช็คอิน' as any, registeredAt, registeredBy: registeredBy || '',
       registrationCategory: registrationCategory || 'thai',
-      nationality: nationality || (registrationCategory === 'foreigner' ? 'ต่างด้าว' : 'ไทย'),
-      gender: gender || '',
-      dob: dob || '',
-      age: age || undefined,
+      nationality: nationality || (isForeigner ? 'ต่างด้าว' : 'ไทย'),
       passportNumber: passportNumber || '',
-      passportIssueDate: passportIssueDate || '',
       passportExpiryDate: passportExpiryDate || '',
       workPermitNumber: workPermitNumber || '',
       workPermitIssueDate: workPermitIssueDate || '',
       workPermitExpiryDate: workPermitExpiryDate || '',
-      isWorkPermitExpired: isWorkPermitExpired || false
+      idCardExpiryDate: idCardExpiryDate || '',
     };
-
-    // Append to 'Visitors'
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: sheetId,
-      range: 'Visitors!A2',
-      valueInputOption: 'RAW',
-      requestBody: {
-        values: [[
-          id, name, effectivePassportId, phone, vehiclePlate, address, company, 
-          visitorType, contactArea, photoUrl, photoDriveId, 'ยังไม่ถูกเช็คอิน', '', registeredAt, '', registeredBy || '',
-          registrationCategory || 'thai', nationality || (registrationCategory === 'foreigner' ? 'ต่างด้าว' : 'ไทย'),
-          dob || '', age ? String(age) : '', gender || '', passportNumber || '', passportIssueDate || '', passportExpiryDate || '',
-          workPermitNumber || '', workPermitIssueDate || '', workPermitExpiryDate || '', isWorkPermitExpired ? 'YES' : 'NO'
-        ]],
-      },
-    });
 
     // Also sync to local fallback database so offline views are kept synchronized
     try {
       const fallback = loadFallbackDB();
-      fallback.visitors.push(newVisitorObj);
+      if (isForeigner) {
+        if (!fallback.foreigners) fallback.foreigners = [];
+        fallback.foreigners.push(visitorObj);
+      } else {
+        if (!fallback.visitors) fallback.visitors = [];
+        fallback.visitors.push(visitorObj);
+      }
       saveFallbackDB(fallback);
     } catch (err) {
       console.error('Error syncing registration to local DB:', err);
@@ -2470,42 +2626,53 @@ app.post('/api/register', async (req, res) => {
 
     res.json({
       success: true,
-      visitor: newVisitorObj
+      visitor: visitorObj
     });
   } catch (err: any) {
     handleGoogleError(err);
     console.warn('Error during visitor registration on Sheets, saving to local fallback:', err.message);
     try {
       const fallback = loadFallbackDB();
-      const id = await getNextVisitorId(null, '', fallback);
+      const isForeigner = req.body?.registrationCategory === 'foreigner';
+      const id = await getNextVisitorId(null, '', fallback, undefined, req.body?.registrationCategory || 'thai');
+      const effectivePassportId = req.body?.passportId || req.body?.passportNumber || 'REG-' + Date.now();
       
-      const existingBanned = fallback.visitors.find(v => v.passportId === passportId && v.status === 'banned');
+      const targetList = isForeigner ? (fallback.foreigners || []) : (fallback.visitors || []);
+      const existingBanned = targetList.find(v => v.passportId === effectivePassportId && v.status === 'banned');
       if (existingBanned) {
         return res.status(403).json({ error: `ไม่สามารถออกใบผ่านได้: บุคคลนี้ถูกระงับสิทธิ์การเข้าพื้นที่ (แบน) เนื่องจาก: ${existingBanned.banReason || 'ผิดกฎระเบียบของบริษัท'}` });
       }
 
-      const photoUrl = photoBase64; // Use base64 photo directly in local fallback
+      const photoUrl = req.body?.photoBase64 || '';
       const photoDriveId = 'local_fallback_on_error';
       const registeredAt = new Date().toISOString();
 
       const visitor = {
         id,
-        name,
-        passportId,
-        phone,
-        vehiclePlate,
-        address,
-        company,
-        visitorType,
-        contactArea,
+        name: req.body?.name || '',
+        passportId: effectivePassportId,
+        phone: req.body?.phone || '',
+        vehiclePlate: req.body?.vehiclePlate || '',
+        address: req.body?.address || '',
+        company: req.body?.company || '',
+        visitorType: req.body?.visitorType || '',
+        contactArea: req.body?.contactArea || '',
         photoUrl,
         photoDriveId,
         status: 'ยังไม่ถูกเช็คอิน' as any,
         registeredAt,
-        registeredBy: registeredBy || '',
+        registeredBy: req.body?.registeredBy || '',
+        registrationCategory: req.body?.registrationCategory || 'thai',
+        nationality: req.body?.nationality || (isForeigner ? 'ต่างด้าว' : 'ไทย'),
       };
 
-      fallback.visitors.push(visitor);
+      if (isForeigner) {
+        if (!fallback.foreigners) fallback.foreigners = [];
+        fallback.foreigners.push(visitor);
+      } else {
+        if (!fallback.visitors) fallback.visitors = [];
+        fallback.visitors.push(visitor);
+      }
       saveFallbackDB(fallback);
 
       return res.json({
@@ -2532,7 +2699,7 @@ app.post('/api/check-in-out', async (req, res) => {
       // Local fallback mode
       console.log('Processing check-in-out in local fallback DB...');
       const fallback = loadFallbackDB();
-      const visitor = fallback.visitors.find(v => v.id === id);
+      const visitor = (fallback.visitors || []).find(v => v.id === id) || (fallback.foreigners || []).find(v => v.id === id);
 
       if (!visitor) {
         return res.status(404).json({ error: `ไม่พบรหัสใบผ่าน ${id}` });
@@ -2595,24 +2762,14 @@ app.post('/api/check-in-out', async (req, res) => {
     const sheetId = await getOrCreateDatabase(auth);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    // Get visitor list
-    const visRes = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: 'Visitors!A2:O',
-    });
+    // Locate visitor in Visitors or Foreigners sheet
+    const match = await findVisitorInSheets(sheets, sheetId, id);
 
-    if (!visRes.data.values || visRes.data.values.length === 0) {
-      return res.status(404).json({ error: 'ไม่พบข้อมูลใบผ่านใดๆ ในระบบ' });
-    }
-
-    const rows = visRes.data.values;
-    const rowIndex = rows.findIndex(row => row[0] === id);
-
-    if (rowIndex === -1) {
+    if (!match) {
       return res.status(404).json({ error: `ไม่พบรหัสใบผ่าน ${id}` });
     }
 
-    const row = rows[rowIndex];
+    const { sheetName: targetSheet, actualSheetRow, row } = match;
     const name = row[1];
     const visitorType = row[7];
     const vehiclePlate = row[4];
@@ -2621,7 +2778,7 @@ app.post('/api/check-in-out', async (req, res) => {
     const currentStatus = row[11];
 
     if (currentStatus === 'banned') {
-      return res.status(403).json({ error: `รหัสใบผ่านนี้ไม่สามารถใช้งานได้เนื่องจากผู้ใช้นี้ถูกแบน: ${row[12]}` });
+      return res.status(403).json({ error: `รหัสใบผ่านนี้ไม่สามารถใช้งานได้เนื่องจากผู้ใช้นี้ถูกแบน: ${row[12] || 'ผิดกฎระเบียบของบริษัท'}` });
     }
 
     // Check if visitor status is already checked out (cannot change anymore)
@@ -2643,20 +2800,19 @@ app.post('/api/check-in-out', async (req, res) => {
       : `เช็คเอาท์โดย ${guardName || 'N/A'}`;
     const timestamp = new Date().toISOString();
 
-    const actualSheetRow = rowIndex + 2;
     const logId = 'L' + Math.floor(100000 + Math.random() * 900000);
 
-    // Parallelize updates to Visitors and append to Logs for maximum speed
+    // Parallelize updates to Visitors/Foreigners and append to Logs for maximum speed
     const updateStatusPromise = sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
-      range: `Visitors!L${actualSheetRow}`,
+      range: `${targetSheet}!L${actualSheetRow}`,
       valueInputOption: 'RAW',
       requestBody: { values: [[targetStatus]] },
     });
 
     const updateLastActivityPromise = sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
-      range: `Visitors!O${actualSheetRow}`,
+      range: `${targetSheet}!O${actualSheetRow}`,
       valueInputOption: 'RAW',
       requestBody: { values: [[timestamp]] },
     });
@@ -2677,7 +2833,7 @@ app.post('/api/check-in-out', async (req, res) => {
     // Also sync to local fallback database so offline views are kept synchronized
     try {
       const fallback = loadFallbackDB();
-      const localVis = fallback.visitors.find(v => v.id === id);
+      const localVis = (fallback.visitors || []).find(v => v.id === id) || (fallback.foreigners || []).find(v => v.id === id);
       if (localVis) {
         localVis.status = targetStatus;
         localVis.lastActivityAt = timestamp;
@@ -2713,7 +2869,7 @@ app.post('/api/check-in-out', async (req, res) => {
     console.warn('Error during check-in-out on Sheets, processing in local fallback:', err.message);
     try {
       const fallback = loadFallbackDB();
-      const visitor = fallback.visitors.find(v => v.id === id);
+      const visitor = (fallback.visitors || []).find(v => v.id === id) || (fallback.foreigners || []).find(v => v.id === id);
 
       if (!visitor) {
         return res.status(404).json({ error: `ไม่พบรหัสใบผ่าน ${id}` });
@@ -2814,9 +2970,8 @@ app.post('/api/retrieve-by-passport', async (req, res) => {
     // 2. Check local fallback DB if no candidate found in memory cache
     if (candidates.length === 0) {
       const fallback = loadFallbackDB();
-      if (fallback.visitors && Array.isArray(fallback.visitors)) {
-        candidates = fallback.visitors.filter(matchVisitorObj);
-      }
+      const allLocal = [...(fallback.visitors || []), ...(fallback.foreigners || [])];
+      candidates = allLocal.filter(matchVisitorObj);
     }
 
     // 3. If still no candidates found or cache expired (>60s), query Google Sheets & update cache
@@ -2829,16 +2984,39 @@ app.post('/api/retrieve-by-passport', async (req, res) => {
         const sheetId = await getOrCreateDatabase(auth);
         const sheets = google.sheets({ version: 'v4', auth });
 
-        const visRes = await sheets.spreadsheets.values.get({
-          spreadsheetId: sheetId,
-          range: 'Visitors!A2:AB',
-        });
+        const [visRes, forRes] = await Promise.all([
+          sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:P' }).catch(() => ({ data: { values: [] } })),
+          sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Foreigners!A2:T' }).catch(() => ({ data: { values: [] } }))
+        ]);
 
-        if (visRes.data.values && visRes.data.values.length > 0) {
-          const freshVisitors = visRes.data.values.map(row => ({
+        const freshThai = (visRes.data.values || []).map(row => ({
+          id: String(row[0] || ''),
+          name: String(row[1] || ''),
+          passportId: String(row[2] || ''),
+          phone: String(row[3] || ''),
+          vehiclePlate: String(row[4] || ''),
+          address: String(row[5] || ''),
+          company: String(row[6] || ''),
+          visitorType: String(row[7] || ''),
+          contactArea: String(row[8] || ''),
+          photoUrl: String(row[9] || ''),
+          photoDriveId: String(row[10] || ''),
+          status: String(row[11] || ''),
+          banReason: String(row[12] || ''),
+          registeredAt: String(row[13] || ''),
+          lastActivityAt: String(row[14] || ''),
+          registeredBy: String(row[15] || ''),
+          idCardExpiryDate: String(row[16] || ''),
+          nationality: 'ไทย',
+          registrationCategory: 'thai',
+        }));
+
+        const freshForeign = (forRes.data.values || []).map(row => {
+          const is22Cols = row.length >= 22 || (row[18] && String(row[18]).includes('-'));
+          return {
             id: String(row[0] || ''),
             name: String(row[1] || ''),
-            passportId: String(row[2] || ''),
+            passportId: String(row[2] || row[17] || ''),
             phone: String(row[3] || ''),
             vehiclePlate: String(row[4] || ''),
             address: String(row[5] || ''),
@@ -2852,28 +3030,25 @@ app.post('/api/retrieve-by-passport', async (req, res) => {
             registeredAt: String(row[13] || ''),
             lastActivityAt: String(row[14] || ''),
             registeredBy: String(row[15] || ''),
-            registrationCategory: String(row[16] || 'thai'),
-            nationality: String(row[17] || ''),
-            dob: String(row[18] || ''),
-            age: row[19] ? Number(row[19]) : undefined,
-            gender: String(row[20] || ''),
-            passportNumber: String(row[21] || ''),
-            passportIssueDate: String(row[22] || ''),
-            passportExpiryDate: String(row[23] || ''),
-            workPermitNumber: String(row[24] || ''),
-            workPermitIssueDate: String(row[25] || ''),
-            workPermitExpiryDate: String(row[26] || ''),
-            isWorkPermitExpired: row[27] === 'YES' || row[27] === 'true',
-          }));
-
-          // Update server memory cache
-          serverVisitorCache = {
-            visitors: freshVisitors,
-            lastFetched: now
+            nationality: String(row[16] || 'ต่างด้าว'),
+            passportNumber: String(row[17] || ''),
+            passportExpiryDate: is22Cols ? String(row[18] || '') : '',
+            workPermitNumber: is22Cols ? String(row[19] || '') : String(row[18] || ''),
+            workPermitIssueDate: is22Cols ? String(row[20] || '') : '',
+            workPermitExpiryDate: is22Cols ? String(row[21] || '') : String(row[19] || ''),
+            registrationCategory: 'foreigner',
           };
+        });
 
-          candidates = freshVisitors.filter(matchVisitorObj);
-        }
+        const freshVisitors = [...freshThai, ...freshForeign];
+
+        // Update server memory cache
+        serverVisitorCache = {
+          visitors: freshVisitors,
+          lastFetched: now
+        };
+
+        candidates = freshVisitors.filter(matchVisitorObj);
       } catch (sheetsErr: any) {
         console.warn('Google Sheets lookup warning in retrieve-by-passport, using cached DB:', sheetsErr.message);
       }
@@ -2921,7 +3096,7 @@ app.get('/api/visitor/:id', async (req, res) => {
 
     const visRes = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: 'Visitors!A2:AB',
+      range: 'Visitors!A2:P',
     });
 
     if (!visRes.data.values || visRes.data.values.length === 0) {
@@ -2950,18 +3125,6 @@ app.get('/api/visitor/:id', async (req, res) => {
       registeredAt: row[13] || '',
       lastActivityAt: row[14] || '',
       registeredBy: row[15] || '',
-      registrationCategory: row[16] || 'thai',
-      nationality: row[17] || '',
-      dob: row[18] || '',
-      age: row[19] ? Number(row[19]) : undefined,
-      gender: row[20] || '',
-      passportNumber: row[21] || '',
-      passportIssueDate: row[22] || '',
-      passportExpiryDate: row[23] || '',
-      workPermitNumber: row[24] || '',
-      workPermitIssueDate: row[25] || '',
-      workPermitExpiryDate: row[26] || '',
-      isWorkPermitExpired: row[27] === 'YES' || row[27] === 'true',
     };
 
     return res.json({ success: true, visitor });
@@ -3450,7 +3613,7 @@ app.post('/api/verify-gate-face', async (req, res) => {
 
     const visRes = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: 'Visitors!A2:AB',
+      range: 'Visitors!A2:P',
     });
 
     if (!visRes.data.values || visRes.data.values.length === 0) {
@@ -3475,18 +3638,6 @@ app.post('/api/verify-gate-face', async (req, res) => {
       registeredAt: row[13] || '',
       lastActivityAt: row[14] || '',
       registeredBy: row[15] || '',
-      registrationCategory: row[16] || 'thai',
-      nationality: row[17] || '',
-      dob: row[18] || '',
-      age: row[19] ? Number(row[19]) : undefined,
-      gender: row[20] || '',
-      passportNumber: row[21] || '',
-      passportIssueDate: row[22] || '',
-      passportExpiryDate: row[23] || '',
-      workPermitNumber: row[24] || '',
-      workPermitIssueDate: row[25] || '',
-      workPermitExpiryDate: row[26] || '',
-      isWorkPermitExpired: row[27] === 'YES' || row[27] === 'true',
     }));
 
     // Filter by passportHint if provided to speed up and secure the lookup
@@ -3579,7 +3730,7 @@ app.post(['/api/ban', '/api/visitors/:id/ban', '/api/visitors/:id/unban'], async
 
     if (!isGoogleConnected(req)) {
       const fallback = loadFallbackDB();
-      const visitor = fallback.visitors.find(v => v.id === id);
+      const visitor = (fallback.visitors || []).find(v => v.id === id) || (fallback.foreigners || []).find(v => v.id === id);
       if (!visitor) {
         return res.status(404).json({ error: `ไม่พบรหัสใบผ่าน ${id}` });
       }
@@ -3593,37 +3744,27 @@ app.post(['/api/ban', '/api/visitors/:id/ban', '/api/visitors/:id/unban'], async
     const sheetId = await getOrCreateDatabase(auth);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    const visRes = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: 'Visitors!A2:O',
-    });
+    const match = await findVisitorInSheets(sheets, sheetId, id);
 
-    if (!visRes.data.values) {
-      return res.status(404).json({ error: 'ไม่พบผู้ใช้งาน' });
-    }
-
-    const rows = visRes.data.values;
-    const rowIndex = rows.findIndex(row => row[0] === id);
-
-    if (rowIndex === -1) {
+    if (!match) {
       return res.status(404).json({ error: `ไม่พบรหัสใบผ่าน ${id}` });
     }
 
-    const actualRow = rowIndex + 2;
+    const { sheetName: targetSheet, actualSheetRow } = match;
     const status = ban ? 'banned' : 'checked-out'; // revert to checked-out or inactive if unbanned
     const banReason = ban ? (reason || 'ละเมิดเงื่อนไขความปลอดภัยและระเบียบของบริษัท') : '';
 
-    // Update Status (Column L, index 11) and Ban Reason (Column M, index 12)
+    // Update Status (Column L) and Ban Reason (Column M)
     await sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
-      range: `Visitors!L${actualRow}`,
+      range: `${targetSheet}!L${actualSheetRow}`,
       valueInputOption: 'RAW',
       requestBody: { values: [[status]] },
     });
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
-      range: `Visitors!M${actualRow}`,
+      range: `${targetSheet}!M${actualSheetRow}`,
       valueInputOption: 'RAW',
       requestBody: { values: [[banReason]] },
     });
@@ -3631,7 +3772,7 @@ app.post(['/api/ban', '/api/visitors/:id/ban', '/api/visitors/:id/unban'], async
     // Also sync to local fallback database
     try {
       const fallback = loadFallbackDB();
-      const localVis = fallback.visitors.find(v => v.id === id);
+      const localVis = (fallback.visitors || []).find(v => v.id === id) || (fallback.foreigners || []).find(v => v.id === id);
       if (localVis) {
         localVis.status = status;
         localVis.banReason = banReason;
@@ -3651,8 +3792,8 @@ app.post(['/api/ban', '/api/visitors/:id/ban', '/api/visitors/:id/unban'], async
 function getDashboardLocalFallback(query: any) {
   const { startDate, endDate, visitorType, contactArea, action, search } = query;
   const fallback = loadFallbackDB();
-  const visitors = fallback.visitors;
-  const logs = fallback.activityLogs;
+  const visitors = [...(fallback.visitors || []), ...(fallback.foreigners || [])];
+  const logs = fallback.activityLogs || [];
 
   const totalBanned = visitors.filter(r => r.status === 'banned').length;
   const currentlyInside = visitors.filter(r => r.status && r.status.startsWith('เช็คอินโดย')).length;
@@ -3697,38 +3838,15 @@ function getDashboardLocalFallback(query: any) {
     );
   }
 
-  // Deduplicate logs by visitorId for accurate visit-based statistics (Check-in and Check-out for the same pass counted as 1 visit)
-  const logsByVisitor: { [visitorId: string]: any[] } = {};
-  filteredLogs.forEach(log => {
-    const vid = log.visitorId || '';
-    if (vid) {
-      if (!logsByVisitor[vid]) {
-        logsByVisitor[vid] = [];
-      }
-      logsByVisitor[vid].push(log);
-    }
-  });
+  // Count visits based strictly on check-in logs
+  const checkInLogs = action
+    ? filteredLogs
+    : filteredLogs.filter(log => {
+        const a = (log.action || '').toLowerCase();
+        return a === 'check-in' || a.includes('check-in') || a.includes('เช็คอิน');
+      });
 
-  const deduplicatedLogs: any[] = [];
-  Object.entries(logsByVisitor).forEach(([vid, vLogs]) => {
-    const checkInLog = vLogs.find(l => l.action === 'check-in');
-    if (checkInLog) {
-      deduplicatedLogs.push(checkInLog);
-    } else {
-      const checkOutLog = vLogs.find(l => l.action === 'check-out');
-      deduplicatedLogs.push(checkOutLog || vLogs[0]);
-    }
-  });
-
-  // Also include logs without visitorId
-  filteredLogs.forEach(log => {
-    if (!log.visitorId) {
-      deduplicatedLogs.push(log);
-    }
-  });
-
-  // Count visits
-  const totalVisitsToday = deduplicatedLogs.length;
+  const totalVisitsToday = checkInLogs.length;
 
   // Area distribution
   const areaCounts: { [key: string]: number } = {};
@@ -3740,7 +3858,7 @@ function getDashboardLocalFallback(query: any) {
     hourCounts[h] = 0;
   }
 
-  deduplicatedLogs.forEach(log => {
+  checkInLogs.forEach(log => {
     // Area distribution
     const area = log.area || 'MainGate';
     areaCounts[area] = (areaCounts[area] || 0) + 1;
@@ -3804,22 +3922,18 @@ app.get('/api/dashboard', async (req, res) => {
       const sheetId = await getOrCreateDatabase(auth);
       const sheets = google.sheets({ version: 'v4', auth });
 
-      // Read Visitors
-      const visitorsRes = await sheets.spreadsheets.values.get({
-        spreadsheetId: sheetId,
-        range: 'Visitors!A2:AB',
-      });
+      // Read Visitors, Foreigners, and Logs
+      const [visitorsRes, foreignersRes, logsRes] = await Promise.all([
+        sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:P' }).catch(() => ({ data: { values: [] } })),
+        sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Foreigners!A2:T' }).catch(() => ({ data: { values: [] } })),
+        sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Logs!A2:I' }).catch(() => ({ data: { values: [] } })),
+      ]);
 
-      // Read Logs
-      const logsRes = await sheets.spreadsheets.values.get({
-        spreadsheetId: sheetId,
-        range: 'Logs!A2:I',
-      });
-
-      const visitors = visitorsRes.data.values || [];
+      const thaiRows = visitorsRes.data.values || [];
+      const foreignerRows = foreignersRes.data.values || [];
       const logs = logsRes.data.values || [];
 
-      const parsedVisitors = visitors.map(row => ({
+      const parsedThai = thaiRows.map(row => ({
         id: row[0] || '',
         name: row[1] || '',
         passportId: row[2] || '',
@@ -3836,19 +3950,42 @@ app.get('/api/dashboard', async (req, res) => {
         registeredAt: row[13] || '',
         lastActivityAt: row[14] || '',
         registeredBy: row[15] || '',
-        registrationCategory: row[16] || 'thai',
-        nationality: row[17] || '',
-        dob: row[18] || '',
-        age: row[19] ? Number(row[19]) : undefined,
-        gender: row[20] || '',
-        passportNumber: row[21] || '',
-        passportIssueDate: row[22] || '',
-        passportExpiryDate: row[23] || '',
-        workPermitNumber: row[24] || '',
-        workPermitIssueDate: row[25] || '',
-        workPermitExpiryDate: row[26] || '',
-        isWorkPermitExpired: row[27] === 'YES' || row[27] === 'true',
+        idCardExpiryDate: row[16] || '',
+        nationality: 'ไทย',
+        registrationCategory: 'thai',
       }));
+
+      const parsedForeigner = foreignerRows.map(row => {
+        const is22Cols = row.length >= 22 || (row[18] && String(row[18]).includes('-'));
+        return {
+          id: row[0] || '',
+          name: row[1] || '',
+          passportId: row[2] || row[17] || '',
+          phone: row[3] || '',
+          vehiclePlate: row[4] || '',
+          address: row[5] || '',
+          company: row[6] || '',
+          visitorType: row[7] || '',
+          contactArea: row[8] || '',
+          photoUrl: row[9] || '',
+          photoDriveId: row[10] || '',
+          status: (row[11] || 'ยังไม่ถูกเช็คอิน') as any,
+          banReason: row[12] || '',
+          registeredAt: row[13] || '',
+          lastActivityAt: row[14] || '',
+          registeredBy: row[15] || '',
+          nationality: row[16] || 'ต่างด้าว',
+          passportNumber: row[17] || '',
+          passportExpiryDate: is22Cols ? (row[18] || '') : '',
+          workPermitNumber: is22Cols ? (row[19] || '') : (row[18] || ''),
+          workPermitIssueDate: is22Cols ? (row[20] || '') : '',
+          workPermitExpiryDate: is22Cols ? (row[21] || '') : (row[19] || ''),
+          registrationCategory: 'foreigner',
+        };
+      });
+
+      const visitors = [...thaiRows, ...foreignerRows];
+      const parsedVisitors = [...parsedThai, ...parsedForeigner];
 
       const totalBanned = visitors.filter(r => r[11] === 'banned').length;
       const currentlyInside = visitors.filter(r => r[11] && r[11].startsWith('เช็คอินโดย')).length;
@@ -3903,38 +4040,15 @@ app.get('/api/dashboard', async (req, res) => {
         );
       }
 
-      // Deduplicate logs by visitorId for accurate visit-based statistics (Check-in and Check-out for the same pass counted as 1 visit)
-      const logsByVisitor: { [visitorId: string]: any[] } = {};
-      filteredLogs.forEach(log => {
-        const vid = log.visitorId || '';
-        if (vid) {
-          if (!logsByVisitor[vid]) {
-            logsByVisitor[vid] = [];
-          }
-          logsByVisitor[vid].push(log);
-        }
-      });
+      // Count visits based strictly on check-in logs
+      const checkInLogs = action
+        ? filteredLogs
+        : filteredLogs.filter(log => {
+            const a = (log.action || '').toLowerCase();
+            return a === 'check-in' || a.includes('check-in') || a.includes('เช็คอิน');
+          });
 
-      const deduplicatedLogs: any[] = [];
-      Object.entries(logsByVisitor).forEach(([vid, vLogs]) => {
-        const checkInLog = vLogs.find(l => l.action === 'check-in');
-        if (checkInLog) {
-          deduplicatedLogs.push(checkInLog);
-        } else {
-          const checkOutLog = vLogs.find(l => l.action === 'check-out');
-          deduplicatedLogs.push(checkOutLog || vLogs[0]);
-        }
-      });
-
-      // Also include logs without visitorId
-      filteredLogs.forEach(log => {
-        if (!log.visitorId) {
-          deduplicatedLogs.push(log);
-        }
-      });
-
-      // Count visits
-      const totalVisitsToday = deduplicatedLogs.length;
+      const totalVisitsToday = checkInLogs.length;
 
       // Area distribution
       const areaCounts: { [key: string]: number } = {};
@@ -3945,7 +4059,7 @@ app.get('/api/dashboard', async (req, res) => {
         hourCounts[h] = 0;
       }
 
-      deduplicatedLogs.forEach(log => {
+      checkInLogs.forEach(log => {
         const area = log.area || 'MainGate';
         areaCounts[area] = (areaCounts[area] || 0) + 1;
 
@@ -4291,8 +4405,8 @@ app.get(['/api/sheets-status', '/api/sheets/capacity'], async (req, res) => {
     const visitorsRows = visRes.data.values ? visRes.data.values.length : 0;
     const logsRows = logsRes.data.values ? logsRes.data.values.length : 0;
 
-    // A single row of Visitors has 27 cells. A single row of Logs has 11 cells.
-    const visitorsCells = visitorsRows * 27;
+    // A single row of Visitors has 16 cells. A single row of Logs has 11 cells.
+    const visitorsCells = visitorsRows * 16;
     const logsCells = logsRows * 11;
     const totalCells = visitorsCells + logsCells;
 
@@ -4304,6 +4418,8 @@ app.get(['/api/sheets-status', '/api/sheets/capacity'], async (req, res) => {
       success: true,
       isGoogleConnected: true,
       sheetId,
+      spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${sheetId}/edit`,
+      driveFolderUrl: 'https://drive.google.com/drive/folders/1an6N6l0Prp9q_ThtF1EhM3MCeiR3XG_W',
       localStats,
       sheetsStats: {
         visitorsRows: Math.max(0, visitorsRows - 1), // exclude header
@@ -4352,7 +4468,7 @@ app.post(['/api/archive-clear-sheets', '/api/sheets/archive'], async (req, res) 
 
     // 1. Read all from Google Sheets
     const [visRes, logsRes] = await Promise.all([
-      sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:AB' }),
+      sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:P' }),
       sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Logs!A2:K' })
     ]);
 
@@ -4389,18 +4505,6 @@ app.post(['/api/archive-clear-sheets', '/api/sheets/archive'], async (req, res) 
         registeredAt: row[13] || '',
         lastActivityAt: row[14] || '',
         registeredBy: row[15] || '',
-        registrationCategory: row[16] || 'thai',
-        nationality: row[17] || '',
-        dob: row[18] || '',
-        age: row[19] ? Number(row[19]) : undefined,
-        gender: row[20] || '',
-        passportNumber: row[21] || '',
-        passportIssueDate: row[22] || '',
-        passportExpiryDate: row[23] || '',
-        workPermitNumber: row[24] || '',
-        workPermitIssueDate: row[25] || '',
-        workPermitExpiryDate: row[26] || '',
-        isWorkPermitExpired: row[27] === 'YES' || row[27] === 'true',
       };
 
       const existingIdx = fallback.visitors.findIndex((v: any) => v.id === id);
@@ -4472,7 +4576,7 @@ app.post(['/api/archive-clear-sheets', '/api/sheets/archive'], async (req, res) 
 
     // 4. Clear sheets
     await Promise.all([
-      sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Visitors!A2:AB' }),
+      sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Visitors!A2:P' }),
       sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Logs!A2:K' })
     ]);
 
@@ -4480,7 +4584,7 @@ app.post(['/api/archive-clear-sheets', '/api/sheets/archive'], async (req, res) 
     if (uniqueRetainedVisitors.length > 0) {
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
-        range: `Visitors!A2:AB${uniqueRetainedVisitors.length + 1}`,
+        range: `Visitors!A2:P${uniqueRetainedVisitors.length + 1}`,
         valueInputOption: 'RAW',
         requestBody: { values: uniqueRetainedVisitors }
       });
@@ -4684,14 +4788,24 @@ app.get('/sw.js', (req, res) => {
 
 // --- VITE MIDDLEWARE SETUP ---
 async function startServer() {
-  // Force update the local database with the user's Google Apps Script URL
+  // Ensure default Google Spreadsheet ID & AppsScript URL are set
   try {
     const db = loadFallbackDB();
     if (!db.branding) db.branding = {} as any;
-    db.branding.googleAuthType = 'apps_script';
-    db.branding.googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbzyU27Baxs9_C-ux3LwS_2Db4BpZ7G9W7sJoiuLf-MqlVgmJ2v3fxJdoPj8AnsypO1e/exec';
+    
+    // Always set default sheet ID and AppsScript URL if empty or demo
+    if (!db.branding.googleSpreadsheetId || db.branding.googleSpreadsheetId.trim() === '') {
+      db.branding.googleSpreadsheetId = '1ZWUD33aJak-GV3auuLjdAE6liGjp5EHvH6nQIIuUiwM';
+    }
+    if (!db.branding.googleAppsScriptUrl || db.branding.googleAppsScriptUrl.includes('AKfycbzyU27Baxs9')) {
+      db.branding.googleAppsScriptUrl = 'https://script.google.com/macros/s/AKfycbxwc6IOug_J8ktWe9NjrOWjOvEvm6mDxmSXYV9hc-DSxZOVPZgeWRfnXs0dBBWyICKmGg/exec';
+      db.branding.googleAuthType = 'apps_script';
+    }
+    if (!db.branding.googleAuthType) {
+      db.branding.googleAuthType = 'apps_script';
+    }
     saveFallbackDB(db);
-    console.log('[Init] Stored database updated with Google Apps Script URL.');
+    console.log('[Init] Default Google Sheets & AppsScript initialized successfully.');
   } catch (err: any) {
     console.error('Failed to initialize/migrate database:', err);
   }
