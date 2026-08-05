@@ -2248,7 +2248,7 @@ app.post('/api/clear-mock-visitors', async (req, res) => {
 app.post('/api/register', async (req, res) => {
   const { 
     name, passportId, phone, vehiclePlate, address, company, visitorType, contactArea, photoBase64, registeredBy,
-    nationality, dob, age, registrationCategory, passportNumber, workPermitNumber, workPermitIssueDate, workPermitExpiryDate, isWorkPermitExpired
+    nationality, dob, age, registrationCategory, passportNumber, passportIssueDate, passportExpiryDate, workPermitNumber, workPermitIssueDate, workPermitExpiryDate, isWorkPermitExpired
   } = req.body;
   try {
     const effectivePassportId = passportId || passportNumber || 'REG-' + Date.now();
@@ -2282,6 +2282,8 @@ app.post('/api/register', async (req, res) => {
         age: age || undefined,
         registrationCategory: registrationCategory || 'thai',
         passportNumber: passportNumber || '',
+        passportIssueDate: passportIssueDate || '',
+        passportExpiryDate: passportExpiryDate || '',
         workPermitNumber: workPermitNumber || '',
         workPermitIssueDate: workPermitIssueDate || '',
         workPermitExpiryDate: workPermitExpiryDate || '',

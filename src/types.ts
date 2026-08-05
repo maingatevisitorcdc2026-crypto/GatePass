@@ -12,6 +12,7 @@ export interface Visitor {
   age?: number; // อายุ (คำนวณอัตโนมัติ)
   registrationCategory?: 'thai' | 'foreigner'; // ประเภทฟอร์ม: 'thai' | 'foreigner'
   passportNumber?: string; // หมายเลขพาสปอร์ต
+  passportExpiryDate?: string; // วันหมดอายุพาสปอร์ต
   workPermitNumber?: string; // เลขใบอนุญาตทำงาน Work Permit
   workPermitIssueDate?: string; // วันที่ออกบัตรใบอนุญาตทำงาน
   workPermitExpiryDate?: string; // วันหมดอายุใบอนุญาตทำงาน

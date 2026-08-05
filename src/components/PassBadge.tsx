@@ -981,16 +981,21 @@ export default function PassBadge({ visitor, config, isDesigner, onUpdateTemplat
               )}
 
               {/* Additional fields: Nationality, Age, Work Permit */}
-              {(visitor.nationality || visitor.age || visitor.dob || visitor.workPermitNumber) && (
+              {(visitor.nationality || visitor.age || visitor.dob || visitor.workPermitNumber || visitor.passportExpiryDate || visitor.workPermitExpiryDate) && (
                 <div className="flex flex-col gap-1 col-span-2 border-t border-black pt-2 mt-1">
                   <span className="text-[9px] uppercase tracking-wider font-extrabold text-black" style={{ color: labelColor }}>สัญชาติ & ข้อมูลเอกสาร</span>
                   <div className="text-[11px] font-black flex flex-wrap gap-x-3 gap-y-0.5 text-black" style={{ color: renderTextColor }}>
                     {visitor.nationality && <span>สัญชาติ: {visitor.nationality}</span>}
                     {visitor.age && <span>อายุ: {visitor.age} ปี</span>}
+                    {visitor.passportExpiryDate && (
+                      <span className="text-slate-800">
+                        หมดอายุพาสปอร์ต: {visitor.passportExpiryDate}
+                      </span>
+                    )}
                     {visitor.workPermitNumber && <span>Work Permit: {visitor.workPermitNumber}</span>}
                     {visitor.workPermitExpiryDate && (
                       <span className={visitor.isWorkPermitExpired ? 'text-rose-600 font-extrabold' : 'text-emerald-700 font-extrabold'}>
-                        หมดอายุ: {visitor.workPermitExpiryDate}
+                        หมดอายุ Work Permit: {visitor.workPermitExpiryDate}
                       </span>
                     )}
                   </div>

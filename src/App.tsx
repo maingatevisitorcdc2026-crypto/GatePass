@@ -885,6 +885,8 @@ export default function App() {
     contactArea: 'MainGate',
     // Foreigner / Migrant Worker fields
     passportNumber: '',
+    passportIssueDate: '',
+    passportExpiryDate: '',
     workPermitNumber: '',
     workPermitIssueDate: '',
     workPermitExpiryDate: '',
@@ -2668,15 +2670,22 @@ export default function App() {
       }
     }
 
-    // 1. Validation for Foreigner Work Permit Expiry
+    // 1. Validation for Foreigner Document Expiry (Passport & Work Permit)
     if (regForm.registrationCategory === 'foreigner') {
-      if (checkWorkPermitExpired(regForm.workPermitExpiryDate)) {
+      const isPassportExpired = checkWorkPermitExpired(regForm.passportExpiryDate);
+      const isWorkPermitExpired = checkWorkPermitExpired(regForm.workPermitExpiryDate);
+
+      if (isPassportExpired || isWorkPermitExpired) {
+        const expiredDocs = [];
+        if (isPassportExpired) expiredDocs.push(`พาสปอร์ต (หมดอายุ ${regForm.passportExpiryDate || 'ไม่ได้ระบุ'})`);
+        if (isWorkPermitExpired) expiredDocs.push(`ใบอนุญาตทำงาน Work Permit (หมดอายุ ${regForm.workPermitExpiryDate || 'ไม่ได้ระบุ'})`);
+
         setCustomNotification({
           isOpen: true,
           type: 'error',
           title: '⛔ ไม่อนุญาตให้เข้าพื้นที่ (เอกสารหมดอายุ)',
-          message: 'เอกสารใบอนุญาตทำงาน (Work Permit) หรือวีซ่าของแรงงานต่างด้าวหมดอายุแล้ว',
-          subMessage: `วันหมดอายุในระบบ: ${regForm.workPermitExpiryDate || 'ไม่ได้ระบุ'} - ระบบปฏิเสธการออกใบผ่านสำหรับเอกสารที่หมดอายุแล้ว`
+          message: 'เอกสารประจำตัวหรือใบอนุญาตทำงานของแรงงานต่างชาติ/ต่างด้าวหมดอายุแล้ว',
+          subMessage: `รายการเอกสารที่หมดอายุ: ${expiredDocs.join(', ')} — ระบบปฏิเสธการออกใบผ่านสำหรับเอกสารที่หมดอายุแล้ว`
         });
         return;
       }
@@ -2764,6 +2773,8 @@ export default function App() {
           visitorType: 'โหลดเดอร์',
           contactArea: 'MainGate',
           passportNumber: '',
+          passportIssueDate: '',
+          passportExpiryDate: '',
           workPermitNumber: '',
           workPermitIssueDate: '',
           workPermitExpiryDate: '',
@@ -2823,6 +2834,8 @@ export default function App() {
         visitorType: String(localMatch.visitorType || prev.visitorType || 'โหลดเดอร์'),
         contactArea: String(localMatch.contactArea || prev.contactArea || 'MainGate'),
         passportNumber: String(localMatch.passportNumber || prev.passportNumber || ''),
+        passportIssueDate: String(localMatch.passportIssueDate || prev.passportIssueDate || ''),
+        passportExpiryDate: String(localMatch.passportExpiryDate || prev.passportExpiryDate || ''),
         workPermitNumber: String(localMatch.workPermitNumber || prev.workPermitNumber || ''),
         workPermitIssueDate: String(localMatch.workPermitIssueDate || prev.workPermitIssueDate || ''),
         workPermitExpiryDate: String(localMatch.workPermitExpiryDate || prev.workPermitExpiryDate || ''),
@@ -2864,6 +2877,12 @@ export default function App() {
           company: String(visitorToUse.company || prev.company || ''),
           visitorType: String(visitorToUse.visitorType || prev.visitorType || 'โหลดเดอร์'),
           contactArea: String(visitorToUse.contactArea || prev.contactArea || 'MainGate'),
+          passportNumber: String(visitorToUse.passportNumber || prev.passportNumber || ''),
+          passportIssueDate: String(visitorToUse.passportIssueDate || prev.passportIssueDate || ''),
+          passportExpiryDate: String(visitorToUse.passportExpiryDate || prev.passportExpiryDate || ''),
+          workPermitNumber: String(visitorToUse.workPermitNumber || prev.workPermitNumber || ''),
+          workPermitIssueDate: String(visitorToUse.workPermitIssueDate || prev.workPermitIssueDate || ''),
+          workPermitExpiryDate: String(visitorToUse.workPermitExpiryDate || prev.workPermitExpiryDate || ''),
         }));
         if (visitorToUse.photoUrl) {
           setRegPhoto(visitorToUse.photoUrl);
@@ -5022,6 +5041,7 @@ export default function App() {
                               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
                           }`}
                         >
+                          <span className="text-base">🌐</span>
                           <span className="font-bold">{lang === 'TH' ? 'แรงงานต่างด้าว / ต่างชาติ' : 'Foreigner Worker'}</span>
                         </button>
                       </div>
@@ -5037,7 +5057,7 @@ export default function App() {
                             ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' 
                             : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
                         }`}>
-                          {regForm.registrationCategory === 'thai' ? 'สัญชาติไทย' : 'แรงงานต่างด้าว'}
+                          {regForm.registrationCategory === 'thai' ? '🇹🇭 สัญชาติไทย' : '🌐 แรงงานต่างด้าว'}
                         </span>
                       </div>
 
@@ -5102,18 +5122,18 @@ export default function App() {
                         {regForm.registrationCategory === 'foreigner' && (
                           <div>
                             <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
-                              สัญชาติ (Nationality) <span className="text-rose-500">*</span>
+                              สัญชาติ <span className="text-rose-500">*</span>
                             </label>
                             <select
                               value={regForm.nationality}
                               onChange={(e) => setRegForm({ ...regForm, nationality: e.target.value })}
                               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-amber-500 focus:outline-none cursor-pointer"
                             >
-                              <option value="พม่า">🇲🇲 พม่า (Myanmar)</option>
-                              <option value="กัมพูชา">🇰🇭 กัมพูชา (Cambodia)</option>
-                              <option value="ลาว">🇱🇦 ลาว (Laos)</option>
-                              <option value="เวียดนาม">🇻🇳 เวียดนาม (Vietnam)</option>
-                              <option value="ต่างชาติอื่นๆ">🌐 อื่นๆ (Other Foreigner)</option>
+                              <option value="พม่า">🇲🇲 พม่า</option>
+                              <option value="กัมพูชา">🇰🇭 กัมพูชา</option>
+                              <option value="ลาว">🇱🇦 ลาว</option>
+                              <option value="เวียดนาม">🇻🇳 เวียดนาม</option>
+                              <option value="ต่างชาติอื่นๆ">🌐 อื่นๆ</option>
                             </select>
                           </div>
                         )}
@@ -5122,7 +5142,7 @@ export default function App() {
                         {regForm.registrationCategory === 'foreigner' && (
                           <div>
                             <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
-                              หมายเลขพาสปอร์ต (Passport No.) <span className="text-rose-500">*</span>
+                              หมายเลขพาสปอร์ต <span className="text-rose-500">*</span>
                             </label>
                             <div className="relative flex items-center">
                               <input
@@ -5161,11 +5181,46 @@ export default function App() {
                           </div>
                         )}
 
+                        {/* FOREIGNER FORM: Passport Issue Date */}
+                        {regForm.registrationCategory === 'foreigner' && (
+                          <div>
+                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
+                              วันออกพาสปอร์ต
+                            </label>
+                            <input
+                              type="date"
+                              value={regForm.passportIssueDate}
+                              onChange={(e) => setRegForm({ ...regForm, passportIssueDate: e.target.value })}
+                              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-amber-500 focus:outline-none"
+                            />
+                          </div>
+                        )}
+
+                        {/* FOREIGNER FORM: Passport Expiry Date */}
+                        {regForm.registrationCategory === 'foreigner' && (
+                          <div>
+                            <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
+                              วันหมดอายุพาสปอร์ต <span className="text-rose-500">*</span>
+                            </label>
+                            <input
+                              type="date"
+                              required
+                              value={regForm.passportExpiryDate}
+                              onChange={(e) => setRegForm({ ...regForm, passportExpiryDate: e.target.value })}
+                              className={`w-full bg-slate-950 border rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:outline-none ${
+                                regForm.passportExpiryDate && checkWorkPermitExpired(regForm.passportExpiryDate)
+                                  ? 'border-rose-500 text-rose-300 font-bold bg-rose-950/20'
+                                  : 'border-slate-800 focus:border-amber-500'
+                              }`}
+                            />
+                          </div>
+                        )}
+
                         {/* FOREIGNER FORM: Work Permit Number */}
                         {regForm.registrationCategory === 'foreigner' && (
                           <div>
                             <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
-                              เลขใบอนุญาตทำงาน (Work Permit No.) <span className="text-rose-500">*</span>
+                              เลขใบอนุญาตทำงาน <span className="text-rose-500">*</span>
                             </label>
                             <input
                               type="text"
@@ -5182,7 +5237,7 @@ export default function App() {
                         {regForm.registrationCategory === 'foreigner' && (
                           <div>
                             <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
-                              วันที่ออกบัตรใบอนุญาต
+                              วันออกบัตร Work Permit
                             </label>
                             <input
                               type="date"
@@ -5197,7 +5252,7 @@ export default function App() {
                         {regForm.registrationCategory === 'foreigner' && (
                           <div>
                             <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
-                              วันหมดอายุใบอนุญาตทำงาน <span className="text-rose-500">*</span>
+                              วันหมดอายุ Work Permit <span className="text-rose-500">*</span>
                             </label>
                             <input
                               type="date"
@@ -5333,14 +5388,33 @@ export default function App() {
                       </div>
 
                       {/* Live Warnings Banner before submit */}
-                      {regForm.registrationCategory === 'foreigner' && regForm.workPermitExpiryDate && checkWorkPermitExpired(regForm.workPermitExpiryDate) && (
-                        <div className="bg-rose-500/15 border border-rose-500/40 rounded-2xl p-3 text-rose-300 text-xs font-bold flex items-start gap-2.5 animate-pulse">
-                          <AlertTriangle className="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
-                          <div>
-                            <div className="font-extrabold text-rose-200">⛔ เอกสารใบอนุญาตทำงาน (Work Permit) หมดอายุแล้ว!</div>
-                            <div className="text-[11px] text-rose-300 mt-0.5">วันหมดอายุ: {regForm.workPermitExpiryDate} — ไม่อนุญาตให้ผ่านเข้าพื้นที่สำหรับเอกสารที่หมดอายุ</div>
-                          </div>
-                        </div>
+                      {regForm.registrationCategory === 'foreigner' && (regForm.passportExpiryDate || regForm.workPermitExpiryDate) && (
+                        (() => {
+                          const isPassExpired = checkWorkPermitExpired(regForm.passportExpiryDate);
+                          const isWpExpired = checkWorkPermitExpired(regForm.workPermitExpiryDate);
+                          if (!isPassExpired && !isWpExpired) return null;
+                          return (
+                            <div className="bg-rose-500/15 border border-rose-500/40 rounded-2xl p-3 text-rose-300 text-xs font-bold flex items-start gap-2.5 animate-pulse">
+                              <AlertTriangle className="w-5 h-5 shrink-0 text-rose-400 mt-0.5" />
+                              <div className="space-y-0.5">
+                                <div className="font-extrabold text-rose-200">⛔ เอกสารประจำตัว/ใบอนุญาตทำงานหมดอายุ!</div>
+                                {isPassExpired && (
+                                  <div className="text-[11px] text-rose-300">
+                                    • วันหมดอายุพาสปอร์ต: {regForm.passportExpiryDate} (หมดอายุแล้ว)
+                                  </div>
+                                )}
+                                {isWpExpired && (
+                                  <div className="text-[11px] text-rose-300">
+                                    • วันหมดอายุ Work Permit: {regForm.workPermitExpiryDate} (หมดอายุแล้ว)
+                                  </div>
+                                )}
+                                <div className="text-[10px] text-rose-400 font-normal pt-0.5">
+                                  ระบบปฏิเสธการลงทะเบียนเข้าพื้นที่สำหรับเอกสารที่หมดอายุแล้ว
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()
                       )}
 
                       {regForm.dob && (() => {
