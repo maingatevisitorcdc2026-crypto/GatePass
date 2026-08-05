@@ -876,6 +876,7 @@ export default function App() {
     name: '',
     passportId: '', // เลขบัตรประจำตัวประชาชน (คนไทย)
     nationality: 'ไทย',
+    gender: '', // เพศ (ชาย / หญิง / อื่นๆ)
     dob: '',
     phone: '',
     vehiclePlate: '',
@@ -2765,6 +2766,7 @@ export default function App() {
           name: '',
           passportId: '',
           nationality: 'ไทย',
+          gender: '',
           dob: '',
           phone: '',
           vehiclePlate: '',
@@ -2826,6 +2828,7 @@ export default function App() {
         name: String(localMatch.name || prev.name || ''),
         passportId: String(localMatch.passportId || rawPassport),
         nationality: String(localMatch.nationality || (localMatch.registrationCategory === 'foreigner' ? 'ต่างด้าว' : 'ไทย')),
+        gender: String(localMatch.gender || prev.gender || ''),
         dob: String(localMatch.dob || prev.dob || ''),
         phone: String(localMatch.phone || prev.phone || ''),
         vehiclePlate: String(localMatch.vehiclePlate || prev.vehiclePlate || ''),
@@ -2871,8 +2874,9 @@ export default function App() {
           ...prev,
           name: String(visitorToUse.name || prev.name || ''),
           passportId: String(visitorToUse.passportId || rawPassport),
-          phone: String(visitorToUse.phone || prev.phone || ''),
-          vehiclePlate: String(visitorToUse.vehiclePlate || prev.vehiclePlate || ''),
+          nationality: String(visitorToUse.nationality || prev.nationality || ''),
+          gender: String(visitorToUse.gender || prev.gender || ''),
+          dob: String(visitorToUse.dob || prev.dob || ''),
           address: String(visitorToUse.address || prev.address || ''),
           company: String(visitorToUse.company || prev.company || ''),
           visitorType: String(visitorToUse.visitorType || prev.visitorType || 'โหลดเดอร์'),
@@ -4491,6 +4495,18 @@ export default function App() {
                                 <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">ผู้ออกใบผ่าน</span>
                                 <span className="text-amber-400 font-extrabold block truncate">{scannedOrSearchedVisitor.registeredBy || 'ระบบอัตโนมัติ'}</span>
                               </div>
+                              {scannedOrSearchedVisitor.gender && (
+                                <div>
+                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">เพศ</span>
+                                  <span className="text-slate-200 font-bold block truncate">{scannedOrSearchedVisitor.gender}</span>
+                                </div>
+                              )}
+                              {scannedOrSearchedVisitor.nationality && (
+                                <div>
+                                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block font-bold">สัญชาติ</span>
+                                  <span className="text-slate-200 font-bold block truncate">{scannedOrSearchedVisitor.nationality}</span>
+                                </div>
+                              )}
                               <div className="sm:col-span-2 md:col-span-3 border-t border-slate-800/60 pt-2.5 mt-1 flex flex-wrap items-center justify-between gap-2 text-[11px]">
                                 <span className="text-slate-400 font-bold">📅 วันที่-เวลาออกใบผ่านลงทะเบียน:</span>
                                 <span className="text-slate-200 font-mono font-bold">
@@ -5305,6 +5321,23 @@ export default function App() {
                               </div>
                             );
                           })()}
+                        </div>
+
+                        {/* BOTH FORMS: Gender */}
+                        <div>
+                          <label className="block text-[11px] uppercase tracking-wider text-slate-400 font-bold mb-1.5">
+                            เพศ
+                          </label>
+                          <select
+                            value={regForm.gender}
+                            onChange={(e) => setRegForm({ ...regForm, gender: e.target.value })}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
+                          >
+                            <option value="">-- ไม่ระบุเพศ --</option>
+                            <option value="ชาย">ชาย (Male)</option>
+                            <option value="หญิง">หญิง (Female)</option>
+                            <option value="อื่นๆ">อื่นๆ (Other)</option>
+                          </select>
                         </div>
 
                         {/* Phone */}

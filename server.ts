@@ -979,20 +979,22 @@ async function ensureAllDatabaseSheets(sheets: any, spreadsheetId: string) {
       });
     }
 
-    if (!existingTitles.includes('Visitors')) {
-      await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range: 'Visitors!A1:P1',
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [[
-            'ID', 'Name', 'Passport ID', 'Phone', 'Vehicle Plate', 'Address', 
-            'Company', 'Visitor Type', 'Contact Area', 'Photo URL', 'Photo Drive ID', 
-            'Status', 'Ban Reason', 'Registered At', 'Last Activity At', 'Registered By'
-          ]],
-        },
-      });
-    }
+    // Always update or ensure Visitors headers include all foreigner, passport, work permit, DOB, and Gender fields
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: 'Visitors!A1:AB1',
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[
+          'ID', 'Name', 'Passport ID', 'Phone', 'Vehicle Plate', 'Address', 
+          'Company', 'Visitor Type', 'Contact Area', 'Photo URL', 'Photo Drive ID', 
+          'Status', 'Ban Reason', 'Registered At', 'Last Activity At', 'Registered By',
+          'Registration Category', 'Nationality', 'DOB', 'Age', 'Gender',
+          'Passport Number', 'Passport Issue Date', 'Passport Expiry Date',
+          'Work Permit Number', 'Work Permit Issue Date', 'Work Permit Expiry Date', 'Is Work Permit Expired'
+        ]],
+      },
+    }).catch((e: any) => console.warn('Could not update Visitors headers:', e.message));
 
     if (!existingTitles.includes('Logs')) {
       await sheets.spreadsheets.values.update({
@@ -1136,13 +1138,16 @@ async function getOrCreateDatabase(oauth2Client: any): Promise<string> {
     // Add headers to 'Visitors'
     await sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
-      range: 'Visitors!A1:P1',
+      range: 'Visitors!A1:AB1',
       valueInputOption: 'RAW',
       requestBody: {
         values: [[
           'ID', 'Name', 'Passport ID', 'Phone', 'Vehicle Plate', 'Address', 
           'Company', 'Visitor Type', 'Contact Area', 'Photo URL', 'Photo Drive ID', 
-          'Status', 'Ban Reason', 'Registered At', 'Last Activity At', 'Registered By'
+          'Status', 'Ban Reason', 'Registered At', 'Last Activity At', 'Registered By',
+          'Registration Category', 'Nationality', 'DOB', 'Age', 'Gender',
+          'Passport Number', 'Passport Issue Date', 'Passport Expiry Date',
+          'Work Permit Number', 'Work Permit Issue Date', 'Work Permit Expiry Date', 'Is Work Permit Expired'
         ]],
       },
     });
@@ -2200,7 +2205,7 @@ app.post('/api/clear-mock-visitors', async (req, res) => {
         const sheetId = await getOrCreateDatabase(auth);
         const sheets = google.sheets({ version: 'v4', auth });
 
-        const vRes = await sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:P' });
+        const vRes = await sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:AB' });
         const vRows = vRes.data.values || [];
         const filteredVRows = vRows.filter(row => row[10] !== 'mock_seed' && row[15] !== 'ระบบอัตโนมัติ');
 
@@ -2210,7 +2215,7 @@ app.post('/api/clear-mock-visitors', async (req, res) => {
         const lRows = lRes.data.values || [];
         const filteredLRows = lRows.filter(row => !mockIdsInSheet.has(row[1]) && row[9] !== 'Adminmaingate');
 
-        await sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Visitors!A2:P' });
+        await sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Visitors!A2:AB' });
         await sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Logs!A2:K' });
 
         if (filteredVRows.length > 0) {
@@ -2248,7 +2253,7 @@ app.post('/api/clear-mock-visitors', async (req, res) => {
 app.post('/api/register', async (req, res) => {
   const { 
     name, passportId, phone, vehiclePlate, address, company, visitorType, contactArea, photoBase64, registeredBy,
-    nationality, dob, age, registrationCategory, passportNumber, passportIssueDate, passportExpiryDate, workPermitNumber, workPermitIssueDate, workPermitExpiryDate, isWorkPermitExpired
+    nationality, gender, dob, age, registrationCategory, passportNumber, passportIssueDate, passportExpiryDate, workPermitNumber, workPermitIssueDate, workPermitExpiryDate, isWorkPermitExpired
   } = req.body;
   try {
     const effectivePassportId = passportId || passportNumber || 'REG-' + Date.now();
@@ -2278,6 +2283,7 @@ app.post('/api/register', async (req, res) => {
         name,
         passportId: effectivePassportId,
         nationality: nationality || (registrationCategory === 'foreigner' ? 'ต่างด้าว' : 'ไทย'),
+        gender: gender || '',
         dob: dob || '',
         age: age || undefined,
         registrationCategory: registrationCategory || 'thai',
@@ -2380,6 +2386,23 @@ app.post('/api/register', async (req, res) => {
       photoUrl = `/api/photo/${photoDriveId}`;
     }
 
+    const newVisitorObj = {
+      id, name, passportId, phone, vehiclePlate, address, company, 
+      visitorType, contactArea, photoUrl, photoDriveId, status: 'ยังไม่ถูกเช็คอิน' as any, banReason: '', registeredAt, lastActivityAt: '', registeredBy: registeredBy || '',
+      registrationCategory: registrationCategory || 'thai',
+      nationality: nationality || (registrationCategory === 'foreigner' ? 'ต่างด้าว' : 'ไทย'),
+      gender: gender || '',
+      dob: dob || '',
+      age: age || undefined,
+      passportNumber: passportNumber || '',
+      passportIssueDate: passportIssueDate || '',
+      passportExpiryDate: passportExpiryDate || '',
+      workPermitNumber: workPermitNumber || '',
+      workPermitIssueDate: workPermitIssueDate || '',
+      workPermitExpiryDate: workPermitExpiryDate || '',
+      isWorkPermitExpired: isWorkPermitExpired || false
+    };
+
     // Append to 'Visitors'
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
@@ -2388,7 +2411,10 @@ app.post('/api/register', async (req, res) => {
       requestBody: {
         values: [[
           id, name, passportId, phone, vehiclePlate, address, company, 
-          visitorType, contactArea, photoUrl, photoDriveId, 'ยังไม่ถูกเช็คอิน', '', registeredAt, '', registeredBy || ''
+          visitorType, contactArea, photoUrl, photoDriveId, 'ยังไม่ถูกเช็คอิน', '', registeredAt, '', registeredBy || '',
+          registrationCategory || 'thai', nationality || (registrationCategory === 'foreigner' ? 'ต่างด้าว' : 'ไทย'),
+          dob || '', age ? String(age) : '', gender || '', passportNumber || '', passportIssueDate || '', passportExpiryDate || '',
+          workPermitNumber || '', workPermitIssueDate || '', workPermitExpiryDate || '', isWorkPermitExpired ? 'YES' : 'NO'
         ]],
       },
     });
@@ -2396,10 +2422,7 @@ app.post('/api/register', async (req, res) => {
     // Also sync to local fallback database so offline views are kept synchronized
     try {
       const fallback = loadFallbackDB();
-      fallback.visitors.push({
-        id, name, passportId, phone, vehiclePlate, address, company, 
-        visitorType, contactArea, photoUrl, photoDriveId, status: 'ยังไม่ถูกเช็คอิน' as any, registeredAt, registeredBy: registeredBy || ''
-      });
+      fallback.visitors.push(newVisitorObj);
       saveFallbackDB(fallback);
     } catch (err) {
       console.error('Error syncing registration to local DB:', err);
@@ -2407,10 +2430,7 @@ app.post('/api/register', async (req, res) => {
 
     res.json({
       success: true,
-      visitor: {
-        id, name, passportId, phone, vehiclePlate, address, company, 
-        visitorType, contactArea, photoUrl, photoDriveId, status: 'ยังไม่ถูกเช็คอิน' as any, registeredAt, registeredBy: registeredBy || ''
-      }
+      visitor: newVisitorObj
     });
   } catch (err: any) {
     handleGoogleError(err);
@@ -2771,7 +2791,7 @@ app.post('/api/retrieve-by-passport', async (req, res) => {
 
         const visRes = await sheets.spreadsheets.values.get({
           spreadsheetId: sheetId,
-          range: 'Visitors!A2:P',
+          range: 'Visitors!A2:AB',
         });
 
         if (visRes.data.values && visRes.data.values.length > 0) {
@@ -2792,6 +2812,18 @@ app.post('/api/retrieve-by-passport', async (req, res) => {
             registeredAt: String(row[13] || ''),
             lastActivityAt: String(row[14] || ''),
             registeredBy: String(row[15] || ''),
+            registrationCategory: String(row[16] || 'thai'),
+            nationality: String(row[17] || ''),
+            dob: String(row[18] || ''),
+            age: row[19] ? Number(row[19]) : undefined,
+            gender: String(row[20] || ''),
+            passportNumber: String(row[21] || ''),
+            passportIssueDate: String(row[22] || ''),
+            passportExpiryDate: String(row[23] || ''),
+            workPermitNumber: String(row[24] || ''),
+            workPermitIssueDate: String(row[25] || ''),
+            workPermitExpiryDate: String(row[26] || ''),
+            isWorkPermitExpired: row[27] === 'YES' || row[27] === 'true',
           }));
 
           // Update server memory cache
@@ -2849,7 +2881,7 @@ app.get('/api/visitor/:id', async (req, res) => {
 
     const visRes = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: 'Visitors!A2:P',
+      range: 'Visitors!A2:AB',
     });
 
     if (!visRes.data.values || visRes.data.values.length === 0) {
@@ -2878,6 +2910,18 @@ app.get('/api/visitor/:id', async (req, res) => {
       registeredAt: row[13] || '',
       lastActivityAt: row[14] || '',
       registeredBy: row[15] || '',
+      registrationCategory: row[16] || 'thai',
+      nationality: row[17] || '',
+      dob: row[18] || '',
+      age: row[19] ? Number(row[19]) : undefined,
+      gender: row[20] || '',
+      passportNumber: row[21] || '',
+      passportIssueDate: row[22] || '',
+      passportExpiryDate: row[23] || '',
+      workPermitNumber: row[24] || '',
+      workPermitIssueDate: row[25] || '',
+      workPermitExpiryDate: row[26] || '',
+      isWorkPermitExpired: row[27] === 'YES' || row[27] === 'true',
     };
 
     return res.json({ success: true, visitor });
@@ -3366,7 +3410,7 @@ app.post('/api/verify-gate-face', async (req, res) => {
 
     const visRes = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: 'Visitors!A2:P',
+      range: 'Visitors!A2:AB',
     });
 
     if (!visRes.data.values || visRes.data.values.length === 0) {
@@ -3391,6 +3435,18 @@ app.post('/api/verify-gate-face', async (req, res) => {
       registeredAt: row[13] || '',
       lastActivityAt: row[14] || '',
       registeredBy: row[15] || '',
+      registrationCategory: row[16] || 'thai',
+      nationality: row[17] || '',
+      dob: row[18] || '',
+      age: row[19] ? Number(row[19]) : undefined,
+      gender: row[20] || '',
+      passportNumber: row[21] || '',
+      passportIssueDate: row[22] || '',
+      passportExpiryDate: row[23] || '',
+      workPermitNumber: row[24] || '',
+      workPermitIssueDate: row[25] || '',
+      workPermitExpiryDate: row[26] || '',
+      isWorkPermitExpired: row[27] === 'YES' || row[27] === 'true',
     }));
 
     // Filter by passportHint if provided to speed up and secure the lookup
@@ -3711,7 +3767,7 @@ app.get('/api/dashboard', async (req, res) => {
       // Read Visitors
       const visitorsRes = await sheets.spreadsheets.values.get({
         spreadsheetId: sheetId,
-        range: 'Visitors!A2:P',
+        range: 'Visitors!A2:AB',
       });
 
       // Read Logs
@@ -3740,6 +3796,18 @@ app.get('/api/dashboard', async (req, res) => {
         registeredAt: row[13] || '',
         lastActivityAt: row[14] || '',
         registeredBy: row[15] || '',
+        registrationCategory: row[16] || 'thai',
+        nationality: row[17] || '',
+        dob: row[18] || '',
+        age: row[19] ? Number(row[19]) : undefined,
+        gender: row[20] || '',
+        passportNumber: row[21] || '',
+        passportIssueDate: row[22] || '',
+        passportExpiryDate: row[23] || '',
+        workPermitNumber: row[24] || '',
+        workPermitIssueDate: row[25] || '',
+        workPermitExpiryDate: row[26] || '',
+        isWorkPermitExpired: row[27] === 'YES' || row[27] === 'true',
       }));
 
       const totalBanned = visitors.filter(r => r[11] === 'banned').length;
@@ -4183,8 +4251,8 @@ app.get(['/api/sheets-status', '/api/sheets/capacity'], async (req, res) => {
     const visitorsRows = visRes.data.values ? visRes.data.values.length : 0;
     const logsRows = logsRes.data.values ? logsRes.data.values.length : 0;
 
-    // A single row of Visitors has 16 cells. A single row of Logs has 11 cells.
-    const visitorsCells = visitorsRows * 16;
+    // A single row of Visitors has 27 cells. A single row of Logs has 11 cells.
+    const visitorsCells = visitorsRows * 27;
     const logsCells = logsRows * 11;
     const totalCells = visitorsCells + logsCells;
 
@@ -4244,7 +4312,7 @@ app.post(['/api/archive-clear-sheets', '/api/sheets/archive'], async (req, res) 
 
     // 1. Read all from Google Sheets
     const [visRes, logsRes] = await Promise.all([
-      sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:P' }),
+      sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:AB' }),
       sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Logs!A2:K' })
     ]);
 
@@ -4281,6 +4349,18 @@ app.post(['/api/archive-clear-sheets', '/api/sheets/archive'], async (req, res) 
         registeredAt: row[13] || '',
         lastActivityAt: row[14] || '',
         registeredBy: row[15] || '',
+        registrationCategory: row[16] || 'thai',
+        nationality: row[17] || '',
+        dob: row[18] || '',
+        age: row[19] ? Number(row[19]) : undefined,
+        gender: row[20] || '',
+        passportNumber: row[21] || '',
+        passportIssueDate: row[22] || '',
+        passportExpiryDate: row[23] || '',
+        workPermitNumber: row[24] || '',
+        workPermitIssueDate: row[25] || '',
+        workPermitExpiryDate: row[26] || '',
+        isWorkPermitExpired: row[27] === 'YES' || row[27] === 'true',
       };
 
       const existingIdx = fallback.visitors.findIndex((v: any) => v.id === id);
@@ -4352,7 +4432,7 @@ app.post(['/api/archive-clear-sheets', '/api/sheets/archive'], async (req, res) 
 
     // 4. Clear sheets
     await Promise.all([
-      sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Visitors!A2:P' }),
+      sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Visitors!A2:AB' }),
       sheets.spreadsheets.values.clear({ spreadsheetId: sheetId, range: 'Logs!A2:K' })
     ]);
 
@@ -4360,7 +4440,7 @@ app.post(['/api/archive-clear-sheets', '/api/sheets/archive'], async (req, res) 
     if (uniqueRetainedVisitors.length > 0) {
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
-        range: `Visitors!A2:P${uniqueRetainedVisitors.length + 1}`,
+        range: `Visitors!A2:AB${uniqueRetainedVisitors.length + 1}`,
         valueInputOption: 'RAW',
         requestBody: { values: uniqueRetainedVisitors }
       });
