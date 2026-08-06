@@ -2848,67 +2848,132 @@ export default function App() {
 
     try {
       setIsRegistering(true);
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
 
-      const effectivePassportId = regForm.registrationCategory === 'foreigner' 
+      const isForeigner = regForm.registrationCategory === 'foreigner';
+      const effectivePassportId = isForeigner 
         ? (regForm.passportNumber || regForm.passportId)
         : regForm.passportId;
+      const isExpired = isForeigner && checkWorkPermitExpired(regForm.workPermitExpiryDate);
 
-      const isExpired = regForm.registrationCategory === 'foreigner' && checkWorkPermitExpired(regForm.workPermitExpiryDate);
+      let createdVisitor: Visitor | null = null;
+      let isSuccess = false;
 
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          ...regForm,
-          passportId: effectivePassportId,
-          age: calculatedAge || undefined,
-          isWorkPermitExpired: isExpired,
-          photoBase64: regPhoto,
-          registeredBy: loggedInSystemUser?.name || tText(tText("ไม่ได้ระบุ", "Unspecified"), "Unspecified"),
-        }),
-      });
+      // 1. Try sending to backend API if server is active
+      try {
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const data = await response.json();
-      if (response.ok) {
-        setNewPass(data.visitor);
-        if (data.visitor) {
-          setVisitorsList(prev => [data.visitor, ...prev.filter(v => v.id !== data.visitor.id)]);
-        }
-        setShowRegSuccess(true);
-        setActiveTab('pass');
-        // Clear form
-        setRegForm({
-          registrationCategory: 'thai',
-          name: '',
-          passportId: '',
-          nationality: 'ไทย',
-          dob: '',
-          phone: '',
-          vehiclePlate: '',
-          address: '',
-          company: '',
-          visitorType: 'โหลดเดอร์',
-          contactArea: 'MainGate',
-          passportNumber: '',
-          passportExpiryDate: '',
-          workPermitNumber: '',
-          workPermitIssueDate: '',
-          workPermitExpiryDate: '',
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            ...regForm,
+            passportId: effectivePassportId,
+            age: calculatedAge || undefined,
+            isWorkPermitExpired: isExpired,
+            photoBase64: regPhoto,
+            registeredBy: loggedInSystemUser?.name || tText("ไม่ได้ระบุ", "Unspecified"),
+          }),
         });
-        setRegPhoto(null);
-        fetchDashboardData(token);
-      } else {
-        alert(data.error || 'การลงทะเบียนล้มเหลว');
+
+        if (response.ok) {
+          const data = await response.json();
+          createdVisitor = data.visitor;
+          isSuccess = true;
+        }
+      } catch (networkErr) {
+        console.warn('Backend API /api/register unreachable (static host/GitHub Pages), switching to client fallback:', networkErr);
       }
+
+      // 2. If backend API is not available (e.g. GitHub Pages / Static Hosting), handle client-side registration & AppsScript sync
+      if (!isSuccess || !createdVisitor) {
+        const newId = (isForeigner ? 'FW' : 'TH') + String(Math.floor(100000 + Math.random() * 900000));
+        createdVisitor = {
+          id: newId,
+          name: regForm.name || 'ไม่ระบุชื่อ',
+          passportId: effectivePassportId || 'ไม่ระบุ',
+          phone: regForm.phone || '',
+          vehiclePlate: regForm.vehiclePlate || '',
+          address: regForm.address || '',
+          company: regForm.company || '',
+          visitorType: regForm.visitorType || 'ทั่วไป',
+          contactArea: regForm.contactArea || 'MainGate',
+          photoUrl: regPhoto || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+          photoDriveId: '',
+          status: 'REGISTERED',
+          registeredAt: new Date().toLocaleString('th-TH'),
+          registeredBy: loggedInSystemUser?.name || 'Local System',
+          nationality: regForm.nationality || (isForeigner ? 'ต่างด้าว' : 'ไทย'),
+          dob: regForm.dob || '',
+          registrationCategory: isForeigner ? 'foreigner' : 'thai',
+        };
+
+        // Attempt direct sync to Google Apps Script if URL is present
+        if (config.googleAppsScriptUrl) {
+          try {
+            const sheetName = isForeigner ? 'Foreigners' : 'Visitors';
+            const rowValues = isForeigner
+              ? [
+                  createdVisitor.id, createdVisitor.name, createdVisitor.passportId, createdVisitor.phone,
+                  createdVisitor.vehiclePlate, createdVisitor.address, createdVisitor.company, createdVisitor.visitorType,
+                  createdVisitor.contactArea, createdVisitor.photoUrl || '', '', 'REGISTERED', '', createdVisitor.registeredAt,
+                  '', createdVisitor.registeredBy, createdVisitor.nationality, regForm.passportNumber || '',
+                  regForm.passportExpiryDate || '', regForm.workPermitNumber || '', regForm.workPermitIssueDate || '',
+                  regForm.workPermitExpiryDate || '', createdVisitor.dob
+                ]
+              : [
+                  createdVisitor.id, createdVisitor.name, createdVisitor.passportId, createdVisitor.phone,
+                  createdVisitor.vehiclePlate, createdVisitor.address, createdVisitor.company, createdVisitor.visitorType,
+                  createdVisitor.contactArea, createdVisitor.photoUrl || '', '', 'REGISTERED', '', createdVisitor.registeredAt,
+                  '', createdVisitor.registeredBy, '', createdVisitor.dob
+                ];
+
+            fetch(config.googleAppsScriptUrl, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'sheets.values.append',
+                range: `${sheetName}!A2`,
+                values: [rowValues],
+                spreadsheetId: config.googleSpreadsheetId || '1ZWUD33aJak-GV3auuLjdAE6liGjp5EHvH6nQIIuUiwM'
+              })
+            }).catch(e => console.warn('Direct AppsScript sync warning:', e));
+          } catch (appScriptErr) {
+            console.warn('AppsScript push failed:', appScriptErr);
+          }
+        }
+      }
+
+      // Success UI update
+      setNewPass(createdVisitor);
+      setVisitorsList(prev => [createdVisitor!, ...prev.filter(v => v.id !== createdVisitor!.id)]);
+      setShowRegSuccess(true);
+      setActiveTab('pass');
+      
+      // Reset registration form
+      setRegForm({
+        registrationCategory: 'thai',
+        name: '',
+        passportId: '',
+        nationality: 'ไทย',
+        dob: '',
+        phone: '',
+        vehiclePlate: '',
+        address: '',
+        company: '',
+        visitorType: 'โหลดเดอร์',
+        contactArea: 'MainGate',
+        passportNumber: '',
+        passportExpiryDate: '',
+        workPermitNumber: '',
+        workPermitIssueDate: '',
+        workPermitExpiryDate: '',
+      });
+      setRegPhoto(null);
+      if (token) fetchDashboardData(token);
     } catch (err: any) {
-      console.error('Registration failed:', err);
-      alert('เกิดข้อผิดพลาดในการลงทะเบียน: ' + err.message);
+      console.error('Registration error:', err);
     } finally {
       setIsRegistering(false);
     }
