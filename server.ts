@@ -958,8 +958,8 @@ async function findVisitorInSheets(sheets: any, sheetId: string, queryStr: strin
   const isForeignerId = query.toUpperCase().startsWith('FW');
 
   const rangesToFetch = isForeignerId 
-    ? ['Foreigners!A2:T', 'Visitors!A2:P']
-    : ['Visitors!A2:P', 'Foreigners!A2:T'];
+    ? ['Foreigners!A2:W', 'Visitors!A2:R']
+    : ['Visitors!A2:R', 'Foreigners!A2:W'];
 
   const [res1, res2] = await Promise.all([
     sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: rangesToFetch[0] }).catch(() => ({ data: { values: [] } })),
@@ -1067,14 +1067,14 @@ async function ensureAllDatabaseSheets(sheets: any, spreadsheetId: string) {
     if (!existingTitles.includes('Visitors')) {
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: 'Visitors!A1:Q1',
+        range: 'Visitors!A1:R1',
         valueInputOption: 'RAW',
         requestBody: {
           values: [[
             'ID', 'Name', 'Passport ID', 'Phone', 'Vehicle Plate', 'Address', 
             'Company', 'Visitor Type', 'Contact Area', 'Photo URL', 'Photo Drive ID', 
             'Status', 'Ban Reason', 'Registered At', 'Last Activity At', 'Registered By',
-            'ID Card Expiry'
+            'ID Card Expiry', 'Date of Birth'
           ]],
         },
       });
@@ -1083,14 +1083,14 @@ async function ensureAllDatabaseSheets(sheets: any, spreadsheetId: string) {
     if (!existingTitles.includes('Foreigners')) {
       await sheets.spreadsheets.values.update({
         spreadsheetId,
-        range: 'Foreigners!A1:V1',
+        range: 'Foreigners!A1:W1',
         valueInputOption: 'RAW',
         requestBody: {
           values: [[
             'ID', 'Name', 'Passport ID', 'Phone', 'Vehicle Plate', 'Address', 
             'Company', 'Visitor Type', 'Contact Area', 'Photo URL', 'Photo Drive ID', 
             'Status', 'Ban Reason', 'Registered At', 'Last Activity At', 'Registered By',
-            'Nationality', 'Passport Number', 'Passport Expiry', 'Work Permit Number', 'Work Permit Issue Date', 'Work Permit Expiry'
+            'Nationality', 'Passport Number', 'Passport Expiry', 'Work Permit Number', 'Work Permit Issue Date', 'Work Permit Expiry', 'Date of Birth'
           ]],
         },
       });
@@ -2596,12 +2596,13 @@ app.post('/api/register', async (req, res) => {
       ? [
           id, name, effectivePassportId, phone || '', vehiclePlate || '', address || '', company || '', 
           visitorType || '', contactArea || '', photoUrl, photoDriveId, 'ยังไม่ถูกเช็คอิน', '', registeredAt, '', registeredBy || '',
-          nationality || 'ต่างด้าว', passportNumber || '', passportExpiryDate || '', workPermitNumber || '', workPermitIssueDate || '', workPermitExpiryDate || ''
+          nationality || 'ต่างด้าว', passportNumber || '', passportExpiryDate || '', workPermitNumber || '', workPermitIssueDate || '', workPermitExpiryDate || '',
+          dob || ''
         ]
       : [
           id, name, effectivePassportId, phone || '', vehiclePlate || '', address || '', company || '', 
           visitorType || '', contactArea || '', photoUrl, photoDriveId, 'ยังไม่ถูกเช็คอิน', '', registeredAt, '', registeredBy || '',
-          idCardExpiryDate || ''
+          idCardExpiryDate || '', dob || ''
         ];
 
     await sheets.spreadsheets.values.append({
@@ -2624,6 +2625,8 @@ app.post('/api/register', async (req, res) => {
       workPermitIssueDate: workPermitIssueDate || '',
       workPermitExpiryDate: workPermitExpiryDate || '',
       idCardExpiryDate: idCardExpiryDate || '',
+      dob: dob || '',
+      age: age || undefined,
     };
 
     // Also sync to local fallback database so offline views are kept synchronized
@@ -3002,8 +3005,8 @@ app.post('/api/retrieve-by-passport', async (req, res) => {
         const sheets = google.sheets({ version: 'v4', auth });
 
         const [visRes, forRes] = await Promise.all([
-          sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:P' }).catch(() => ({ data: { values: [] } })),
-          sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Foreigners!A2:T' }).catch(() => ({ data: { values: [] } }))
+          sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:R' }).catch(() => ({ data: { values: [] } })),
+          sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Foreigners!A2:W' }).catch(() => ({ data: { values: [] } }))
         ]);
 
         const freshThai = (visRes.data.values || []).map(row => ({
@@ -3024,6 +3027,7 @@ app.post('/api/retrieve-by-passport', async (req, res) => {
           lastActivityAt: String(row[14] || ''),
           registeredBy: String(row[15] || ''),
           idCardExpiryDate: String(row[16] || ''),
+          dob: String(row[17] || ''),
           nationality: 'ไทย',
           registrationCategory: 'thai',
         }));
@@ -3053,6 +3057,7 @@ app.post('/api/retrieve-by-passport', async (req, res) => {
             workPermitNumber: is22Cols ? String(row[19] || '') : String(row[18] || ''),
             workPermitIssueDate: is22Cols ? String(row[20] || '') : '',
             workPermitExpiryDate: is22Cols ? String(row[21] || '') : String(row[19] || ''),
+            dob: String(row[22] || (row.length === 23 ? row[22] : (row[17] && !isNaN(Date.parse(row[17])) ? row[17] : ''))),
             registrationCategory: 'foreigner',
           };
         });
@@ -3111,38 +3116,64 @@ app.get('/api/visitor/:id', async (req, res) => {
     const sheetId = await getOrCreateDatabase(auth);
     const sheets = google.sheets({ version: 'v4', auth });
 
-    const visRes = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: 'Visitors!A2:P',
-    });
-
-    if (!visRes.data.values || visRes.data.values.length === 0) {
-      return res.status(404).json({ error: 'ไม่พบประวัติผู้ใช้งานในระบบ' });
-    }
-
-    const row = visRes.data.values.find(row => row[0].toUpperCase() === queryId);
-    if (!row) {
+    const matchInfo = await findVisitorInSheets(sheets, sheetId, queryId);
+    if (!matchInfo) {
       return res.status(404).json({ error: 'ไม่พบข้อมูลของรหัสใบผ่านนี้' });
     }
 
-    const visitor = {
-      id: row[0],
-      name: row[1],
-      passportId: row[2],
-      phone: row[3],
-      vehiclePlate: row[4],
-      address: row[5],
-      company: row[6],
-      visitorType: row[7],
-      contactArea: row[8],
-      photoUrl: row[9],
-      photoDriveId: row[10],
-      status: row[11],
-      banReason: row[12],
-      registeredAt: row[13] || '',
-      lastActivityAt: row[14] || '',
-      registeredBy: row[15] || '',
-    };
+    const { sheetName, row } = matchInfo;
+    const isForeignerSheet = sheetName === 'Foreigners';
+    const is22Cols = isForeignerSheet && (row.length >= 22 || (row[18] && String(row[18]).includes('-')));
+
+    const visitor = isForeignerSheet
+      ? {
+          id: row[0] || '',
+          name: row[1] || '',
+          passportId: row[2] || row[17] || '',
+          phone: row[3] || '',
+          vehiclePlate: row[4] || '',
+          address: row[5] || '',
+          company: row[6] || '',
+          visitorType: row[7] || '',
+          contactArea: row[8] || '',
+          photoUrl: row[9] || '',
+          photoDriveId: row[10] || '',
+          status: row[11] || '',
+          banReason: row[12] || '',
+          registeredAt: row[13] || '',
+          lastActivityAt: row[14] || '',
+          registeredBy: row[15] || '',
+          nationality: row[16] || 'ต่างด้าว',
+          passportNumber: row[17] || '',
+          passportExpiryDate: is22Cols ? (row[18] || '') : '',
+          workPermitNumber: is22Cols ? (row[19] || '') : (row[18] || ''),
+          workPermitIssueDate: is22Cols ? (row[20] || '') : '',
+          workPermitExpiryDate: is22Cols ? (row[21] || '') : (row[19] || ''),
+          dob: row[22] || (row.length === 23 ? row[22] : (row[17] && !isNaN(Date.parse(row[17])) ? row[17] : '')),
+          registrationCategory: 'foreigner',
+        }
+      : {
+          id: row[0] || '',
+          name: row[1] || '',
+          passportId: row[2] || '',
+          phone: row[3] || '',
+          vehiclePlate: row[4] || '',
+          address: row[5] || '',
+          company: row[6] || '',
+          visitorType: row[7] || '',
+          contactArea: row[8] || '',
+          photoUrl: row[9] || '',
+          photoDriveId: row[10] || '',
+          status: row[11] || '',
+          banReason: row[12] || '',
+          registeredAt: row[13] || '',
+          lastActivityAt: row[14] || '',
+          registeredBy: row[15] || '',
+          idCardExpiryDate: row[16] || '',
+          dob: row[17] || '',
+          nationality: 'ไทย',
+          registrationCategory: 'thai',
+        };
 
     return res.json({ success: true, visitor });
   } catch (err: any) {
@@ -3941,8 +3972,8 @@ app.get('/api/dashboard', async (req, res) => {
 
       // Read Visitors, Foreigners, and Logs
       const [visitorsRes, foreignersRes, logsRes] = await Promise.all([
-        sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:P' }).catch(() => ({ data: { values: [] } })),
-        sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Foreigners!A2:T' }).catch(() => ({ data: { values: [] } })),
+        sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Visitors!A2:R' }).catch(() => ({ data: { values: [] } })),
+        sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Foreigners!A2:W' }).catch(() => ({ data: { values: [] } })),
         sheets.spreadsheets.values.get({ spreadsheetId: sheetId, range: 'Logs!A2:I' }).catch(() => ({ data: { values: [] } })),
       ]);
 
@@ -3968,6 +3999,7 @@ app.get('/api/dashboard', async (req, res) => {
         lastActivityAt: row[14] || '',
         registeredBy: row[15] || '',
         idCardExpiryDate: row[16] || '',
+        dob: row[17] || '',
         nationality: 'ไทย',
         registrationCategory: 'thai',
       }));
@@ -3997,6 +4029,7 @@ app.get('/api/dashboard', async (req, res) => {
           workPermitNumber: is22Cols ? (row[19] || '') : (row[18] || ''),
           workPermitIssueDate: is22Cols ? (row[20] || '') : '',
           workPermitExpiryDate: is22Cols ? (row[21] || '') : (row[19] || ''),
+          dob: row[22] || (row.length === 23 ? row[22] : (row[17] && !isNaN(Date.parse(row[17])) ? row[17] : '')),
           registrationCategory: 'foreigner',
         };
       });
